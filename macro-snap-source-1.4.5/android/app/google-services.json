@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "562037381",
+    "project_id": "macrosnap-cfde3",
+    "storage_bucket": "macrosnap-cfde3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:562037381:android:1b2ad3ac42dc3c3a145fec",
+        "android_client_info": {
+          "package_name": "com.macrosnap.macro_snap"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "562037381-bb5nr7lthsv3ci9mfjf26rrifkstjnet.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.macrosnap.macro_snap",
+            "certificate_hash": "b662159fbd0e21e4db735bf4437a81ea123d2036"
+          }
+        },
+        {
+          "client_id": "562037381-fe32lcko640l5ro6br2aqoaq6ld2feb7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkjzBfjZE0ZIvjFaDRh0pg7H4ZpW19cC8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "562037381-fe32lcko640l5ro6br2aqoaq6ld2feb7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
