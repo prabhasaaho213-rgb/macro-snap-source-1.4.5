@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/theme.dart';
+import '../widgets/glass_card.dart';
 import '../services/gemini_service.dart';
 import 'subscription_screen.dart';
 import 'phone_login_screen.dart';
@@ -144,13 +145,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = isDark ? const Color(0xFF0F172A) : const Color(0xFFF5F7FA);
-    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
 
     return Scaffold(
-      backgroundColor: bg,
+      backgroundColor: isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surface,
       appBar: AppBar(
-        title: Text('Settings', style: TextStyle(fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+        title: Text('Settings', style: TextStyle(fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF0F172A))),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -158,18 +157,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
+            // Profile card
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(colors: [MacroSnapTheme.emerald, MacroSnapTheme.emeraldLight], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(24),
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Row(children: [
                   Container(
                     width: 56, height: 56,
-                    decoration: BoxDecoration(color: Colors.white.withOpacity( 0.2), borderRadius: BorderRadius.circular(16)),
+                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(16)),
                     child: Center(child: Text(_name.isNotEmpty ? _name[0].toUpperCase() : 'U',
                         style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700))),
                   ),
@@ -184,10 +184,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
                           ),
                           const SizedBox(width: 6),
-                          Icon(Icons.edit_rounded, color: Colors.white.withOpacity( 0.5), size: 16),
+                          const Icon(Icons.edit_rounded, color: Colors.white38, size: 16),
                         ],
                       ),
-                      if (_email.isNotEmpty) Text(_email, style: TextStyle(color: Colors.white.withOpacity( 0.7), fontSize: 13)),
+                      if (_email.isNotEmpty) Text(_email, style: const TextStyle(color: Colors.white70, fontSize: 13)),
                     ]),
                   )),
                 ]),
@@ -195,7 +195,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity( 0.2),
+                    color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(_subscribed ? 'Pro Member' : 'Free User',
@@ -204,10 +204,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ]),
             ),
             const SizedBox(height: 20),
-            Container(
-              width: double.infinity,
+            // Settings list card
+            GlassCard(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity( 0.04), blurRadius: 10, offset: const Offset(0, 2))]),
               child: Column(children: [
                 _settingTile(Icons.subscriptions_rounded, _subscribed ? 'Manage Subscription' : 'Upgrade to Pro', _subscribed && _subscribedDate != null ? 'Subscribed since ${_subscribedDate!.substring(0, 10)}' : 'Unlock AI meal plans & more', () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
