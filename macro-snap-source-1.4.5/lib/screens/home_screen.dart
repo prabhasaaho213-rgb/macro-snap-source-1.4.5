@@ -176,6 +176,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   SliverToBoxAdapter(child: _buildWeekInsights(context, isDark)),
                 SliverToBoxAdapter(child: _buildCalorieCard(context, isDark)),
                 SliverToBoxAdapter(child: _buildMacrosSection(context, isDark)),
+                SliverToBoxAdapter(child: _buildAchievements(context, isDark)),
                 SliverToBoxAdapter(child: _buildQuickActions(context, isDark)),
                 SliverToBoxAdapter(child: _buildRecentMeals(context, isDark)),
                 const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -191,119 +192,69 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final now = DateTime.now();
     final days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     final dayName = days[now.weekday - 1];
-    final targetCal = DietPlanService.instance.profile?.targetCalories ?? 2000;
-    final caloriesToday = MealStore.instance.todayCalories;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            'Good ${now.hour < 12 ? 'Morning' : now.hour < 18 ? 'Afternoon' : 'Evening'},',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white70 : const Color(0xFF64748B),
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Good ${now.hour < 12 ? 'Morning' : now.hour < 18 ? 'Afternoon' : 'Evening'},',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _name.isNotEmpty ? _name : 'MacroSnap User',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : const Color(0xFF0F172A),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            _name.isNotEmpty ? '$_name' : 'MacroSnap User',
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.w800,
-              color: isDark ? Colors.white : const Color(0xFF0F172A),
-              letterSpacing: -0.6,
-            ),
-          ),
-          const SizedBox(height: 18),
-          GlassCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: MacroSnapTheme.emerald.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: MacroSnapTheme.emerald.withOpacity(0.3)),
+                ),
+                child: Row(
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '$dayName · ${now.day}/${now.month}/${now.year}',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Today’s progress',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: isDark ? Colors.white : const Color(0xFF0F172A),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
-                      child: Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1F2937) : const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        child: Icon(Icons.settings_rounded, color: isDark ? Colors.white38 : const Color(0xFF94A3B8), size: 24),
-                      ),
+                    Icon(Icons.local_fire_department_rounded, color: MacroSnapTheme.emerald, size: 18),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$_streak',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: MacroSnapTheme.emerald),
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    _buildMiniStat('Streak', '$_streak', Icons.local_fire_department_rounded, MacroSnapTheme.amber, isDark),
-                    _buildMiniStat('Scans', _scansLeft >= 99 ? 'Pro' : '$_scansLeft', Icons.flash_on_rounded, _scansLeft > 0 ? MacroSnapTheme.emerald : MacroSnapTheme.rose, isDark),
-                    _buildMiniStat('Target', '${targetCal.toStringAsFixed(0)} kcal', Icons.track_changes_rounded, MacroSnapTheme.blue, isDark),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  '$caloriesToday / ${targetCal.toStringAsFixed(0)} kcal',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white70 : const Color(0xFF475569),
+              ),
+              const SizedBox(width: 12),
+              GestureDetector(
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(14),
                   ),
+                  child: Icon(Icons.settings_rounded, color: isDark ? Colors.white60 : const Color(0xFF64748B), size: 22),
                 ),
-                const SizedBox(height: 10),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: LinearProgressIndicator(
-                    value: (caloriesToday / targetCal).clamp(0.0, 1.0),
-                    minHeight: 10,
-                    backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                    valueColor: const AlwaysStoppedAnimation<Color>(MacroSnapTheme.emerald),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  'Build momentum by logging a meal or scanning a food item.',
-                  style: TextStyle(
-                    fontSize: 13,
-                    height: 1.5,
-                    color: isDark ? Colors.white38 : const Color(0xFF64748B),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -652,6 +603,110 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
+  Widget _buildAchievements(BuildContext context, bool isDark) {
+    final achievements = _getAchievements();
+    if (achievements.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+      child: GlassCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Achievements',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  ),
+                ),
+                Text(
+                  '${achievements.length} unlocked',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: MacroSnapTheme.emerald,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: achievements.take(6).map((a) => _AchievementBadge(
+                icon: a['icon'] as IconData,
+                label: a['label'] as String,
+                color: a['color'] as Color,
+                isDark: isDark,
+              )).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Map<String, dynamic>> _getAchievements() {
+    final achievements = <Map<String, dynamic>>[];
+    
+    if (_streak >= 3) {
+      achievements.add({
+        'icon': Icons.local_fire_department_rounded,
+        'label': '3 Day Streak',
+        'color': MacroSnapTheme.amber,
+      });
+    }
+    if (_streak >= 7) {
+      achievements.add({
+        'icon': Icons.emoji_events_rounded,
+        'label': 'Week Warrior',
+        'color': MacroSnapTheme.emerald,
+      });
+    }
+    if (_streak >= 30) {
+      achievements.add({
+        'icon': Icons.military_tech_rounded,
+        'label': 'Monthly Master',
+        'color': MacroSnapTheme.blue,
+      });
+    }
+    
+    final todayCalories = MealStore.instance.todayCalories;
+    final targetCal = DietPlanService.instance.profile?.targetCalories ?? 2000;
+    if (todayCalories >= targetCal * 0.9 && todayCalories <= targetCal * 1.1) {
+      achievements.add({
+        'icon': Icons.track_changes_rounded,
+        'label': 'On Target',
+        'color': MacroSnapTheme.rose,
+      });
+    }
+
+    final todayProtein = MealStore.instance.todayProtein;
+    final targetProtein = DietPlanService.instance.profile?.targetProtein ?? 150;
+    if (todayProtein >= targetProtein) {
+      achievements.add({
+        'icon': Icons.fitness_center_rounded,
+        'label': 'Protein Pro',
+        'color': MacroSnapTheme.emerald,
+      });
+    }
+
+    if (_scansLeft >= 99) {
+      achievements.add({
+        'icon': Icons.workspace_premium_rounded,
+        'label': 'Pro Member',
+        'color': MacroSnapTheme.amber,
+      });
+    }
+
+    return achievements;
+  }
+
   Widget _buildQuickActions(BuildContext context, bool isDark) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 6, 20, 16),
@@ -667,107 +722,71 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 color: isDark ? Colors.white : const Color(0xFF1E293B),
               ),
             ),
-            const SizedBox(height: 14),
-            Row(
+            const SizedBox(height: 16),
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 4,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1,
               children: [
-                Expanded(
-                  child: _ActionButton(
-                    icon: Icons.camera_alt_rounded,
-                    label: 'Snap & Track',
-                    gradient: const LinearGradient(
-                      colors: [MacroSnapTheme.emerald, MacroSnapTheme.emeraldLight],
-                    ),
-                    onTap: () async {
+                _QuickActionIcon(
+                  icon: Icons.camera_alt_rounded,
+                  label: 'Snap',
+                  color: MacroSnapTheme.emerald,
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (_, _, _) => const ScanScreen(),
+                        transitionsBuilder: (_, a, _, child) =>
+                            FadeTransition(opacity: a, child: child),
+                        transitionDuration: const Duration(milliseconds: 400),
+                      ),
+                    );
+                    _refresh();
+                  },
+                ),
+                _QuickActionIcon(
+                  icon: Icons.search_rounded,
+                  label: 'Search',
+                  color: MacroSnapTheme.amber,
+                  onTap: () async {
+                    final item = await Navigator.push<FoodItem>(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SearchScreen()),
+                    );
+                    if (item != null && context.mounted) {
                       await Navigator.push(
                         context,
-                        PageRouteBuilder(
-                          pageBuilder: (_, _, _) => const ScanScreen(),
-                          transitionsBuilder: (_, a, _, child) =>
-                              FadeTransition(opacity: a, child: child),
-                          transitionDuration: const Duration(milliseconds: 400),
+                        MaterialPageRoute(
+                          builder: (_) => AddMealScreen(food: item),
                         ),
                       );
-                      _refresh();
-                    },
-                  ),
+                    }
+                    _refresh();
+                  },
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _ActionButton(
-                    icon: Icons.search_rounded,
-                    label: 'Search Food',
-                    gradient: const LinearGradient(
-                      colors: [MacroSnapTheme.amber, Color(0xFFFBBF24)],
-                    ),
-                    onTap: () async {
-                      final item = await Navigator.push<FoodItem>(
-                        context,
-                        MaterialPageRoute(builder: (_) => const SearchScreen()),
-                      );
-                      if (item != null && context.mounted) {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => AddMealScreen(food: item),
-                          ),
-                        );
-                      }
-                      _refresh();
-                    },
-                  ),
+                _QuickActionIcon(
+                  icon: Icons.auto_awesome_rounded,
+                  label: 'Diet',
+                  color: MacroSnapTheme.blue,
+                  onTap: () async {
+                    await DietPlanService.instance.load();
+                    if (context.mounted) {
+                      await Navigator.push(context, MaterialPageRoute(builder: (_) => const DietPlanScreen()));
+                    }
+                  },
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _ActionButton(
-                    icon: Icons.auto_awesome_rounded,
-                    label: 'Diet Plan',
-                    gradient: const LinearGradient(
-                      colors: [MacroSnapTheme.emerald, MacroSnapTheme.emeraldLight],
-                    ),
-                    onTap: () async {
-                      await DietPlanService.instance.load();
-                      if (context.mounted) {
-                        await Navigator.push(context, MaterialPageRoute(builder: (_) => const DietPlanScreen()));
-                      }
-                    },
-                  ),
+                _QuickActionIcon(
+                  icon: Icons.menu_book_rounded,
+                  label: 'Recipes',
+                  color: MacroSnapTheme.rose,
+                  onTap: () async {
+                    await Navigator.push(context, MaterialPageRoute(builder: (_) => const RecipeListScreen()));
+                  },
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _ActionButton(
-                    icon: Icons.menu_book_rounded,
-                    label: 'Recipes',
-                    gradient: const LinearGradient(
-                      colors: [MacroSnapTheme.blue, Color(0xFF60A5FA)],
-                    ),
-                    onTap: () async {
-                      await Navigator.push(context, MaterialPageRoute(builder: (_) => const RecipeListScreen()));
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _ActionButton(
-                    icon: Icons.qr_code_scanner_rounded,
-                    label: 'Scan Barcode',
-                    gradient: const LinearGradient(
-                      colors: [MacroSnapTheme.amber, Color(0xFFFBBF24)],
-                    ),
-                    onTap: () async {
-                      await Navigator.push(context, MaterialPageRoute(builder: (_) => const BarcodeScanScreen()));
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(child: SizedBox.shrink()),
               ],
             ),
           ],
@@ -779,6 +798,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   Widget _buildRecentMeals(BuildContext context, bool isDark) {
     final meals = MealStore.instance.todayMeals;
     final totalCals = meals.fold<int>(0, (s, m) => s + m.calories);
+
+    // Group meals by time of day
+    final groupedMeals = _groupMealsByTime(meals);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 6, 20, 24),
@@ -834,63 +856,132 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
               )
             else
-              ...meals.take(10).map((m) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: MacroSnapTheme.emerald.withOpacity( 0.1),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Icon(Icons.restaurant_rounded, color: MacroSnapTheme.emerald, size: 22),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            m.name,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: isDark ? Colors.white : const Color(0xFF1E293B),
-                            ),
-                          ),
-                          Text(
-                            '${m.category.isNotEmpty ? '${m.category} Â· ' : ''}${m.serving}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        '${m.calories} kcal',
+              ...groupedMeals.entries.map((entry) => _buildMealGroup(context, entry.key, entry.value, isDark)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Map<String, List<MealRecord>> _groupMealsByTime(List<MealRecord> meals) {
+    final grouped = <String, List<MealRecord>>{
+      'Breakfast': [],
+      'Lunch': [],
+      'Dinner': [],
+      'Snacks': [],
+    };
+
+    for (final meal in meals) {
+      final hour = meal.date.hour;
+      if (hour >= 5 && hour < 11) {
+        grouped['Breakfast']!.add(meal);
+      } else if (hour >= 11 && hour < 15) {
+        grouped['Lunch']!.add(meal);
+      } else if (hour >= 17 && hour < 22) {
+        grouped['Dinner']!.add(meal);
+      } else {
+        grouped['Snacks']!.add(meal);
+      }
+    }
+
+    // Remove empty groups
+    grouped.removeWhere((key, value) => value.isEmpty);
+    return grouped;
+  }
+
+  Widget _buildMealGroup(BuildContext context, String groupName, List<MealRecord> meals, bool isDark) {
+    final groupCals = meals.fold<int>(0, (s, m) => s + m.calories);
+    final groupIcons = {
+      'Breakfast': Icons.wb_sunny_rounded,
+      'Lunch': Icons.restaurant_rounded,
+      'Dinner': Icons.nights_stay_rounded,
+      'Snacks': Icons.cookie_rounded,
+    };
+    final groupColors = {
+      'Breakfast': MacroSnapTheme.amber,
+      'Lunch': MacroSnapTheme.emerald,
+      'Dinner': MacroSnapTheme.blue,
+      'Snacks': MacroSnapTheme.rose,
+    };
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(groupIcons[groupName], color: groupColors[groupName], size: 18),
+              const SizedBox(width: 8),
+              Text(
+                groupName,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white70 : const Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '$groupCals kcal',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...meals.map((m) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: groupColors[groupName]!.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(groupIcons[groupName], color: groupColors[groupName], size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        m.name,
                         style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
                           color: isDark ? Colors.white : const Color(0xFF1E293B),
                         ),
                       ),
-                    ),
-                  ],
+                      Text(
+                        m.serving,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              )),
-          ],
-        ),
+                Text(
+                  '${m.calories}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  ),
+                ),
+              ],
+            ),
+          )),
+        ],
       ),
     );
   }
@@ -949,6 +1040,94 @@ class _ActionButton extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _QuickActionIcon extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickActionIcon({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: color.withOpacity(0.2),
+            width: 1.5,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : const Color(0xFF1E293B),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AchievementBadge extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final bool isDark;
+
+  const _AchievementBadge({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : const Color(0xFF1E293B),
+            ),
+          ),
+        ],
       ),
     );
   }

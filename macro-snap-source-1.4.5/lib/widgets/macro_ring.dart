@@ -26,17 +26,17 @@ class MacroRing extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          width: 80,
-          height: 80,
+          width: 72,
+          height: 72,
           child: Stack(
             alignment: Alignment.center,
             children: [
               CustomPaint(
-                size: const Size(80, 80),
+                size: const Size(72, 72),
                 painter: _RingPainter(
                   progress: progress,
                   color: color,
-                  backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                  backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
                 ),
               ),
               Column(
@@ -45,7 +45,7 @@ class MacroRing extends StatelessWidget {
                   Text(
                     value.toStringAsFixed(0),
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.w800,
                       color: isDark ? Colors.white : const Color(0xFF1E293B),
                       height: 1,
@@ -54,7 +54,7 @@ class MacroRing extends StatelessWidget {
                   Text(
                     unit,
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 9,
                       fontWeight: FontWeight.w500,
                       color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
                       height: 1,
@@ -69,17 +69,18 @@ class MacroRing extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 12,
             fontWeight: FontWeight.w600,
             color: isDark ? Colors.white70 : const Color(0xFF475569),
           ),
         ),
+        const SizedBox(height: 2),
         Text(
-          '${target.toStringAsFixed(0)}$unit target',
+          '${target.toStringAsFixed(0)}$unit',
           style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w400,
-            color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: color,
           ),
         ),
       ],
@@ -101,12 +102,12 @@ class _RingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2 - 6;
+    final radius = size.width / 2 - 5;
 
     final bgPaint = Paint()
       ..color = backgroundColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 8
+      ..strokeWidth = 6
       ..strokeCap = StrokeCap.round;
 
     canvas.drawCircle(center, radius, bgPaint);
@@ -114,7 +115,7 @@ class _RingPainter extends CustomPainter {
     final progressPaint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 8
+      ..strokeWidth = 6
       ..strokeCap = StrokeCap.round;
 
     canvas.drawArc(
