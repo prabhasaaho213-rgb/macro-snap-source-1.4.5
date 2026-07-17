@@ -191,7 +191,6 @@ class _ScanScreenState extends State<ScanScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final canUse = _scansLeft > 0;
 
     if (_cameraError) {
@@ -248,15 +247,9 @@ class _ScanScreenState extends State<ScanScreen>
           // Live camera preview
           if (_controller != null && _controller!.value.isInitialized)
             Positioned.fill(
-              child: ClipRect(
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.width / _controller!.value.aspectRatio,
-                    child: CameraPreview(_controller!),
-                  ),
-                ),
+              child: AspectRatio(
+                aspectRatio: _controller!.value.aspectRatio,
+                child: CameraPreview(_controller!),
               ),
             ),
 
