@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme.dart';
-import 'screens/home_screen.dart';
+import 'screens/main_shell.dart';
 import 'screens/phone_login_screen.dart';
 
 class MacroSnapApp extends StatefulWidget {
@@ -86,7 +86,7 @@ class _MacroSnapAppState extends State<MacroSnapApp> {
       themeMode: _themeMode,
       home: _loading
           ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-          : (_savedPhone != null ? const HomeScreen() : const PhoneLoginScreen()),
+          : (_savedPhone != null ? const MainShell() : const PhoneLoginScreen()),
     );
   }
 }
