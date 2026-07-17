@@ -10,6 +10,7 @@ import '../widgets/app_text_field.dart';
 import '../widgets/glass_card.dart';
 import 'phone_login_screen.dart';
 import '../services/notification_service.dart';
+import '../services/gemini_service.dart';
 import 'referral_screen.dart';
 
 class SubscriptionScreen extends StatefulWidget {
@@ -28,7 +29,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
   String? _subscribedDate;
   String? _paymentStatus;
   final _txnController = TextEditingController();
-  final String _serverUrl = 'https://macro-snap-backend-production.up.railway.app';
   AnimationController? _animController;
   Animation<double>? _checkAnim;
 
@@ -64,7 +64,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
   Future<void> _checkPaymentStatus(String phone) async {
     try {
-      final res = await http.get(Uri.parse('$_serverUrl/payment/status/$phone'));
+      final res = await http.get(Uri.parse('${GeminiService.serverUrl}/payment/status/$phone'));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (mounted) {
@@ -99,7 +99,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     setState(() { _submitting = true; _paymentStatus = null; });
     try {
       final res = await http.post(
-        Uri.parse('$_serverUrl/payment/request'),
+        Uri.parse('${GeminiService.serverUrl}/payment/request'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'phone': _phone, 'transaction_ref': txn}),
       );

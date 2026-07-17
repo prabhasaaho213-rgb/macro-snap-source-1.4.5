@@ -126,10 +126,21 @@ class NutritionResult {
 }
 
 class GeminiService {
+  static const _prefsKey = 'server_url';
   static String _serverUrl = 'https://macro-snap-backend-production.up.railway.app';
 
-  static void setServerUrl(String url) {
+  static Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedUrl = prefs.getString(_prefsKey);
+    if (savedUrl != null && savedUrl.isNotEmpty) {
+      _serverUrl = savedUrl.trim();
+    }
+  }
+
+  static Future<void> setServerUrl(String url) async {
     _serverUrl = url.trim();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_prefsKey, _serverUrl);
   }
 
   static String get serverUrl => _serverUrl;

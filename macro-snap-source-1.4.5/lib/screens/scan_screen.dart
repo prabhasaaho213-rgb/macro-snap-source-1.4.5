@@ -248,9 +248,15 @@ class _ScanScreenState extends State<ScanScreen>
           // Live camera preview
           if (_controller != null && _controller!.value.isInitialized)
             Positioned.fill(
-              child: FittedBox(
-                fit: BoxFit.cover,
-                child: CameraPreview(_controller!),
+              child: ClipRect(
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.width / _controller!.value.aspectRatio,
+                    child: CameraPreview(_controller!),
+                  ),
+                ),
               ),
             ),
 

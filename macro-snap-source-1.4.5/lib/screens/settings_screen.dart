@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/theme.dart';
+import '../services/gemini_service.dart';
 import 'subscription_screen.dart';
 import 'phone_login_screen.dart';
 
@@ -18,6 +19,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _email = '';
   bool _subscribed = false;
   String? _subscribedDate;
+  String _serverUrl = GeminiService.serverUrl;
 
   @override
   void initState() {
@@ -32,7 +34,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _email = prefs.getString('email') ?? '';
       _subscribed = prefs.getBool('subscribed') ?? false;
       _subscribedDate = prefs.getString('subscribed_at');
+      _serverUrl = GeminiService.serverUrl;
     });
+  }
+
+  Future<void> _editServerUrl() async {
+    final ctrl = TextEditingController(text: _serverUrl);
+    final newUrl = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF1E293B) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Server URL'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'https://your-backend.example.com',
+            border: OutlineInputBorder(),
+          ),
+          keyboardType: TextInputType.url,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (newUrl != null && newUrl.isNotEmpty && newUrl != _serverUrl) {
+      await GeminiService.setServerUrl(newUrl);
+      setState(() => _serverUrl = GeminiService.serverUrl);
+    }
   }
 
   Future<void> _logout(BuildContext context, bool isDark) async {
@@ -177,6 +214,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 }, isDark),
                 const Divider(height: 24),
                 _settingTile(Icons.dark_mode_rounded, 'Theme', 'Switch between Light, Dark, or System', () => _showThemeDialog(isDark), isDark),
+                const Divider(height: 24),
+                _settingTile(Icons.dns_outlined, 'Server URL', _serverUrl.isNotEmpty ? _serverUrl : 'Not configured', _editServerUrl, isDark),
                 const Divider(height: 24),
                 _settingTile(Icons.info_outline_rounded, 'App Version', '1.4.5', null, isDark),
                 const Divider(height: 24),

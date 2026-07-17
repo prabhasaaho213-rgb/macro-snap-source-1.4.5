@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme.dart';
 import '../models/diet_profile.dart';
+import '../services/gemini_service.dart';
 import '../services/meal_store.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/app_text_field.dart';
@@ -21,12 +22,11 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
   final _weightCtrl = TextEditingController();
   final _heightCtrl = TextEditingController();
   final _ageCtrl = TextEditingController();
-  final _serverUrl = 'https://macro-snap-backend-production.up.railway.app';
   Gender _gender = Gender.male;
   Goal _goal = Goal.loseWeight;
   ActivityLevel _activity = ActivityLevel.sedentary;
   DietProfile? _profile;
-  String _avatar = 'ðŸ˜Ž';
+  String _avatar = '😎';
   bool _subscribed = false;
   bool _generating = false;
   Map<String, dynamic>? _aiPlan;
@@ -131,7 +131,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
     setState(() { _generating = true; _aiError = ''; _aiPlan = null; });
     try {
       final resp = await http.post(
-        Uri.parse('$_serverUrl/generate-diet-plan'),
+        Uri.parse('${GeminiService.serverUrl}/generate-diet-plan'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'weight': _profile!.weightKg,
@@ -155,7 +155,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
     _weightCtrl.text = '70';
     _heightCtrl.text = '170';
     _ageCtrl.text = '25';
-    setState(() { _gender = Gender.male; _goal = Goal.maintain; _activity = ActivityLevel.moderate; _profile = null; _avatar = 'ðŸ˜Ž'; _aiPlan = null; _aiError = ''; });
+    setState(() { _gender = Gender.male; _goal = Goal.maintain; _activity = ActivityLevel.moderate; _profile = null; _avatar = '😎'; _aiPlan = null; _aiError = ''; });
   }
 
   @override
