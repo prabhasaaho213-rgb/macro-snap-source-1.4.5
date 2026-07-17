@@ -31,7 +31,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
-  String _avatar = 'ðŸ˜Ž';
+  late Animation<Offset> _slideAnim;
+  String _avatar = '😎';
   String _name = '';
   int _streak = 0;
   int _bestStreak = 0;
@@ -46,6 +47,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       duration: const Duration(milliseconds: 800),
     );
     _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.04), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _loadAll();
     UpdateChecker.checkAndPrompt(context);
   }
@@ -72,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     _computeWeekSummary();
     if (mounted) {
       setState(() {
-        _avatar = p?.avatar ?? 'ðŸ˜Ž';
+        _avatar = p?.avatar ?? '😎';
         _name = name;
         _streak = streak;
         _bestStreak = best;
@@ -160,21 +163,24 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnim,
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(child: _buildHeader(context, isDark)),
-              SliverToBoxAdapter(child: _buildStreakRow(isDark)),
-              if (_weekSummary.isNotEmpty)
-                SliverToBoxAdapter(child: _buildWeekInsights(isDark)),
-              SliverToBoxAdapter(child: _buildCalorieCard(context, isDark)),
-              SliverToBoxAdapter(child: _buildMacrosSection(context, isDark)),
-              SliverToBoxAdapter(child: _buildQuickActions(context, isDark)),
-              SliverToBoxAdapter(child: _buildRecentMeals(context, isDark)),
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
-            ],
+        child: SlideTransition(
+          position: _slideAnim,
+          child: FadeTransition(
+            opacity: _fadeAnim,
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(child: _buildHeader(context, isDark)),
+                SliverToBoxAdapter(child: _buildStreakRow(isDark)),
+                if (_weekSummary.isNotEmpty)
+                  SliverToBoxAdapter(child: _buildWeekInsights(context, isDark)),
+                SliverToBoxAdapter(child: _buildCalorieCard(context, isDark)),
+                SliverToBoxAdapter(child: _buildMacrosSection(context, isDark)),
+                SliverToBoxAdapter(child: _buildQuickActions(context, isDark)),
+                SliverToBoxAdapter(child: _buildRecentMeals(context, isDark)),
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              ],
+            ),
           ),
         ),
       ),
@@ -185,107 +191,152 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final now = DateTime.now();
     final days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     final dayName = days[now.weekday - 1];
+    final targetCal = DietPlanService.instance.profile?.targetCalories ?? 2000;
+    final caloriesToday = MealStore.instance.todayCalories;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
+          Text(
+            'Good ${now.hour < 12 ? 'Morning' : now.hour < 18 ? 'Afternoon' : 'Evening'},',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white70 : const Color(0xFF64748B),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _name.isNotEmpty ? '$_name' : 'MacroSnap User',
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              letterSpacing: -0.6,
+            ),
+          ),
+          const SizedBox(height: 18),
+          GlassCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Hello${_name.isNotEmpty ? ', $_name' : ''}!',
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : const Color(0xFF1E293B),
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 4),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Icon(Icons.calendar_today_rounded, size: 14, color: isDark ? Colors.white30 : const Color(0xFF94A3B8)),
-                    const SizedBox(width: 6),
-                    Text(
-                      '$dayName, ${now.day}/${now.month}/${now.year}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$dayName · ${now.day}/${now.month}/${now.year}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Today’s progress',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? Colors.white : const Color(0xFF0F172A),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+                      child: Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1F2937) : const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        child: Icon(Icons.settings_rounded, color: isDark ? Colors.white38 : const Color(0xFF94A3B8), size: 24),
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 18),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    _buildMiniStat('Streak', '$_streak', Icons.local_fire_department_rounded, MacroSnapTheme.amber, isDark),
+                    _buildMiniStat('Scans', _scansLeft >= 99 ? 'Pro' : '$_scansLeft', Icons.flash_on_rounded, _scansLeft > 0 ? MacroSnapTheme.emerald : MacroSnapTheme.rose, isDark),
+                    _buildMiniStat('Target', '${targetCal.toStringAsFixed(0)} kcal', Icons.track_changes_rounded, MacroSnapTheme.blue, isDark),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  '$caloriesToday / ${targetCal.toStringAsFixed(0)} kcal',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white70 : const Color(0xFF475569),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: LinearProgressIndicator(
+                    value: (caloriesToday / targetCal).clamp(0.0, 1.0),
+                    minHeight: 10,
+                    backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                    valueColor: const AlwaysStoppedAnimation<Color>(MacroSnapTheme.emerald),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  'Build momentum by logging a meal or scanning a food item.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.5,
+                    color: isDark ? Colors.white38 : const Color(0xFF64748B),
+                  ),
+                ),
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          Row(
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniStat(String label, String value, IconData icon, Color color, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF111827) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 18, color: color),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              GestureDetector(
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SubscriptionScreen())),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: (_scansLeft > 0 ? MacroSnapTheme.emerald : MacroSnapTheme.rose).withOpacity( 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.flash_on_rounded, size: 14,
-                          color: _scansLeft > 0 ? MacroSnapTheme.emerald : MacroSnapTheme.rose),
-                      const SizedBox(width: 4),
-                      Text(_scansLeft >= 99 ? 'Pro' : '$_scansLeft',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
-                              color: _scansLeft > 0 ? MacroSnapTheme.emerald : MacroSnapTheme.rose)),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              GestureDetector(
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(Icons.settings_rounded, color: isDark ? Colors.white38 : const Color(0xFF94A3B8), size: 20),
-                ),
-              ),
-              const SizedBox(width: 10),
-              GestureDetector(
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DietPlanScreen())).then((_) {
-                  final p = DietPlanService.instance.profile;
-                  if (p != null) setState(() => _avatar = p.avatar);
-                }),
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [MacroSnapTheme.emerald, MacroSnapTheme.emeraldLight],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(
-                        color: MacroSnapTheme.emerald.withOpacity( 0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Center(child: Text(_avatar, style: const TextStyle(fontSize: 20))),
-                ),
-              ),
+              Text(label, style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : const Color(0xFF94A3B8))),
+              const SizedBox(height: 2),
+              Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF0F172A))),
             ],
           ),
         ],
@@ -297,29 +348,30 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     if (_streak <= 0) return const SizedBox.shrink();
     final isBest = StreakService.isLongestStreak(_streak, _bestStreak);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
       child: GlassCard(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
         child: Row(
           children: [
             Icon(Icons.local_fire_department_rounded,
                 color: MacroSnapTheme.amber, size: 20),
             const SizedBox(width: 8),
-            Text('$_streak day${_streak == 1 ? '' : 's'} streak',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : const Color(0xFF1E293B))),
-            if (isBest)
-              Container(
-                margin: const EdgeInsets.only(left: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: MacroSnapTheme.amber.withOpacity( 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text('Best!', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
-                    color: MacroSnapTheme.amber)),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('$_streak day${_streak == 1 ? '' : 's'} streak',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                  const SizedBox(height: 4),
+                  Text(
+                    isBest ? 'New personal best!' : 'Keep the streak going',
+                    style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : const Color(0xFF64748B)),
+                  ),
+                ],
               ),
-            const Spacer(),
+            ),
+            const SizedBox(width: 12),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: List.generate(min(_streak, 7), (i) =>
@@ -328,7 +380,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   margin: const EdgeInsets.only(right: 3),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: MacroSnapTheme.emerald.withOpacity( 0.6 + (i / _streak * 0.4)),
+                    color: MacroSnapTheme.emerald.withOpacity(0.6 + (i / max(_streak, 1) * 0.4)),
                   ),
                 ),
               ),
@@ -339,7 +391,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildWeekInsights(bool isDark) {
+
+  Widget _buildWeekInsights(BuildContext context, bool isDark) {
     final profile = DietPlanService.instance.profile;
     if (_weekSummary.isEmpty) return const SizedBox.shrink();
 
@@ -358,7 +411,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       insights.add('Calories were below target on $daysBelowCals of the last 7 days');
     }
     if (daysBelowProtein == 0 && daysLogged >= 5) {
-      insights.add('Great consistency â€” hitting protein targets all week!');
+      insights.add('Great consistency — hitting protein targets all week!');
     }
     if (daysLogged >= 6) {
       insights.add('Logged meals $daysLogged/7 days this week. Keep it up!');
@@ -435,9 +488,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final profile = DietPlanService.instance.profile;
     final targetCal = profile?.targetCalories ?? 2000;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+      padding: const EdgeInsets.fromLTRB(20, 6, 20, 8),
       child: GlassCard(
-        height: 180,
+        height: 190,
         padding: EdgeInsets.zero,
         child: Stack(
           children: [
@@ -554,19 +607,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 if (total > 0)
                   Flexible(
                     child: Text(
-                      '${(p / max(total, 1) * 100).round()}% P Â· ${(c / max(total, 1) * 100).round()}% C Â· ${(f / max(total, 1) * 100).round()}% F',
+                      '${(p / max(total, 1) * 100).round()}% P · ${(c / max(total, 1) * 100).round()}% C · ${(f / max(total, 1) * 100).round()}% F',
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.end,
                       style: TextStyle(
                         fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                        fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -601,7 +654,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
   Widget _buildQuickActions(BuildContext context, bool isDark) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+      padding: const EdgeInsets.fromLTRB(20, 6, 20, 16),
       child: GlassCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -614,7 +667,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 color: isDark ? Colors.white : const Color(0xFF1E293B),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             Row(
               children: [
                 Expanded(
@@ -728,7 +781,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final totalCals = meals.fold<int>(0, (s, m) => s + m.calories);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+      padding: const EdgeInsets.fromLTRB(20, 6, 20, 24),
       child: GlassCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
