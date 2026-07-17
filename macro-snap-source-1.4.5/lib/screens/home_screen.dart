@@ -682,22 +682,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   BoxDecoration _glassDecoration(BuildContext context, bool isDark) {
-    return BoxDecoration(
-      color: isDark ? MacroSnapTheme.cardDark.withOpacity(0.85) : Colors.white.withOpacity(0.85),
-      borderRadius: BorderRadius.circular(24),
-      border: Border.all(
-        color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.04),
-      ),
-      boxShadow: [
-        BoxShadow(
-          color: isDark
-              ? Colors.black.withOpacity(0.3)
-              : MacroSnapTheme.emerald.withOpacity(0.08),
-          blurRadius: 30,
-          offset: const Offset(0, 8),
-        ),
-      ],
-    );
+    return MacroSnapTheme.glassDecoration(context);
   }
 }
 

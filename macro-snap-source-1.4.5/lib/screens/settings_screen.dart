@@ -216,7 +216,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const Divider(height: 24),
                 _settingTile(Icons.dns_outlined, 'Server URL', _serverUrl.isNotEmpty ? _serverUrl : 'Not configured', _editServerUrl, isDark),
                 const Divider(height: 24),
-                _settingTile(Icons.info_outline_rounded, 'App Version', '1.4.5', null, isDark),
+                _settingTile(Icons.info_outline_rounded, 'App Version', '1.4.6', null, isDark),
                 const Divider(height: 24),
                 _settingTile(Icons.mail_outline_rounded, 'Contact Support', 'macrosnap7@gmail.com', () async {
                   final uri = Uri.parse('mailto:macrosnap7@gmail.com');
