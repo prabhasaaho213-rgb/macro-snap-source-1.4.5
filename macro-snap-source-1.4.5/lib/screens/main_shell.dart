@@ -187,6 +187,22 @@ class _MealsTab extends StatefulWidget {
 
 class _MealsTabState extends State<_MealsTab> {
   @override
+  void initState() {
+    super.initState();
+    MealStore.instance.changeNotifier.addListener(_onMealsChanged);
+  }
+
+  @override
+  void dispose() {
+    MealStore.instance.changeNotifier.removeListener(_onMealsChanged);
+    super.dispose();
+  }
+
+  void _onMealsChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final meals = MealStore.instance.todayMeals;

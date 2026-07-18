@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import '../models/meal_record.dart';
@@ -7,6 +8,8 @@ class MealStore {
   static final MealStore _instance = MealStore._();
   static MealStore get instance => _instance;
   MealStore._();
+
+  final ValueNotifier<int> changeNotifier = ValueNotifier(0);
 
   List<MealRecord> _meals = [];
   bool _loaded = false;
@@ -49,11 +52,13 @@ class MealStore {
   Future<void> add(MealRecord meal) async {
     _meals.add(meal);
     await _save();
+    changeNotifier.value++;
   }
 
   Future<void> remove(String id) async {
     _meals.removeWhere((m) => m.id == id);
     await _save();
+    changeNotifier.value++;
   }
 
   Future<void> _save() async {

@@ -244,12 +244,27 @@ class _ScanScreenState extends State<ScanScreen>
       backgroundColor: const Color(0xFF0A0E1A),
       body: Stack(
         children: [
-          // Live camera preview
+          // Live camera preview — OverflowBox allows camera to exceed
+          // screen bounds to maintain native aspect ratio, ClipRect crops overflow
           if (_controller != null && _controller!.value.isInitialized)
             Positioned.fill(
-              child: AspectRatio(
-                aspectRatio: _controller!.value.aspectRatio,
-                child: CameraPreview(_controller!),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final screenAspect = constraints.maxWidth / constraints.maxHeight;
+                  final cameraAspect = _controller!.value.aspectRatio;
+                  return ClipRect(
+                    child: OverflowBox(
+                      alignment: Alignment.center,
+                      maxHeight: screenAspect > cameraAspect
+                          ? constraints.maxWidth / cameraAspect
+                          : constraints.maxHeight,
+                      maxWidth: screenAspect > cameraAspect
+                          ? constraints.maxWidth
+                          : constraints.maxHeight * cameraAspect,
+                      child: CameraPreview(_controller!),
+                    ),
+                  );
+                },
               ),
             ),
 
