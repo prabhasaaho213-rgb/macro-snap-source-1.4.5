@@ -41,6 +41,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
   @override
   void dispose() {
+    _animController?.stop();
     _animController?.dispose();
     _txnController.dispose();
     super.dispose();
