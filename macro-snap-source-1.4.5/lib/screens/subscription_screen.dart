@@ -30,7 +30,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
   String? _paymentStatus;
   final _txnController = TextEditingController();
   AnimationController? _animController;
-  Animation<double>? _checkAnim;
+  CurvedAnimation? _checkAnim;
 
   @override
   void initState() {
@@ -41,6 +41,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
   @override
   void dispose() {
+    _checkAnim?.dispose();
     _animController?.stop();
     _animController?.dispose();
     _txnController.dispose();
@@ -179,6 +180,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
   void _showConfirmation() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    _checkAnim?.dispose();
     _animController?.stop();
     _animController?.dispose();
     _animController = AnimationController(

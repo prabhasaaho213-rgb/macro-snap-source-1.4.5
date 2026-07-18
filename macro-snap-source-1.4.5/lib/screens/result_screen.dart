@@ -120,6 +120,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
 
   @override
   void dispose() {
+    _animController.stop();
     _animController.dispose();
     super.dispose();
   }
