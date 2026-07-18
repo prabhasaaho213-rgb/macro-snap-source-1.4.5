@@ -138,21 +138,25 @@ class _HomeScreenState extends State<HomeScreen>
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(greeting,
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.white60 : const Color(0xFF64748B))),
-              const SizedBox(height: 4),
-              Text(_name.isNotEmpty ? _name : 'MacroSnap',
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A))),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(greeting,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.white60 : const Color(0xFF64748B))),
+                const SizedBox(height: 4),
+                Text(_name.isNotEmpty ? _name : 'MacroSnap',
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : const Color(0xFF0F172A))),
+              ],
+            ),
           ),
+          const SizedBox(width: 12),
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Scans remaining badge
               Container(
@@ -373,16 +377,19 @@ class _HomeScreenState extends State<HomeScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Macronutrients',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700,
                         color: isDark ? Colors.white : const Color(0xFF0F172A))),
+                const Spacer(),
                 if (p + c + f > 0)
-                  Text(
-                    '${(p / max(p + c + f, 1) * 100).round()}% P · ${(c / max(p + c + f, 1) * 100).round()}% C · ${(f / max(p + c + f, 1) * 100).round()}% F',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                  Flexible(
+                    child: Text(
+                      '${(p / max(p + c + f, 1) * 100).round()}% P · ${(c / max(p + c + f, 1) * 100).round()}% C · ${(f / max(p + c + f, 1) * 100).round()}% F',
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                    ),
                   ),
               ],
             ),
@@ -574,10 +581,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _quickAction(IconData icon, String label, Color color, bool isDark, VoidCallback onTap) {
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 68,
-        padding: const EdgeInsets.symmetric(vertical: 12),
+      onTap: onTap,        child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),

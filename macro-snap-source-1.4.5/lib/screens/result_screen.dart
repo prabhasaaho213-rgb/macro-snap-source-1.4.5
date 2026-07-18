@@ -74,10 +74,12 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
           children: [
             Icon(Icons.scale_rounded, size: 18,
                 color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
-            const SizedBox(width: 10),
-            Text('Total Serving',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white60 : const Color(0xFF64748B))),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text('Total Serving', maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white60 : const Color(0xFF64748B))),
+            ),
             const Spacer(),
             GestureDetector(
               onTap: () => setState(() => _grams = _grams >= 50 ? _grams - 25 : 25),
