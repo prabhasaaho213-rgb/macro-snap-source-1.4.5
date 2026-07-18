@@ -15,8 +15,10 @@ void main() async {
   await GeminiService.init();
   await NotificationService().init();
   // Schedule daily reminders for ALL users (free + pro)
-  NotificationService().scheduleDailyReminder();
-  NotificationService().scheduleStreakReminder();
+  try {
+    NotificationService().scheduleDailyReminder();
+    NotificationService().scheduleStreakReminder();
+  } catch (_) {}
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await MealStore.instance.load();
   await DietPlanService.instance.load();
