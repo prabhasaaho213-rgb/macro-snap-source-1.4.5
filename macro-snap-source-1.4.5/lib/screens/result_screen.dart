@@ -86,7 +86,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: MacroSnapTheme.emerald.withOpacity( 0.1),
+                  color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.remove_rounded, size: 18, color: MacroSnapTheme.emerald),
@@ -106,7 +106,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: MacroSnapTheme.emerald.withOpacity( 0.1),
+                  color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.add_rounded, size: 18, color: MacroSnapTheme.emerald),
@@ -206,7 +206,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: (isNoUrl ? MacroSnapTheme.amber : MacroSnapTheme.rose).withOpacity( 0.1),
+                color: (isNoUrl ? MacroSnapTheme.amber : MacroSnapTheme.rose).withValues(alpha:  0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Icon(
@@ -363,7 +363,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                             width: 48,
                             height: 48,
                             decoration: BoxDecoration(
-                              color: MacroSnapTheme.emerald.withOpacity( 0.1),
+                              color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(Icons.auto_awesome_rounded,
@@ -458,7 +458,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: MacroSnapTheme.emerald.withOpacity( 0.1),
+                        color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
@@ -482,7 +482,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: badgeColor.withOpacity( 0.1),
+                      color: badgeColor.withValues(alpha:  0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -529,7 +529,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: MacroSnapTheme.emerald.withOpacity( 0.1),
+            color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
@@ -556,7 +556,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity( 0.1),
+        color: color.withValues(alpha:  0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -623,7 +623,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
           height: 56,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: color.withOpacity( 0.1),
+            color: color.withValues(alpha:  0.1),
           ),
           child: Center(
             child: Text(

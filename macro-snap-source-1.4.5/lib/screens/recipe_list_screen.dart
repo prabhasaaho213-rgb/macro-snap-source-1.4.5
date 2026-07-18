@@ -144,7 +144,7 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: MacroSnapTheme.emerald.withOpacity( 0.1),
+                        color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(recipe.ingredients.length == 1 ? '1 Ingredient' : '${recipe.ingredients.length} Ingredients',

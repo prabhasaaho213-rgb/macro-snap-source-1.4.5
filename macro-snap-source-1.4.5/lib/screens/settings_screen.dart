@@ -170,7 +170,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Row(children: [
                   Container(
                     width: 56, height: 56,
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(16)),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(16)),
                     child: Center(child: Text(_name.isNotEmpty ? _name[0].toUpperCase() : 'U',
                         style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700))),
                   ),
@@ -196,7 +196,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(_subscribed ? 'Pro Member' : 'Free User',
@@ -247,21 +247,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Text('Choose Theme',
                 style: TextStyle(color: isDark ? Colors.white : const Color(0xFF1E293B))),
-            content: Column(mainAxisSize: MainAxisSize.min, children: [
-              for (final mode in ThemeMode.values)
-                RadioListTile<ThemeMode>(
-                  value: mode,
-                  groupValue: selected,
-                  title: Text(_themeModeLabel(mode),
-                      style: TextStyle(color: isDark ? Colors.white : const Color(0xFF1E293B))),
-                  subtitle: Text(_themeModeSubtitle(mode),
-                      style: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
-                  activeColor: MacroSnapTheme.emerald,
-                  onChanged: (v) {
-                    setDialogState(() { selected = v!; });
-                  },
-                ),
-            ]),
+            content: RadioGroup<ThemeMode>(
+              groupValue: selected,
+              onChanged: (v) {
+                setDialogState(() { selected = v!; });
+              },
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                for (final mode in ThemeMode.values)
+                  RadioListTile<ThemeMode>(
+                    value: mode,
+                    title: Text(_themeModeLabel(mode),
+                        style: TextStyle(color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                    subtitle: Text(_themeModeSubtitle(mode),
+                        style: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                    activeColor: MacroSnapTheme.emerald,
+                  ),
+              ]),
+            ),
             actions: [
               TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
               FilledButton(
@@ -303,7 +305,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Row(children: [
         Container(
           width: 40, height: 40,
-          decoration: BoxDecoration(color: MacroSnapTheme.emerald.withOpacity( 0.1), borderRadius: BorderRadius.circular(12)),
+          decoration: BoxDecoration(color: MacroSnapTheme.emerald.withValues(alpha:  0.1), borderRadius: BorderRadius.circular(12)),
           child: Icon(icon, color: MacroSnapTheme.emerald, size: 20),
         ),
         const SizedBox(width: 14),

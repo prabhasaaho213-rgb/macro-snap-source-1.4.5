@@ -166,7 +166,7 @@ class _ConfettiPainter extends CustomPainter {
       canvas.scale(scale);
 
       final paint = Paint()
-        ..color = piece.color.withOpacity(alpha)
+        ..color = piece.color.withValues(alpha: alpha)
         ..style = PaintingStyle.fill;
 
       final half = piece.size / 2;

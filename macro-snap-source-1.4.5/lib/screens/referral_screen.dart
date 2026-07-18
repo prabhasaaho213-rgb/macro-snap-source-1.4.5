@@ -77,7 +77,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                 Container(
                   width: 64, height: 64,
                   decoration: BoxDecoration(
-                    color: MacroSnapTheme.emerald.withOpacity( 0.1),
+                    color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Icon(Icons.emoji_events_rounded,
@@ -104,7 +104,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                           color: (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: MacroSnapTheme.emerald.withOpacity( 0.3),
+                            color: MacroSnapTheme.emerald.withValues(alpha:  0.3),
                           ),
                         ),
                         child: SelectableText(

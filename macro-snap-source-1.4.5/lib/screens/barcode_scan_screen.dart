@@ -77,7 +77,7 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
             ),
             child: Center(
               child: Icon(Icons.qr_code_scanner_rounded,
-                  size: 80, color: Colors.white.withOpacity( 0.3)),
+                  size: 80, color: Colors.white.withValues(alpha:  0.3)),
             ),
           ),
         ),
@@ -90,7 +90,7 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
               style: TextStyle(
                 color: Colors.white70, fontSize: 16,
                 fontWeight: FontWeight.w500,
-                shadows: [Shadow(blurRadius: 10, color: Colors.black.withOpacity( 0.5))],
+                shadows: [Shadow(blurRadius: 10, color: Colors.black.withValues(alpha:  0.5))],
               )),
         ),
       ],
@@ -109,7 +109,7 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
                 Container(
                   width: 64, height: 64,
                   decoration: BoxDecoration(
-                    color: MacroSnapTheme.emerald.withOpacity( 0.1),
+                    color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Icon(Icons.check_circle_rounded,

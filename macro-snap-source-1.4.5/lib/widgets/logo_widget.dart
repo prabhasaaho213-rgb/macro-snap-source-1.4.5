@@ -29,7 +29,7 @@ class LogoWidget extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: MacroSnapTheme.emerald.withOpacity(0.35),
+                color: MacroSnapTheme.emerald.withValues(alpha: 0.35),
                 blurRadius: size * 0.33,
                 offset: const Offset(0, 8),
               ),
@@ -45,7 +45,7 @@ class LogoWidget extends StatelessWidget {
                   height: size * 0.75,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: MacroSnapTheme.emeraldLight.withOpacity(0.2),
+                    color: MacroSnapTheme.emeraldLight.withValues(alpha: 0.2),
                   ),
                 ),
               ),
@@ -63,7 +63,7 @@ class LogoWidget extends StatelessWidget {
                   height: size * 0.18,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                   child: Center(
                     child: Container(

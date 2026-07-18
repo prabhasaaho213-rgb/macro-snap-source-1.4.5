@@ -142,7 +142,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 width: 72, height: 72,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: MacroSnapTheme.emerald.withOpacity( 0.1),
+                  color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
                 ),
                 child: Icon(Icons.hourglass_top_rounded,
                     color: MacroSnapTheme.emerald, size: 40),
@@ -208,7 +208,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     width: 80, height: 80,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: MacroSnapTheme.emerald.withOpacity( 0.1),
+                      color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
                     ),
                     child: Icon(Icons.check_circle_rounded,
                         color: MacroSnapTheme.emerald, size: 56),
@@ -305,7 +305,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   ),
                   boxShadow: [
                     BoxShadow(
-                        color: MacroSnapTheme.emerald.withOpacity( 0.3),
+                        color: MacroSnapTheme.emerald.withValues(alpha:  0.3),
                         blurRadius: 20, offset: const Offset(0, 6))
                   ],
                 ),
@@ -381,7 +381,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                             : 'One-time payment \u2022 Unlimited access',
                         style: TextStyle(fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: MacroSnapTheme.emerald.withOpacity( 0.8)),
+                            color: MacroSnapTheme.emerald.withValues(alpha:  0.8)),
                       ),
                     ],
                   ),
@@ -430,7 +430,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                           Container(
                             width: 44, height: 44,
                             decoration: BoxDecoration(
-                              color: MacroSnapTheme.emerald.withOpacity( 0.1),
+                              color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(Icons.payments_rounded,
@@ -465,10 +465,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                           decoration: BoxDecoration(
-                            color: MacroSnapTheme.emerald.withOpacity( 0.06),
+                            color: MacroSnapTheme.emerald.withValues(alpha:  0.06),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                                color: MacroSnapTheme.emerald.withOpacity( 0.2)),
+                                color: MacroSnapTheme.emerald.withValues(alpha:  0.2)),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -623,17 +623,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: MacroSnapTheme.emerald.withOpacity( 0.06),
+                    color: MacroSnapTheme.emerald.withValues(alpha:  0.06),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: MacroSnapTheme.emerald.withOpacity( 0.15)),
+                        color: MacroSnapTheme.emerald.withValues(alpha:  0.15)),
                   ),
                   child: Row(
                     children: [
                       Container(
                         width: 44, height: 44,
                         decoration: BoxDecoration(
-                          color: MacroSnapTheme.emerald.withOpacity( 0.1),
+                          color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: const Icon(Icons.emoji_events_rounded,
@@ -679,7 +679,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           Container(
             width: 44, height: 44,
             decoration: BoxDecoration(
-                color: MacroSnapTheme.emerald.withOpacity( 0.1),
+                color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
                 borderRadius: BorderRadius.circular(14)),
             child: Icon(icon, color: MacroSnapTheme.emerald, size: 22),
           ),

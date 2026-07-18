@@ -152,7 +152,7 @@ class _ScanScreenState extends State<ScanScreen>
               width: 64, height: 64,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: MacroSnapTheme.amber.withOpacity( 0.1),
+                color: MacroSnapTheme.amber.withValues(alpha:  0.1),
               ),
               child: const Icon(Icons.flash_on_rounded,
                   color: MacroSnapTheme.amber, size: 32),
@@ -210,7 +210,7 @@ class _ScanScreenState extends State<ScanScreen>
               const Icon(Icons.videocam_off_rounded, color: Colors.white38, size: 64),
               const SizedBox(height: 16),
               Text('Camera unavailable',
-                  style: TextStyle(color: Colors.white.withOpacity( 0.6), fontSize: 18)),
+                  style: TextStyle(color: Colors.white.withValues(alpha:  0.6), fontSize: 18)),
               const SizedBox(height: 24),
               FilledButton.icon(
                 onPressed: _pickFromGallery,
@@ -278,7 +278,7 @@ class _ScanScreenState extends State<ScanScreen>
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    Colors.black.withOpacity( 0.7),
+                    Colors.black.withValues(alpha:  0.7),
                     Colors.transparent,
                   ],
                 ),
@@ -302,10 +302,10 @@ class _ScanScreenState extends State<ScanScreen>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: (canUse ? MacroSnapTheme.emerald : MacroSnapTheme.rose).withOpacity( 0.25),
+                        color: (canUse ? MacroSnapTheme.emerald : MacroSnapTheme.rose).withValues(alpha:  0.25),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: (canUse ? MacroSnapTheme.emerald : MacroSnapTheme.rose).withOpacity( 0.3),
+                          color: (canUse ? MacroSnapTheme.emerald : MacroSnapTheme.rose).withValues(alpha:  0.3),
                         ),
                       ),
                       child: Row(
@@ -344,12 +344,12 @@ class _ScanScreenState extends State<ScanScreen>
                       child: Container(
                         width: 52, height: 52,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity( 0.15),
+                          color: Colors.white.withValues(alpha:  0.15),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white.withOpacity( 0.2)),
+                          border: Border.all(color: Colors.white.withValues(alpha:  0.2)),
                         ),
                         child: Icon(Icons.photo_library_rounded,
-                            color: Colors.white.withOpacity( 0.8), size: 24),
+                            color: Colors.white.withValues(alpha:  0.8), size: 24),
                       ),
                     ),
                     const Spacer(),

@@ -94,7 +94,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
                   width: 60, height: 60,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _avatar == a ? MacroSnapTheme.emerald.withOpacity( 0.15) : (isDark ? Colors.white10 : const Color(0xFFF1F5F9)),
+                    color: _avatar == a ? MacroSnapTheme.emerald.withValues(alpha:  0.15) : (isDark ? Colors.white10 : const Color(0xFFF1F5F9)),
                     border: _avatar == a ? Border.all(color: MacroSnapTheme.emerald, width: 2) : null,
                   ),
                   child: Center(child: Text(a, style: const TextStyle(fontSize: 28))),
@@ -204,7 +204,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(colors: [MacroSnapTheme.emerald, MacroSnapTheme.emeraldLight], begin: Alignment.topLeft, end: Alignment.bottomRight),
                   shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: MacroSnapTheme.emerald.withOpacity( 0.3), blurRadius: 12, offset: const Offset(0, 4))],
+                  boxShadow: [BoxShadow(color: MacroSnapTheme.emerald.withValues(alpha:  0.3), blurRadius: 12, offset: const Offset(0, 4))],
                 ),
                 child: Center(child: Text(_avatar, style: const TextStyle(fontSize: 36))),
               ),
@@ -228,21 +228,21 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<Gender>(
-            value: _gender,
+            initialValue: _gender,
             decoration: InputDecoration(labelText: 'Gender', filled: true, fillColor: isDark ? const Color(0xFF1E293B) : Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0))), contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18)),
             items: const [DropdownMenuItem(value: Gender.male, child: Text('Male')), DropdownMenuItem(value: Gender.female, child: Text('Female'))],
             onChanged: (v) => setState(() => _gender = v!),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<Goal>(
-            value: _goal,
+            initialValue: _goal,
             decoration: InputDecoration(labelText: 'Goal', filled: true, fillColor: isDark ? const Color(0xFF1E293B) : Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0))), contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18)),
             items: Goal.values.map((g) => DropdownMenuItem(value: g, child: Text(DietPlanService.goalLabel(g)))).toList(),
             onChanged: (v) => setState(() => _goal = v!),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<ActivityLevel>(
-            value: _activity,
+            initialValue: _activity,
             decoration: InputDecoration(labelText: 'Activity Level', filled: true, fillColor: isDark ? const Color(0xFF1E293B) : Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0))), contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18)),
             items: ActivityLevel.values.map((a) => DropdownMenuItem(value: a, child: Text(DietPlanService.activityLabel(a)))).toList(),
             onChanged: (v) => setState(() => _activity = v!),
@@ -264,7 +264,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
           Row(children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: MacroSnapTheme.emerald.withOpacity( 0.1), borderRadius: BorderRadius.circular(20)),
+              decoration: BoxDecoration(color: MacroSnapTheme.emerald.withValues(alpha:  0.1), borderRadius: BorderRadius.circular(20)),
               child: Text(DietPlanService.goalLabel(p.goal), style: const TextStyle(color: MacroSnapTheme.emerald, fontSize: 13, fontWeight: FontWeight.w700)),
             ),
             const Spacer(),
@@ -292,7 +292,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
     return Column(children: [
       Container(
         width: 52, height: 52,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: color.withOpacity( 0.1)),
+        decoration: BoxDecoration(shape: BoxShape.circle, color: color.withValues(alpha:  0.1)),
         child: Center(child: Text('$value', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color))),
       ),
       const SizedBox(height: 4),
@@ -343,7 +343,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
               Container(
                 width: double.infinity, padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark ? MacroSnapTheme.rose.withOpacity( 0.15) : const Color(0xFFFEF2F2),
+                  color: isDark ? MacroSnapTheme.rose.withValues(alpha:  0.15) : const Color(0xFFFEF2F2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(_aiError, style: TextStyle(color: isDark ? MacroSnapTheme.rose : const Color(0xFFDC2626), fontSize: 12)),
@@ -402,7 +402,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
   Widget _macroChip(String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(color: color.withOpacity( 0.1), borderRadius: BorderRadius.circular(6)),
+      decoration: BoxDecoration(color: color.withValues(alpha:  0.1), borderRadius: BorderRadius.circular(6)),
       child: Text(text, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
     );
   }
@@ -467,7 +467,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
           width: 36, height: 36,
-          decoration: BoxDecoration(color: color.withOpacity( 0.1), borderRadius: BorderRadius.circular(10)),
+          decoration: BoxDecoration(color: color.withValues(alpha:  0.1), borderRadius: BorderRadius.circular(10)),
           child: Icon(icon, color: color, size: 18),
         ),
         const SizedBox(width: 12),

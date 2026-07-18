@@ -65,7 +65,7 @@ class _MainShellState extends State<MainShell> {
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         border: Border(
           top: BorderSide(
-            color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.04),
+            color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
             width: 0.5,
           ),
         ),
@@ -140,14 +140,14 @@ class _NavItem extends StatelessWidget {
                 ? const LinearGradient(colors: [MacroSnapTheme.emerald, MacroSnapTheme.emeraldLight])
                 : LinearGradient(
                     colors: [
-                      (isDark ? Colors.white : MacroSnapTheme.emerald).withOpacity(0.1),
-                      (isDark ? Colors.white : MacroSnapTheme.emerald).withOpacity(0.05),
+                      (isDark ? Colors.white : MacroSnapTheme.emerald).withValues(alpha: 0.1),
+                      (isDark ? Colors.white : MacroSnapTheme.emerald).withValues(alpha: 0.05),
                     ],
                   ),
             border: Border.all(
               color: isSelected
                   ? MacroSnapTheme.emeraldLight
-                  : (isDark ? Colors.white : MacroSnapTheme.emerald).withOpacity(0.2),
+                  : (isDark ? Colors.white : MacroSnapTheme.emerald).withValues(alpha: 0.2),
               width: 1.5,
             ),
           ),
@@ -155,7 +155,7 @@ class _NavItem extends StatelessWidget {
             icon,
             color: isSelected
                 ? Colors.white
-                : (isDark ? Colors.white54 : MacroSnapTheme.emerald.withOpacity(0.6)),
+                : (isDark ? Colors.white54 : MacroSnapTheme.emerald.withValues(alpha: 0.6)),
             size: 24,
           ),
         ),
@@ -169,7 +169,7 @@ class _NavItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? (isDark ? MacroSnapTheme.emerald.withOpacity(0.15) : MacroSnapTheme.emerald.withOpacity(0.1))
+              ? (isDark ? MacroSnapTheme.emerald.withValues(alpha: 0.15) : MacroSnapTheme.emerald.withValues(alpha: 0.1))
               : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
@@ -353,7 +353,7 @@ class _MealsTabState extends State<_MealsTab> {
                   Container(
                     width: 40, height: 40,
                     decoration: BoxDecoration(
-                      color: groupColors[name]!.withOpacity(0.1),
+                      color: groupColors[name]!.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(groupIcons[name], color: groupColors[name], size: 20),
@@ -382,10 +382,15 @@ class _MealsTabState extends State<_MealsTab> {
     };
     for (final m in meals) {
       final h = m.date.hour;
-      if (h >= 5 && h < 11) grouped['Breakfast']!.add(m);
-      else if (h >= 11 && h < 15) grouped['Lunch']!.add(m);
-      else if (h >= 17 && h < 22) grouped['Dinner']!.add(m);
-      else grouped['Snacks']!.add(m);
+      if (h >= 5 && h < 11) {
+        grouped['Breakfast']!.add(m);
+      } else if (h >= 11 && h < 15) {
+        grouped['Lunch']!.add(m);
+      } else if (h >= 17 && h < 22) {
+        grouped['Dinner']!.add(m);
+      } else {
+        grouped['Snacks']!.add(m);
+      }
     }
     grouped.removeWhere((k, v) => v.isEmpty);
     return grouped;

@@ -38,7 +38,7 @@ class AddMealScreen extends StatelessWidget {
                           width: 56,
                           height: 56,
                           decoration: BoxDecoration(
-                            color: MacroSnapTheme.emerald.withOpacity( 0.1),
+                            color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Center(
@@ -187,7 +187,7 @@ class AddMealScreen extends StatelessWidget {
           height: 56,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: color.withOpacity( 0.1),
+            color: color.withValues(alpha:  0.1),
           ),
           child: Center(
             child: Text(

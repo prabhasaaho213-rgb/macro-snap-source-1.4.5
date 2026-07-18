@@ -172,7 +172,7 @@ class _SearchScreenState extends State<SearchScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: MacroSnapTheme.emerald.withOpacity( 0.1),
+                color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(

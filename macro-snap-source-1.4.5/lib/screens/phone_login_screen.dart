@@ -363,7 +363,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity( isDark ? 0.3 : 0.06),
+                          color: Colors.black.withValues(alpha:  isDark ? 0.3 : 0.06),
                           blurRadius: 12,
                           offset: const Offset(0, 3),
                         ),
@@ -433,7 +433,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                               color: _authTab == 0 ? (isDark ? MacroSnapTheme.cardDark : Colors.white) : Colors.transparent,
                               borderRadius: BorderRadius.circular(11),
                               boxShadow: _authTab == 0 ? [
-                                BoxShadow(color: Colors.black.withOpacity( 0.04), blurRadius: 4, offset: const Offset(0, 1)),
+                                BoxShadow(color: Colors.black.withValues(alpha:  0.04), blurRadius: 4, offset: const Offset(0, 1)),
                               ] : [],
                             ),
                             child: Text('Phone', textAlign: TextAlign.center,
@@ -456,7 +456,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                               color: _authTab == 1 ? (isDark ? MacroSnapTheme.cardDark : Colors.white) : Colors.transparent,
                               borderRadius: BorderRadius.circular(11),
                               boxShadow: _authTab == 1 ? [
-                                BoxShadow(color: Colors.black.withOpacity( 0.04), blurRadius: 4, offset: const Offset(0, 1)),
+                                BoxShadow(color: Colors.black.withValues(alpha:  0.04), blurRadius: 4, offset: const Offset(0, 1)),
                               ] : [],
                             ),
                             child: Text('Email', textAlign: TextAlign.center,
@@ -492,7 +492,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                       decoration: BoxDecoration(
-                        color: isDark ? MacroSnapTheme.rose.withOpacity( 0.15) : const Color(0xFFFEF2F2),
+                        color: isDark ? MacroSnapTheme.rose.withValues(alpha:  0.15) : const Color(0xFFFEF2F2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(

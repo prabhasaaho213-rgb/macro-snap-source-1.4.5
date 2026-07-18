@@ -163,10 +163,10 @@ class _HomeScreenState extends State<HomeScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: (_scansLeft > 0 ? MacroSnapTheme.emerald : MacroSnapTheme.rose).withOpacity(0.1),
+                  color: (_scansLeft > 0 ? MacroSnapTheme.emerald : MacroSnapTheme.rose).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: (_scansLeft > 0 ? MacroSnapTheme.emerald : MacroSnapTheme.rose).withOpacity(0.3),
+                    color: (_scansLeft > 0 ? MacroSnapTheme.emerald : MacroSnapTheme.rose).withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(
@@ -254,7 +254,7 @@ class _HomeScreenState extends State<HomeScreen>
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
                       colors: [
-                        MacroSnapTheme.emerald.withOpacity(0.5 + (i / max(_streak, 1)) * 0.5),
+                        MacroSnapTheme.emerald.withValues(alpha: 0.5 + (i / max(_streak, 1)) * 0.5),
                         MacroSnapTheme.emeraldLight,
                       ],
                     ),
@@ -468,7 +468,7 @@ class _HomeScreenState extends State<HomeScreen>
                   child: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: MacroSnapTheme.emerald.withOpacity(0.1),
+                      color: MacroSnapTheme.emerald.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(Icons.share_rounded, size: 16, color: MacroSnapTheme.emerald),
@@ -501,7 +501,7 @@ class _HomeScreenState extends State<HomeScreen>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: logged
-                            ? MacroSnapTheme.emerald.withOpacity(0.2)
+                            ? MacroSnapTheme.emerald.withValues(alpha: 0.2)
                             : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                         border: isToday
                             ? Border.all(color: MacroSnapTheme.emerald, width: 2)
@@ -519,7 +519,7 @@ class _HomeScreenState extends State<HomeScreen>
                     if (dayList.isNotEmpty)
                       Text('${dayList.fold(0, (s, m) => s + m.calories)}',
                           style: TextStyle(fontSize: 9, fontWeight: FontWeight.w500,
-                              color: MacroSnapTheme.emerald.withOpacity(0.7))),
+                              color: MacroSnapTheme.emerald.withValues(alpha: 0.7))),
                   ],
                 );
               }),
@@ -553,10 +553,11 @@ class _HomeScreenState extends State<HomeScreen>
                 _quickAction(Icons.qr_code_scanner_rounded, 'Barcode', MacroSnapTheme.blue, isDark, () {
                   Navigator.push(context, habitFlowRoute(const BarcodeScanScreen()));
                 }),
-                _quickAction(Icons.auto_awesome_rounded, 'Diet', MacroSnapTheme.purple, isDark, () {
-                  DietPlanService.instance.load().then((_) {
+                _quickAction(Icons.auto_awesome_rounded, 'Diet', MacroSnapTheme.purple, isDark, () async {
+                  await DietPlanService.instance.load();
+                  if (context.mounted) {
                     Navigator.push(context, habitFlowRoute(const DietPlanScreen()));
-                  });
+                  }
                 }),
                 _quickAction(Icons.menu_book_rounded, 'Recipes', MacroSnapTheme.rose, isDark, () {
                   Navigator.push(context, habitFlowRoute(const RecipeListScreen()));
@@ -576,7 +577,7 @@ class _HomeScreenState extends State<HomeScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -615,7 +616,7 @@ class _HomeScreenState extends State<HomeScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: MacroSnapTheme.emerald.withOpacity(0.1),
+                    color: MacroSnapTheme.emerald.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text('${meals.fold(0, (s, m) => s + m.calories)} kcal',
@@ -632,7 +633,7 @@ class _HomeScreenState extends State<HomeScreen>
                   Container(
                     width: 40, height: 40,
                     decoration: BoxDecoration(
-                      color: _mealIcon(m).withOpacity(0.1),
+                      color: _mealIcon(m).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(_mealIconData(m), color: _mealIcon(m), size: 20),

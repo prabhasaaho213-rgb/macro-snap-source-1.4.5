@@ -86,7 +86,7 @@ class MacroSnapTheme {
         elevation: 0,
         color: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        shadowColor: emerald.withOpacity(0.08),
+        shadowColor: emerald.withValues(alpha: 0.08),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         elevation: 0,
@@ -161,20 +161,20 @@ class MacroSnapTheme {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return BoxDecoration(
       color: isDark
-          ? const Color(0xFF1E293B).withOpacity(0.85)
-          : Colors.white.withOpacity(0.85),
+          ? const Color(0xFF1E293B).withValues(alpha: 0.85)
+          : Colors.white.withValues(alpha: 0.85),
       borderRadius: BorderRadius.circular(24),
       border: Border.all(
         color: isDark
-            ? Colors.white.withOpacity(0.08)
-            : Colors.black.withOpacity(0.04),
+            ? Colors.white.withValues(alpha: 0.08)
+            : Colors.black.withValues(alpha: 0.04),
         width: 1,
       ),
       boxShadow: [
         BoxShadow(
           color: isDark
-              ? Colors.black.withOpacity(0.3)
-              : const Color(0xFF059669).withOpacity(0.08),
+              ? Colors.black.withValues(alpha: 0.3)
+              : const Color(0xFF059669).withValues(alpha: 0.08),
           blurRadius: 30,
           offset: const Offset(0, 8),
         ),
@@ -190,15 +190,15 @@ class MacroSnapTheme {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          isDark ? Colors.white.withOpacity(0.05) : Colors.white,
+          isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
           isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
           isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
-          isDark ? Colors.white.withOpacity(0.03) : Colors.white.withOpacity(0.5),
+          isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.5),
         ],
       ),
       borderRadius: BorderRadius.circular(24),
       border: Border.all(
-        color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.04),
+        color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.04),
       ),
     );
   }
