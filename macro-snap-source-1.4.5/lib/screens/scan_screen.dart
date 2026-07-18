@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../core/theme.dart';
 import '../services/scan_gate.dart';
+import '../services/meal_store.dart';
 import '../widgets/gradient_button.dart';
 import 'result_screen.dart';
 import 'subscription_screen.dart';
@@ -30,11 +31,18 @@ class _ScanScreenState extends State<ScanScreen>
     WidgetsBinding.instance.addObserver(this);
     _loadScans();
     _initCamera();
+    // Refresh scan count when data changes (e.g. after subscribing)
+    MealStore.instance.changeNotifier.addListener(_onDataChanged);
+  }
+
+  void _onDataChanged() {
+    _loadScans();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    MealStore.instance.changeNotifier.removeListener(_onDataChanged);
     _controller?.dispose();
     super.dispose();
   }

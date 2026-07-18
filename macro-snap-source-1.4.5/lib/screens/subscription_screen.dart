@@ -114,6 +114,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           setState(() => _paymentStatus = 'pending');
           _txnController.clear();
           _showSubmitted();
+          // Auto-poll for payment confirmation every 10 seconds
+          _startPaymentPolling();
         }
       } else {
         if (mounted) _showError('Failed to submit. Try again.');
@@ -123,6 +125,21 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  bool _polling = false;
+
+  void _startPaymentPolling() {
+    if (_polling) return;
+    _polling = true;
+    Future.doWhile(() async {
+      await Future.delayed(const Duration(seconds: 10));
+      if (!mounted || _subscribed) return false;
+      if (_phone != null) {
+        await _checkPaymentStatus(_phone!);
+      }
+      return _paymentStatus == 'pending' && mounted;
+    }).then((_) => _polling = false);
   }
 
   void _showSubmitted() {

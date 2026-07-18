@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../core/theme.dart';
 import '../models/meal_record.dart';
 import '../services/gemini_service.dart';
+import '../services/local_analyzer.dart';
 import '../services/meal_store.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_button.dart';
@@ -44,23 +45,51 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
   }
 
   Future<void> _analyze() async {
-    if (!GeminiService.hasServerUrl) {
-      if (mounted) {
-        setState(() { _error = 'no_url'; _isAnalyzing = false; });
-        _animController.forward();
+    // Try Gemini AI first
+    if (GeminiService.hasServerUrl) {
+      try {
+        final result = await GeminiService.analyzeFoodImage(widget.imagePath);
+        if (mounted) {
+          setState(() { _result = result; _isAnalyzing = false; });
+          _animController.forward();
+        }
+        return;
+      } catch (_) {
+        // Fall through to local fallback
       }
-      return;
     }
 
+    // Fallback: Local ML Kit analysis
     try {
-      final result = await GeminiService.analyzeFoodImage(widget.imagePath);
+      final localResult = await LocalAnalyzer.analyze(widget.imagePath);
       if (mounted) {
-        setState(() { _result = result; _isAnalyzing = false; });
+        if (localResult.bestMatch != null) {
+          final item = localResult.bestMatch!;
+          final dish = DishItem(
+            name: item.name,
+            portionDescription: 'Local estimate',
+            caloriesPer100g: item.calories,
+            proteinPer100g: item.protein,
+            carbsPer100g: item.carbs,
+            fatsPer100g: item.fats,
+            fiberPer100g: item.fiber,
+            sugarPer100g: 0,
+            suitableFor: 'both',
+          );
+          final result = NutritionResult(
+            dishes: [dish],
+            description: 'On-device analysis (${localResult.labels.take(2).join(", ")})',
+            confidence: 0.5,
+          );
+          setState(() { _result = result; _isAnalyzing = false; });
+        } else {
+          setState(() { _error = 'Could not identify food. Try a clearer photo.'; _isAnalyzing = false; });
+        }
         _animController.forward();
       }
     } catch (e) {
       if (mounted) {
-        setState(() { _error = e.toString(); _isAnalyzing = false; });
+        setState(() { _error = 'Analysis failed: ${e.toString()}'; _isAnalyzing = false; });
         _animController.forward();
       }
     }
@@ -122,6 +151,13 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
   void dispose() {
     _animController.stop();
     _animController.dispose();
+    // Clean up temp image file
+    try {
+      final file = File(widget.imagePath);
+      if (file.existsSync()) {
+        file.deleteSync();
+      }
+    } catch (_) {}
     super.dispose();
   }
 

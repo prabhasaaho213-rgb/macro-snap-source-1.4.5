@@ -626,8 +626,41 @@ class _HomeScreenState extends State<HomeScreen>
               ],
             ),
             const SizedBox(height: 16),
-            ...meals.take(5).map((m) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+            ...meals.take(5).map((m) => Dismissible(
+              key: Key(m.id),
+              direction: DismissDirection.endToStart,
+              confirmDismiss: (_) async {
+                return await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    title: const Text('Delete Meal'),
+                    content: Text('Remove "${m.name}" from your log?'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                      FilledButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        style: FilledButton.styleFrom(backgroundColor: MacroSnapTheme.rose),
+                        child: const Text('Delete'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              onDismissed: (_) {
+                MealStore.instance.remove(m.id);
+                _refresh();
+              },
+              background: Container(
+                decoration: BoxDecoration(
+                  color: MacroSnapTheme.rose,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 20),
+                child: const Icon(Icons.delete_rounded, color: Colors.white, size: 24),
+              ),
               child: Row(
                 children: [
                   Container(

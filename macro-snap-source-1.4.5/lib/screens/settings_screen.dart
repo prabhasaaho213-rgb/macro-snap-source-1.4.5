@@ -6,6 +6,7 @@ import '../core/theme.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/animations.dart';
 import '../services/gemini_service.dart';
+import '../services/meal_store.dart';
 import 'subscription_screen.dart';
 import 'phone_login_screen.dart';
 
@@ -29,11 +30,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _load();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _load(); // Refresh when returning from other screens
+  }
+
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _name = prefs.getString('name') ?? 'User';
       _email = prefs.getString('email') ?? '';
+      _phone = prefs.getString('phone') ?? '';
       _subscribed = prefs.getBool('subscribed') ?? false;
       _subscribedDate = prefs.getString('subscribed_at');
       _serverUrl = GeminiService.serverUrl;
@@ -71,6 +79,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (newUrl != null && newUrl.isNotEmpty && newUrl != _serverUrl) {
       await GeminiService.setServerUrl(newUrl);
       setState(() => _serverUrl = GeminiService.serverUrl);
+    }
+  }
+
+  bool get _isGuest => _phone.startsWith('guest_');
+  String _phone = '';
+
+  Future<void> _upgradeFromGuest() async {
+    final phone = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(builder: (_) => const PhoneLoginScreen()),
+    );
+    if (phone != null && mounted) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('phone', phone);
+      // Trigger cloud re-sync with new phone identifier
+      await MealStore.instance.reload();
+      setState(() => _phone = phone);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Account upgraded! Your data is now linked to your phone.')),
+        );
+      }
     }
   }
 
@@ -224,6 +254,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (await canLaunchUrl(uri)) await launchUrl(uri);
                 }, isDark)),
                 const Divider(height: 24),
+                if (_isGuest)
+                  AnimatedEntrance(delayMs: 270, child: _settingTile(Icons.person_add_rounded, 'Save Your Account', 'Link phone to keep your data permanently', _upgradeFromGuest, isDark)),
+                if (_isGuest) const Divider(height: 24),
                 AnimatedEntrance(delayMs: 300, child: _settingTile(Icons.logout_rounded, 'Log Out', 'Sign out and return to login', () => _logout(context, isDark), isDark)),
               ]),
             ),

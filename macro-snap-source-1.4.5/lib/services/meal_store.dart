@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import '../models/meal_record.dart';
+import 'meal_sync_service.dart';
 
 class MealStore {
   static final MealStore _instance = MealStore._();
@@ -43,21 +44,54 @@ class MealStore {
           }
         }
       }
+      // Also sync from cloud backup
+      await _syncFromCloud();
     } catch (_) {
       _meals = [];
     }
     _loaded = true;
   }
 
+  /// Force a full reload from local + cloud
+  Future<void> reload() async {
+    _loaded = false;
+    _meals = [];
+    await load();
+    changeNotifier.value++;
+  }
+
+  /// Sync meals from cloud backup
+  Future<void> _syncFromCloud() async {
+    try {
+      final cloudMeals = await MealSyncService.fetchMeals();
+      if (cloudMeals.isEmpty) return;
+      final localIds = _meals.map((m) => m.id).toSet();
+      bool added = false;
+      for (final meal in cloudMeals) {
+        if (!localIds.contains(meal.id)) {
+          _meals.add(meal);
+          added = true;
+        }
+      }
+      if (added) {
+        await _save();
+      }
+    } catch (_) {} // Silently fail — local data is primary
+  }
+
   Future<void> add(MealRecord meal) async {
     _meals.add(meal);
     await _save();
+    // Async sync to cloud (fire-and-forget)
+    MealSyncService.syncMeal(meal);
     changeNotifier.value++;
   }
 
   Future<void> remove(String id) async {
     _meals.removeWhere((m) => m.id == id);
     await _save();
+    // Async remove from cloud (fire-and-forget)
+    MealSyncService.removeMeal(id);
     changeNotifier.value++;
   }
 
