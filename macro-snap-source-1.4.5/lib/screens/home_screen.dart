@@ -10,6 +10,7 @@ import '../models/diet_profile.dart';
 import '../services/share_service.dart';
 
 import '../widgets/confetti_overlay.dart';
+import '../widgets/animations.dart';
 import 'diet_plan_screen.dart';
 import 'scan_screen.dart';
 import 'settings_screen.dart';
@@ -111,12 +112,12 @@ class _HomeScreenState extends State<HomeScreen>
                 physics: const BouncingScrollPhysics(),
                 slivers: [
                   SliverToBoxAdapter(child: _buildHeader(context, isDark)),
-                  SliverToBoxAdapter(child: _buildStreakCard(context, isDark)),
-                  SliverToBoxAdapter(child: _buildCalorieRing(context, isDark)),
-                  SliverToBoxAdapter(child: _buildMacroBars(context, isDark)),
-                  SliverToBoxAdapter(child: _buildWeekStrip(context, isDark)),
-                  SliverToBoxAdapter(child: _buildQuickActions(context, isDark)),
-                  SliverToBoxAdapter(child: _buildRecentMeals(context, isDark)),
+                  SliverToBoxAdapter(child: AnimatedEntrance(delayMs: 50, child: _buildStreakCard(context, isDark))),
+                  SliverToBoxAdapter(child: AnimatedEntrance(delayMs: 100, child: _buildCalorieRing(context, isDark))),
+                  SliverToBoxAdapter(child: AnimatedEntrance(delayMs: 150, child: _buildMacroBars(context, isDark))),
+                  SliverToBoxAdapter(child: AnimatedEntrance(delayMs: 200, child: _buildWeekStrip(context, isDark))),
+                  SliverToBoxAdapter(child: AnimatedEntrance(delayMs: 250, child: _buildQuickActions(context, isDark))),
+                  SliverToBoxAdapter(child: AnimatedEntrance(delayMs: 300, child: _buildRecentMeals(context, isDark))),
                   const SliverToBoxAdapter(child: SizedBox(height: 100)),
                 ],
               ),
@@ -181,8 +182,8 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
               const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+              ScaleOnPress(
+                onTap: () => Navigator.push(context, habitFlowRoute(const SettingsScreen())),
                 child: Container(
                   width: 40, height: 40,
                   decoration: BoxDecoration(
@@ -428,15 +429,8 @@ class _HomeScreenState extends State<HomeScreen>
           ],
         ),
         const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: pct,
-            minHeight: 8,
-            backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-            valueColor: AlwaysStoppedAnimation<Color>(color),
-          ),
-        ),
+        // Animated progress bar with Habit Flow style
+        AnimatedProgressBar(value: pct, color: color, height: 8),
       ],
     );
   }
@@ -465,7 +459,7 @@ class _HomeScreenState extends State<HomeScreen>
                 Text('This Week',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
                         color: isDark ? Colors.white : const Color(0xFF0F172A))),
-                GestureDetector(
+                ScaleOnPress(
                   onTap: () async {
                     try {
                       await ShareService.shareWeekSummary();
@@ -554,22 +548,18 @@ class _HomeScreenState extends State<HomeScreen>
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _quickAction(Icons.camera_alt_rounded, 'Snap', MacroSnapTheme.emerald, isDark, () {
-                  Navigator.push(context, PageRouteBuilder(
-                    pageBuilder: (_, _, _) => const ScanScreen(),
-                    transitionsBuilder: (_, a, _, child) => FadeTransition(opacity: a, child: child),
-                    transitionDuration: const Duration(milliseconds: 400),
-                  )).then((_) => _refresh());
+                  Navigator.push(context, habitFlowRoute(const ScanScreen())).then((_) => _refresh());
                 }),
                 _quickAction(Icons.qr_code_scanner_rounded, 'Barcode', MacroSnapTheme.blue, isDark, () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const BarcodeScanScreen()));
+                  Navigator.push(context, habitFlowRoute(const BarcodeScanScreen()));
                 }),
                 _quickAction(Icons.auto_awesome_rounded, 'Diet', MacroSnapTheme.purple, isDark, () {
                   DietPlanService.instance.load().then((_) {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const DietPlanScreen()));
+                    Navigator.push(context, habitFlowRoute(const DietPlanScreen()));
                   });
                 }),
                 _quickAction(Icons.menu_book_rounded, 'Recipes', MacroSnapTheme.rose, isDark, () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const RecipeListScreen()));
+                  Navigator.push(context, habitFlowRoute(const RecipeListScreen()));
                 }),
               ],
             ),
@@ -580,8 +570,10 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _quickAction(IconData icon, String label, Color color, bool isDark, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,        child: Container(
+    return ScaleOnPress(
+      onTap: onTap,
+      scaleAmount: 0.93,
+      child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),

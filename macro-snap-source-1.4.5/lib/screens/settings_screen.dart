@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/theme.dart';
 import '../widgets/glass_card.dart';
+import '../widgets/animations.dart';
 import '../services/gemini_service.dart';
 import 'subscription_screen.dart';
 import 'phone_login_screen.dart';
@@ -208,22 +209,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             GlassCard(
               padding: const EdgeInsets.all(16),
               child: Column(children: [
-                _settingTile(Icons.subscriptions_rounded, _subscribed ? 'Manage Subscription' : 'Upgrade to Pro', _subscribed && _subscribedDate != null ? 'Subscribed since ${_subscribedDate!.substring(0, 10)}' : 'Unlock AI meal plans & more', () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
-                }, isDark),
+                AnimatedEntrance(delayMs: 50, child: _settingTile(Icons.subscriptions_rounded, _subscribed ? 'Manage Subscription' : 'Upgrade to Pro', _subscribed && _subscribedDate != null ? 'Subscribed since ${_subscribedDate!.substring(0, 10)}' : 'Unlock AI meal plans & more', () {
+                  Navigator.push(context, habitFlowRoute(const SubscriptionScreen()));
+                }, isDark)),
                 const Divider(height: 24),
-                _settingTile(Icons.dark_mode_rounded, 'Theme', 'Switch between Light, Dark, or System', () => _showThemeDialog(isDark), isDark),
+                AnimatedEntrance(delayMs: 100, child: _settingTile(Icons.dark_mode_rounded, 'Theme', 'Switch between Light, Dark, or System', () => _showThemeDialog(isDark), isDark)),
                 const Divider(height: 24),
-                _settingTile(Icons.dns_outlined, 'Server URL', _serverUrl.isNotEmpty ? _serverUrl : 'Not configured', _editServerUrl, isDark),
+                AnimatedEntrance(delayMs: 150, child: _settingTile(Icons.dns_outlined, 'Server URL', _serverUrl.isNotEmpty ? _serverUrl : 'Not configured', _editServerUrl, isDark)),
                 const Divider(height: 24),
-                _settingTile(Icons.info_outline_rounded, 'App Version', '1.4.6', null, isDark),
+                AnimatedEntrance(delayMs: 200, child: _settingTile(Icons.info_outline_rounded, 'App Version', '1.4.6', null, isDark)),
                 const Divider(height: 24),
-                _settingTile(Icons.mail_outline_rounded, 'Contact Support', 'macrosnap7@gmail.com', () async {
+                AnimatedEntrance(delayMs: 250, child: _settingTile(Icons.mail_outline_rounded, 'Contact Support', 'macrosnap7@gmail.com', () async {
                   final uri = Uri.parse('mailto:macrosnap7@gmail.com');
                   if (await canLaunchUrl(uri)) await launchUrl(uri);
-                }, isDark),
+                }, isDark)),
                 const Divider(height: 24),
-                _settingTile(Icons.logout_rounded, 'Log Out', 'Sign out and return to login', () => _logout(context, isDark), isDark),
+                AnimatedEntrance(delayMs: 300, child: _settingTile(Icons.logout_rounded, 'Log Out', 'Sign out and return to login', () => _logout(context, isDark), isDark)),
               ]),
             ),
             const SizedBox(height: 20),

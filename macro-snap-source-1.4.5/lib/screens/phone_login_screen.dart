@@ -9,6 +9,7 @@ import '../core/theme.dart';
 import '../services/gemini_service.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/app_text_field.dart';
+import '../widgets/logo_widget.dart';
 import 'main_shell.dart';
 
 class PhoneLoginScreen extends StatefulWidget {
@@ -87,7 +88,16 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
         },
         verificationFailed: (e) {
           if (mounted) {
-            setState(() { _loading = false; _error = e.message ?? 'OTP failed'; });
+            final msg = e.message ?? '';
+            String userMsg;
+            if (msg.contains('provider is disabled') || msg.contains('not enabled')) {
+              userMsg = 'Phone sign-in is not enabled. Please enable it in your Firebase Console > Authentication > Sign-in method. Or use Email/Google login.';
+            } else if (msg.contains('SMS') || msg.contains('region')) {
+              userMsg = 'SMS verification unavailable in your region. Please use Email or Google login instead.';
+            } else {
+              userMsg = 'OTP verification failed. Please try Email or Google login.';
+            }
+            setState(() { _loading = false; _error = userMsg; });
           }
         },
         codeSent: (vid, token) {
@@ -328,22 +338,8 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
             child: Column(
               children: [
                 SizedBox(height: screenHeight * 0.08),
-                // App icon
-                Container(
-                  width: 72, height: 72,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    gradient: const LinearGradient(colors: [MacroSnapTheme.emerald, MacroSnapTheme.emeraldLight]),
-                    boxShadow: [
-                      BoxShadow(
-                        color: MacroSnapTheme.emerald.withOpacity( 0.35),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 36),
-                ),
+                // Professional app logo
+                const LogoWidget(size: 72),
                 const SizedBox(height: 20),
                 Text('Welcome to MacroSnap',
                   style: Theme.of(context).textTheme.displayMedium?.copyWith(
@@ -351,7 +347,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text('Track your meals, hit your macros',
+                Text('Snap a photo, get your macros',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
                   ),

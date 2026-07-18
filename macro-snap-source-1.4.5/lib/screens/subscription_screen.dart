@@ -85,6 +85,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     final now = DateTime.now().toIso8601String();
     await prefs.setString('subscribed_at', now);
     await prefs.setBool('subscribed', true);
+    // Schedule notifications for pro subscribers
+    try {
+      await NotificationService().scheduleAllForSubscriber(now);
+    } catch (_) {}
     if (mounted) {
       setState(() {
         _subscribed = true;
@@ -175,6 +179,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
   void _showConfirmation() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    _animController?.stop();
     _animController?.dispose();
     _animController = AnimationController(
       vsync: this,
