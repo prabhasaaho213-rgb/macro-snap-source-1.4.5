@@ -6,9 +6,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme.dart';
+import '../services/gemini_service.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/app_text_field.dart';
-import 'home_screen.dart';
+import 'main_shell.dart';
 
 class PhoneLoginScreen extends StatefulWidget {
   final String? returnRoute;
@@ -140,7 +141,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
       final name = prefs.getString('name') ?? '';
       try {
         await http.post(
-          Uri.parse('https://macro-snap-backend-production.up.railway.app/register'),
+          Uri.parse('${GeminiService.serverUrl}/register'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({'phone': phone, 'name': name}),
         );
@@ -149,7 +150,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
         if (Navigator.of(context).canPop()) {
           Navigator.pop(context, phone);
         } else {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
         }
       }
     } catch (e) {
@@ -223,10 +224,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
       await prefs.setString('email', email);
       await prefs.setString('name', name);
       if (photoUrl != null) await prefs.setString('photo_url', photoUrl);
-
       try {
         await http.post(
-          Uri.parse('https://macro-snap-backend-production.up.railway.app/register'),
+          Uri.parse('${GeminiService.serverUrl}/register'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({'phone': email, 'email': email, 'name': name}),
         );
@@ -236,7 +236,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
         if (Navigator.of(context).canPop()) {
           Navigator.pop(context, email);
         } else {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
         }
       }
     } catch (e) {
@@ -270,7 +270,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
     await prefs.setString('name', email.split('@').first);
     try {
       await http.post(
-        Uri.parse('https://macro-snap-backend-production.up.railway.app/register'),
+        Uri.parse('${GeminiService.serverUrl}/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'phone': email, 'email': email, 'name': email.split('@').first}),
       );
@@ -279,7 +279,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
       if (Navigator.of(context).canPop()) {
         Navigator.pop(context, email);
       } else {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
       }
     }
   }
@@ -297,7 +297,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
     final name = prefs.getString('name') ?? 'Guest';
     try {
       await http.post(
-        Uri.parse('https://macro-snap-backend-production.up.railway.app/register'),
+        Uri.parse('${GeminiService.serverUrl}/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'phone': guestId, 'name': name}),
       );
@@ -306,7 +306,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
       if (Navigator.of(context).canPop()) {
         Navigator.pop(context, guestId);
       } else {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
       }
     }
   }
