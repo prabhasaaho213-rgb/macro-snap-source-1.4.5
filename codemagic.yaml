@@ -7,6 +7,12 @@ workflows:
       vars:
         PACKAGE_NAME: "com.yourcompany.macrosnap"
     scripts:
+      - name: Show repo structure
+        script: |
+          pwd
+          ls -la
+          find . -name "pubspec.yaml"
+
       - name: Generate keystore
         script: |
           keytool -genkey -v -keystore macrosnap-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias macrosnap -storepass MacroSnap@2026 -keypass MacroSnap@2026 -dname "CN=Prabhas, OU=MacroSnap, O=MacroSnap, L=Hyderabad, ST=Telangana, C=IN"
