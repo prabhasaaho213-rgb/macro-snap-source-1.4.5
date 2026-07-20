@@ -1,4 +1,26 @@
-- name: Get Flutter packages
-  script: |
-    cd "Files/Source repo"
-    flutter packages pub get
+workflows:
+  macrosnap-workflow:
+    name: MacroSnap
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      android_signing:
+        - macrosnap_keystore
+      vars:
+        PACKAGE_NAME: "com.yourcompany.macrosnap"
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          cd "Files/Source repo"
+          flutter packages pub get
+
+      - name: Build AAB
+        script: |
+          cd "Files/Source repo"
+          flutter build appbundle --release
+    artifacts:
+      - Files/Source repo/build/**/outputs/**/*.aab
+    publishing:
+      email:
+        recipients:
+          - your@email.com
