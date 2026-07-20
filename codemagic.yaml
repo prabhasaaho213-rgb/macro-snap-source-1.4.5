@@ -1,8 +1,25 @@
-- name: Generate keystore
+workflows:
+  macrosnap-workflow:
+    name: MacroSnap
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      vars:
+        PACKAGE_NAME: "com.yourcompany.macrosnap"
+    scripts:
+      - name: Generate keystore
         script: |
-          keytool -genkey -v -keystore macrosnap-release.jks \
-            -keyalg RSA -keysize 2048 -validity 10000 \
-            -alias macrosnap \
-            -storepass MacroSnap@2026 \
-            -keypass MacroSnap@2026 \
-            -dname "CN=Prabhas, OU=MacroSnap, O=MacroSnap, L=Hyderabad, ST=Telangana, C=IN"
+          keytool -genkey -v -keystore macrosnap-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias macrosnap -storepass MacroSnap@2026 -keypass MacroSnap@2026 -dname "CN=Prabhas, OU=MacroSnap, O=MacroSnap, L=Hyderabad, ST=Telangana, C=IN"
+
+      - name: Get Flutter packages
+        script: |
+          cd "Files/Source repo"
+          flutter packages pub get
+
+      - name: Build AAB
+        script: |
+          cd "Files/Source repo"
+          flutter build appbundle --release
+    artifacts:
+      - macrosnap-release.jks
+      - Files/Source repo/build/**/outputs/**/*.aab
