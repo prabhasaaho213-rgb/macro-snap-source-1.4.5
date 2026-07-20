@@ -7,25 +7,19 @@ workflows:
       vars:
         PACKAGE_NAME: "com.yourcompany.macrosnap"
     scripts:
-      - name: Show repo structure
-        script: |
-          pwd
-          ls -la
-          find . -name "pubspec.yaml"
-
       - name: Generate keystore
         script: |
           keytool -genkey -v -keystore macrosnap-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias macrosnap -storepass MacroSnap@2026 -keypass MacroSnap@2026 -dname "CN=Prabhas, OU=MacroSnap, O=MacroSnap, L=Hyderabad, ST=Telangana, C=IN"
 
       - name: Get Flutter packages
         script: |
-          cd "Files/Source repo"
+          cd "macro-snap-source-1.4.5"
           flutter packages pub get
 
       - name: Build AAB
         script: |
-          cd "Files/Source repo"
+          cd "macro-snap-source-1.4.5"
           flutter build appbundle --release
     artifacts:
       - macrosnap-release.jks
-      - Files/Source repo/build/**/outputs/**/*.aab
+      - macro-snap-source-1.4.5/build/**/outputs/**/*.aab
