@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/theme.dart';
 import '../services/gemini_service.dart';
 import '../widgets/gradient_button.dart';
@@ -599,9 +600,26 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                   ),
                 ),
                 const SizedBox(height: 32),
-                Text("By continuing, you agree to our Terms & Privacy Policy",
+                RichText(
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 11, color: isDark ? Colors.white24 : const Color(0xFFCBD5E1)),
+                  text: TextSpan(
+                    style: TextStyle(fontSize: 11, color: isDark ? Colors.white24 : const Color(0xFFCBD5E1)),
+                    children: [
+                      const TextSpan(text: 'By continuing, you agree to our '),
+                      TextSpan(
+                        text: 'Privacy Policy',
+                        style: TextStyle(
+                          color: MacroSnapTheme.emerald,
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () async {
+                            final uri = Uri.parse('https://raw.githubusercontent.com/prabhasaaho213-rgb/macro-snap-source-1.4.5/master/PRIVACY_POLICY.md');
+                            if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          },
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 24),
               ],
