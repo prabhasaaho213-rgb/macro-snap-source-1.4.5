@@ -258,11 +258,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   AnimatedEntrance(delayMs: 270, child: _settingTile(Icons.person_add_rounded, 'Save Your Account', 'Link phone to keep your data permanently', _upgradeFromGuest, isDark)),
                 if (_isGuest) const Divider(height: 24),
                 AnimatedEntrance(delayMs: 280, child: _settingTile(Icons.privacy_tip_outlined, 'Privacy Policy', 'How we handle your data', () async {
-                  final uri = Uri.parse('https://raw.githubusercontent.com/prabhasaaho213-rgb/macro-snap-source-1.4.5/master/PRIVACY_POLICY.md');
+                  final uri = Uri.parse('https://prabhasaaho213-rgb.github.io/macro-snap-source-1.4.5/');
                   if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
                 }, isDark)),
                 const Divider(height: 24),
-                AnimatedEntrance(delayMs: 300, child: _settingTile(Icons.logout_rounded, 'Log Out', 'Sign out and return to login', () => _logout(context, isDark), isDark)),
+                AnimatedEntrance(delayMs: 300, child: _settingTile(Icons.delete_forever_outlined, 'Delete Account', 'Permanently delete your data', () async {
+                  final uri = Uri.parse('https://prabhasaaho213-rgb.github.io/macro-snap-source-1.4.5/delete-account.html');
+                  if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }, isDark)),
+                const Divider(height: 24),
+                AnimatedEntrance(delayMs: 320, child: _settingTile(Icons.logout_rounded, 'Log Out', 'Sign out and return to login', () => _logout(context, isDark), isDark)),
               ]),
             ),
             const SizedBox(height: 20),
