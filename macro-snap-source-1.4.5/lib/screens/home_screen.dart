@@ -45,7 +45,12 @@ class _HomeScreenState extends State<HomeScreen>
     _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _slideAnim = Tween<Offset>(begin: const Offset(0, 0.04), end: Offset.zero)
         .animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
+    MealStore.instance.changeNotifier.addListener(_onDataChanged);
     _loadAll();
+  }
+
+  void _onDataChanged() {
+    _loadScansOnly();
   }
 
   Future<void> _loadAll() async {
@@ -87,8 +92,14 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
+  Future<void> _loadScansOnly() async {
+    final scans = await ScanGate.getScansRemaining();
+    if (mounted) setState(() => _scansLeft = scans);
+  }
+
   @override
   void dispose() {
+    MealStore.instance.changeNotifier.removeListener(_onDataChanged);
     _animController.stop();
     _animController.dispose();
     super.dispose();

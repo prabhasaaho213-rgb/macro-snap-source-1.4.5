@@ -11,6 +11,7 @@ import '../widgets/glass_card.dart';
 import 'phone_login_screen.dart';
 import '../services/notification_service.dart';
 import '../services/gemini_service.dart';
+import '../services/meal_store.dart';
 import 'referral_screen.dart';
 
 class SubscriptionScreen extends StatefulWidget {
@@ -90,6 +91,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     try {
       await NotificationService().scheduleAllForSubscriber(now);
     } catch (_) {}
+    // Trigger refresh of scan count on home/scan screens
+    try { MealStore.instance.changeNotifier.value++; } catch (_) {}
     if (mounted) {
       setState(() {
         _subscribed = true;
