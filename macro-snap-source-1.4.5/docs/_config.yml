@@ -1,3 +1,0 @@
-# GitHub Pages - serve static HTML directly
-include: [".*"]
-exclude: []
