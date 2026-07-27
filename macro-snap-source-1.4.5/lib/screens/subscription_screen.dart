@@ -11,6 +11,7 @@ import '../widgets/glass_card.dart';
 import 'phone_login_screen.dart';
 import '../services/notification_service.dart';
 import '../services/gemini_service.dart';
+import '../services/razorpay_service.dart';
 import '../services/meal_store.dart';
 import 'referral_screen.dart';
 
@@ -42,6 +43,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
   @override
   void dispose() {
+    RazorpayService.clearCallbacks();
     _checkAnim?.dispose();
     _animController?.stop();
     _animController?.dispose();
@@ -276,6 +278,32 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     ));
   }
 
+  Future<void> _payWithRazorpay() async {
+    if (_phone == null) return;
+    setState(() => _submitting = true);
+    try {
+      RazorpayService.setErrorCallback((msg) {
+        if (mounted) _showError(msg);
+      });
+      RazorpayService.setSuccessCallback(() {
+        if (mounted) {
+          setState(() {
+            _submitting = false;
+          });
+          _activateFromServer();
+        }
+      });
+      await RazorpayService.startCheckout(
+        phone: _phone!,
+        name: 'MacroSnap User',
+        email: '',
+      );
+    } catch (e) {
+      _showError('Could not start payment: $e');
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
   void _openUpiApp() async {
     final uri = Uri.parse('upi://pay?pa=7569086885@yespop&pn=MacroSnap&am=29&cu=INR&tn=MacroSnap+Pro+Subscription');
     if (await canLaunchUrl(uri)) {
@@ -437,6 +465,74 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     height: 56,
                   ),
                 ] else ...[
+                  // Razorpay payment section
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: isDark ? MacroSnapTheme.cardDark : Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                    ),
+                    child: Column(children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 44, height: 44,
+                            decoration: BoxDecoration(
+                              color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(Icons.credit_card_rounded,
+                                color: MacroSnapTheme.emerald, size: 22),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Pay Online (Razorpay)',
+                                    style: TextStyle(fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        color: isDark ? Colors.white
+                                            : const Color(0xFF1E293B))),
+                                Text('UPI, Card, Netbanking, Wallet',
+                                    style: TextStyle(fontSize: 13,
+                                        color: isDark ? Colors.white38
+                                            : const Color(0xFF94A3B8))),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      GradientButton(
+                        label: 'Pay ₹29 & Subscribe',
+                        icon: Icons.lock_rounded,
+                        loading: _submitting,
+                        onPressed: _payWithRazorpay,
+                        height: 52,
+                      ),
+                      const SizedBox(height: 8),
+                      Text('Secure payment • Instant activation',
+                          style: TextStyle(fontSize: 12,
+                              color: isDark ? Colors.white30 : const Color(0xFF94A3B8))),
+                    ]),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text('OR',
+                            style: TextStyle(fontSize: 12,
+                                color: isDark ? Colors.white30 : const Color(0xFF94A3B8))),
+                      ),
+                      const Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   // UPI payment section
                   Container(
                     padding: const EdgeInsets.all(20),

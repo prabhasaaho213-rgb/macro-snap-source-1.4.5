@@ -41,21 +41,28 @@ class _MainShellState extends State<MainShell> {
             ),
           );
         },
-        child: KeyedSubtree(
-          key: ValueKey(_currentIndex),
-          child: IndexedStack(
-            index: _currentIndex,
-            children: const [
-              HomeScreen(),
-              ScanScreen(),
-              _MealsTab(),
-              SettingsScreen(),
-            ],
-          ),
-        ),
+        child: _currentIndex == 1
+            // Scan tab: build fresh each time so camera initializes properly
+            ? ScanScreen(key: ValueKey('scan_${DateTime.now().millisecondsSinceEpoch}'))
+            // Other tabs: use IndexedStack to preserve state
+            : IndexedStack(
+                index: _nonScanIndex(_currentIndex),
+                children: const [
+                  HomeScreen(),
+                  _MealsTab(),
+                  SettingsScreen(),
+                ],
+              ),
       ),
       bottomNavigationBar: _buildBottomNav(context),
     );
+  }
+
+  /// Maps bottom nav index to IndexedStack position (excluding Scan tab at index 1).
+  int _nonScanIndex(int current) {
+    if (current == 0) return 0; // Home
+    if (current == 2) return 1; // Meals
+    return 2;                   // Settings
   }
 
   Widget _buildBottomNav(BuildContext context) {

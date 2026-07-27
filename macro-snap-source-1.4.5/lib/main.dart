@@ -6,6 +6,7 @@ import 'services/meal_store.dart';
 import 'models/diet_profile.dart';
 import 'services/notification_service.dart';
 import 'services/gemini_service.dart';
+import 'services/razorpay_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +14,7 @@ void main() async {
     await Firebase.initializeApp();
   } catch (_) {}
   await GeminiService.init();
+  RazorpayService.init();
   await NotificationService().init();
   // Schedule daily reminders for ALL users (free + pro)
   try {
