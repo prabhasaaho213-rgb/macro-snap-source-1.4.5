@@ -14,15 +14,31 @@
       },
       "oauth_client": [
         {
-          "client_id": "562037381-bb5nr7lthsv3ci9mfjf26rrifkstjnet.apps.googleusercontent.com",
+          "client_id": "562037381-chh5aop2j003hhpieiuhpulfuknl4kps.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.macrosnap.macro_snap",
-            "certificate_hash": "b662159fbd0e21e4db735bf4437a81ea123d2036"
+            "certificate_hash": "ac4ea618250e258dc3cb88224ed1583ce289ae13"
           }
         },
         {
-          "client_id": "562037381-fe32lcko640l5ro6br2aqoaq6ld2feb7.apps.googleusercontent.com",
+          "client_id": "562037381-dapit1ovl1pi51m046b7q0d4kro2pg6e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.macrosnap.macro_snap",
+            "certificate_hash": "1f6f274db9389c1ee17905d6be22d7bf749110bc"
+          }
+        },
+        {
+          "client_id": "562037381-t3osrdt63s91eho5nrt0e1ks33dnpgad.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.macrosnap.macro_snap",
+            "certificate_hash": "63ee17a796b93cf02c4e1ec6b3fcef0669f213b7"
+          }
+        },
+        {
+          "client_id": "562037381-u8bkrnf1mcl7k7ed6njq7ag46fefrera.apps.googleusercontent.com",
           "client_type": 3
         }
       ],

@@ -12,7 +12,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await Firebase.initializeApp();
-  } catch (_) {}
+    debugPrint('✅ Firebase initialized successfully');
+  } catch (e) {
+    debugPrint('❌ Firebase initialization FAILED: $e');
+    // App continues but Firebase features (auth, etc.) will not work
+  }
   await GeminiService.init();
   RazorpayService.init();
   await NotificationService().init();

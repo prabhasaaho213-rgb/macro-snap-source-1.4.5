@@ -27,7 +27,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
   final _otpControllers = List.generate(6, (_) => TextEditingController());
   final _otpFocusNodes = List.generate(6, (_) => FocusNode());
   final _googleSignIn = GoogleSignIn(
-    serverClientId: '562037381-fe32lcko640l5ro6br2aqoaq6ld2feb7.apps.googleusercontent.com',
+    serverClientId: '562037381-u8bkrnf1mcl7k7ed6njq7ag46fefrera.apps.googleusercontent.com',
   );
   final _emailController = TextEditingController();
   final _passController = TextEditingController();
@@ -307,13 +307,8 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
       }
     }
     final name = prefs.getString('name') ?? 'Guest';
-    try {
-      await http.post(
-        Uri.parse('${GeminiService.serverUrl}/register'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'phone': guestId, 'name': name}),
-      );
-    } catch (_) {}
+
+    // Navigate immediately — don't wait for backend
     if (mounted) {
       if (Navigator.of(context).canPop()) {
         Navigator.pop(context, guestId);
@@ -321,6 +316,15 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
       }
     }
+
+    // Fire-and-forget backend registration (non-blocking)
+    try {
+      await http.post(
+        Uri.parse('${GeminiService.serverUrl}/register'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'phone': guestId, 'name': name}),
+      );
+    } catch (_) {}
   }
 
   void _onOtpChange(int index, String val) {
