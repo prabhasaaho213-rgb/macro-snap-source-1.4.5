@@ -17,13 +17,6 @@ class HabitStore extends ChangeNotifier {
   int get waterToday => _waterLog[dateKey(DateTime.now())] ?? 0;
   final Map<String, int> _waterLog = {};
 
-  /// Default habits created on first launch
-  static final List<Habit> defaultHabits = [
-    Habit(id: 'water', name: 'Drink Water', emoji: '💧', colorValue: 0xFF00CC52),
-    Habit(id: 'walk', name: 'Walk 10k Steps', emoji: '🚶', colorValue: 0xFFFF9500),
-    Habit(id: 'veggies', name: '5 Veggies', emoji: '🥗', colorValue: 0xFF34C759),
-  ];
-
   Future<void> load() async {
     if (_loaded) return;
     final p = await SharedPreferences.getInstance();
@@ -33,14 +26,6 @@ class HabitStore extends ChangeNotifier {
       habits
         ..clear()
         ..addAll(list.map((e) => Habit.fromJson(Map<String, dynamic>.from(e))));
-    } else {
-      habits.addAll(defaultHabits.map((h) => Habit(
-        id: h.id,
-        name: h.name,
-        emoji: h.emoji,
-        colorValue: h.colorValue,
-      )));
-      await save(notify: false);
     }
 
     // Load water log

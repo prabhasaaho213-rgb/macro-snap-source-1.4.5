@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme.dart';
 import 'screens/main_shell.dart';
+import 'screens/onboarding_screen.dart';
 import 'screens/phone_login_screen.dart';
 
 class MacroSnapApp extends StatefulWidget {
@@ -14,13 +15,14 @@ class MacroSnapApp extends StatefulWidget {
 class _MacroSnapAppState extends State<MacroSnapApp> {
   bool _loading = true;
   String? _savedPhone;
+  bool _onboardingDone = false;
   ThemeMode _themeMode = ThemeMode.system;
 
   @override
   void initState() {
     super.initState();
     _loadThemeMode();
-    _checkLogin();
+    _checkOnboardingAndLogin();
     themeModeNotifier.addListener(_onThemeChanged);
   }
 
@@ -56,13 +58,15 @@ class _MacroSnapAppState extends State<MacroSnapApp> {
     }
   }
 
-  Future<void> _checkLogin() async {
+  Future<void> _checkOnboardingAndLogin() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final phone = prefs.getString('phone');
+      final onboardingDone = prefs.getBool('onboarding_done') ?? false;
       if (mounted) {
         setState(() {
           _savedPhone = phone;
+          _onboardingDone = onboardingDone;
           _loading = false;
         });
       }
@@ -70,6 +74,7 @@ class _MacroSnapAppState extends State<MacroSnapApp> {
       if (mounted) {
         setState(() {
           _savedPhone = null;
+          _onboardingDone = false;
           _loading = false;
         });
       }
@@ -86,7 +91,15 @@ class _MacroSnapAppState extends State<MacroSnapApp> {
       themeMode: _themeMode,
       home: _loading
           ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-          : (_savedPhone != null ? const MainShell() : const PhoneLoginScreen()),
+          : _onboardingDone
+              ? (_savedPhone != null
+                  ? const MainShell()
+                  : const PhoneLoginScreen())
+              : OnboardingScreen(
+                  nextScreen: _savedPhone != null
+                      ? const MainShell()
+                      : const PhoneLoginScreen(),
+                ),
     );
   }
 }

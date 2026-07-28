@@ -6,8 +6,10 @@ import 'package:permission_handler/permission_handler.dart';
 import '../core/theme.dart';
 import '../services/scan_gate.dart';
 import '../services/meal_store.dart';
+import '../widgets/animations.dart';
 import '../widgets/gradient_button.dart';
 import 'result_screen.dart';
+import 'settings_screen.dart';
 import 'subscription_screen.dart';
 
 class ScanScreen extends StatefulWidget {
@@ -330,6 +332,21 @@ class _ScanScreenState extends State<ScanScreen>
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    // Settings button
+                    GestureDetector(
+                      onTap: () => Navigator.push(context,
+                          habitFlowRoute(const SettingsScreen())),
+                      child: Container(
+                        width: 38, height: 38,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha:  0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.settings_rounded,
+                            color: Colors.white60, size: 20),
                       ),
                     ),
                   ],

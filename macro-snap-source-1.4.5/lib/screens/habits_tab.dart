@@ -6,6 +6,7 @@ import '../services/habit_store.dart';
 import '../widgets/animations.dart';
 import '../widgets/consistency_map.dart';
 import '../widgets/gradient_button.dart';
+import 'settings_screen.dart';
 import 'subscription_screen.dart';
 
 class HabitsTab extends StatefulWidget {
@@ -50,6 +51,7 @@ class _HabitsTabState extends State<HabitsTab> {
     final today = DateTime.now();
     final active = store.todayHabits;
     final completed = store.todayCompleted;
+    final hasHabits = store.habits.isNotEmpty;
     final progress = active.isEmpty ? 0.0 : completed / active.length;
     final waterProgress = store.waterGoal > 0
         ? (store.waterToday / store.waterGoal).clamp(0.0, 1.0)
@@ -73,11 +75,24 @@ class _HabitsTabState extends State<HabitsTab> {
                 ),
                 Row(
                   children: [
-                    _coinPill(isDark),
-                    const SizedBox(width: 8),
+                    if (hasHabits) ...[_coinPill(isDark), const SizedBox(width: 8)],
                     IconButton(
                       onPressed: () => setState(() {}),
                       icon: const Icon(Icons.refresh_rounded),
+                    ),
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: () => Navigator.push(context,
+                          habitFlowRoute(const SettingsScreen())),
+                      child: Container(
+                        width: 38, height: 38,
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.04),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.settings_rounded,
+                            color: isDark ? Colors.white38 : const Color(0xFF94A3B8), size: 20),
+                      ),
                     ),
                   ],
                 ),
@@ -91,7 +106,17 @@ class _HabitsTabState extends State<HabitsTab> {
                 fontSize: 14,
               ),
             ),
-            const SizedBox(height: 14),
+
+            // ─── ─── NO HABITS YET ─── SHOW INLINE CREATE ─────
+            if (!hasHabits) ...[
+              const SizedBox(height: 40),
+              _emptyState(isDark),
+              const SizedBox(height: 24),
+              _createButton(context),
+            ]
+
+            // ─── ─── HAS HABITS ─── FULL LAYOUT ──────────────
+            else ...[const SizedBox(height: 14),
 
             // ─── Hero Card ──────────────────────────────────
             AnimatedEntrance(
@@ -153,30 +178,35 @@ class _HabitsTabState extends State<HabitsTab> {
             const SizedBox(height: 24),
 
             // ─── Create Habit Button ─────────────────────────
-            SizedBox(
-              width: double.infinity,
-              height: 54,
-              child: FilledButton.icon(
-                onPressed: () => _onCreateTap(context),
-                icon: Icon(store.habitLimitReached && !_subscribed
-                    ? Icons.lock_rounded
-                    : Icons.add_rounded),
-                label: Text(
-                  store.habitLimitReached && !_subscribed
-                      ? 'GO PRO FOR UNLIMITED'
-                      : 'CREATE HABIT',
-                  style: const TextStyle(fontWeight: FontWeight.w900)),
-                style: FilledButton.styleFrom(
-                  backgroundColor: store.habitLimitReached && !_subscribed
-                      ? MacroSnapTheme.neonPurple
-                      : MacroSnapTheme.neonGreen,
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                ),
-              ),
-            ),
+            _createButton(context),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _createButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 54,
+      child: FilledButton.icon(
+        onPressed: () => _onCreateTap(context),
+        icon: Icon(store.habitLimitReached && !_subscribed
+            ? Icons.lock_rounded
+            : Icons.add_rounded),
+        label: Text(
+          store.habitLimitReached && !_subscribed
+              ? 'GO PRO FOR UNLIMITED'
+              : 'CREATE HABIT',
+          style: const TextStyle(fontWeight: FontWeight.w900)),
+        style: FilledButton.styleFrom(
+          backgroundColor: store.habitLimitReached && !_subscribed
+              ? MacroSnapTheme.neonPurple
+              : MacroSnapTheme.neonGreen,
+          foregroundColor: Colors.black,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
         ),
       ),
     );

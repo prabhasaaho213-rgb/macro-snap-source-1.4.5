@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme.dart';
-import '../models/meal_record.dart';
-import '../services/meal_store.dart';
-import 'package:macro_snap/services/food_database.dart';
 import 'home_screen.dart';
 import 'habits_tab.dart';
 import 'scan_screen.dart';
-import 'search_screen.dart';
-import 'settings_screen.dart';
-import 'add_meal_screen.dart';
+import 'subscription_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -19,6 +15,28 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowSubscription());
+  }
+
+  Future<void> _maybeShowSubscription() async {
+    final prefs = await SharedPreferences.getInstance();
+    final offered = prefs.getBool('subscription_offered') ?? false;
+    final subscribed = prefs.getBool('subscribed') ?? false;
+    final phone = prefs.getString('phone');
+    if (!offered && !subscribed && phone != null && mounted) {
+      await prefs.setBool('subscription_offered', true);
+      if (mounted) {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,8 +69,6 @@ class _MainShellState extends State<MainShell> {
                 children: const [
                   HomeScreen(),
                   HabitsTab(),
-                  _MealsTab(),
-                  SettingsScreen(),
                 ],
               ),
       ),
@@ -63,9 +79,7 @@ class _MainShellState extends State<MainShell> {
   /// Maps bottom nav index to IndexedStack position (excluding Scan tab at index 1).
   int _nonScanIndex(int current) {
     if (current == 0) return 0; // Home
-    if (current == 2) return 1; // Habits
-    if (current == 3) return 2; // Meals
-    return 3;                   // Settings
+    return 1;                   // Habits (index 2)
   }
 
   Widget _buildBottomNav(BuildContext context) {
@@ -105,18 +119,7 @@ class _MainShellState extends State<MainShell> {
                 isSelected: _currentIndex == 2,
                 onTap: () => setState(() => _currentIndex = 2),
               ),
-              _NavItem(
-                icon: Icons.restaurant_rounded,
-                label: 'Meals',
-                isSelected: _currentIndex == 3,
-                onTap: () => setState(() => _currentIndex = 3),
-              ),
-              _NavItem(
-                icon: Icons.person_rounded,
-                label: 'Profile',
-                isSelected: _currentIndex == 4,
-                onTap: () => setState(() => _currentIndex = 4),
-              ),
+
             ],
           ),
         ),
@@ -217,198 +220,3 @@ class _NavItem extends StatelessWidget {
   }
 }
 
-class _MealsTab extends StatefulWidget {
-  const _MealsTab();
-
-  @override
-  State<_MealsTab> createState() => _MealsTabState();
-}
-
-class _MealsTabState extends State<_MealsTab> {
-  @override
-  void initState() {
-    super.initState();
-    MealStore.instance.changeNotifier.addListener(_onMealsChanged);
-  }
-
-  @override
-  void dispose() {
-    MealStore.instance.changeNotifier.removeListener(_onMealsChanged);
-    super.dispose();
-  }
-
-  void _onMealsChanged() {
-    if (mounted) setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final meals = MealStore.instance.todayMeals;
-    final totalCals = meals.fold<int>(0, (s, m) => s + m.calories);
-    final mealsByTime = _groupByTime(meals);
-
-    return Scaffold(
-      backgroundColor: isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surface,
-      appBar: AppBar(
-        title: Text('My Meals', style: TextStyle(fontWeight: FontWeight.w800, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.search_rounded, color: isDark ? Colors.white54 : const Color(0xFF64748B)),
-            onPressed: () async {
-              final item = await Navigator.push<FoodItem>(
-                context,
-                MaterialPageRoute(builder: (_) => const SearchScreen()),
-              );
-              if (item != null && context.mounted) {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => AddMealScreen(food: item)),
-                );
-                if (mounted) setState(() {});
-              }
-            },
-          ),
-        ],
-      ),
-      body: meals.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.restaurant_rounded, size: 64, color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
-                  const SizedBox(height: 16),
-                  Text('No meals logged yet', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: isDark ? Colors.white30 : const Color(0xFF94A3B8))),
-                  const SizedBox(height: 8),
-                  Text('Snap a photo or search food!', style: TextStyle(fontSize: 14, color: isDark ? Colors.white24 : const Color(0xFFCBD5E1))),
-                ],
-              ),
-            )
-          : RefreshIndicator(
-              onRefresh: () async {
-                await MealStore.instance.load();
-                if (mounted) setState(() {});
-              },
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-                children: [
-                  _buildTotalCard(context, totalCals, meals.length, isDark),
-                  const SizedBox(height: 20),
-                  ...mealsByTime.entries.map((e) => _buildMealGroup(e.key, e.value, isDark)),
-                ],
-              ),
-            ),
-    );
-  }
-
-  Widget _buildTotalCard(BuildContext context, int cals, int count, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: MacroSnapTheme.habitlyCard(context),
-      child: Row(
-        children: [
-          Container(
-            width: 56, height: 56,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [MacroSnapTheme.neonGreen, Color(0xFF00CC52)]),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 28),
-          ),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('$cals kcal', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
-              const SizedBox(height: 4),
-              Text('$count meal${count == 1 ? '' : 's'} today', style: TextStyle(fontSize: 13, color: isDark ? Colors.white54 : const Color(0xFF64748B))),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMealGroup(String name, List<MealRecord> meals, bool isDark) {
-    final groupIcons = {
-      'Breakfast': Icons.wb_sunny_rounded,
-      'Lunch': Icons.restaurant_rounded,
-      'Dinner': Icons.nights_stay_rounded,
-      'Snacks': Icons.cookie_rounded,
-    };
-    final groupColors = {
-      'Breakfast': MacroSnapTheme.amber,
-      'Lunch': MacroSnapTheme.neonGreen,
-      'Dinner': MacroSnapTheme.blue,
-      'Snacks': MacroSnapTheme.rose,
-    };
-    final cals = meals.fold<int>(0, (s, m) => s + m.calories);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: MacroSnapTheme.habitlyCard(context),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(groupIcons[name], color: groupColors[name], size: 18),
-                const SizedBox(width: 8),
-                Text(name, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white70 : const Color(0xFF475569))),
-                const Spacer(),
-                Text('$cals kcal', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ...meals.map((m) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40, height: 40,
-                    decoration: BoxDecoration(
-                      color: groupColors[name]!.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(groupIcons[name], color: groupColors[name], size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(m.name, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
-                      Text(m.serving, style: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
-                    ],
-                  )),
-                  Text('${m.calories}', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
-                ],
-              ),
-            )),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Map<String, List<MealRecord>> _groupByTime(List<MealRecord> meals) {
-    final grouped = <String, List<MealRecord>>{
-      'Breakfast': [], 'Lunch': [], 'Dinner': [], 'Snacks': [],
-    };
-    for (final m in meals) {
-      final h = m.date.hour;
-      if (h >= 5 && h < 11) {
-        grouped['Breakfast']!.add(m);
-      } else if (h >= 11 && h < 15) {
-        grouped['Lunch']!.add(m);
-      } else if (h >= 17 && h < 22) {
-        grouped['Dinner']!.add(m);
-      } else {
-        grouped['Snacks']!.add(m);
-      }
-    }
-    grouped.removeWhere((k, v) => v.isEmpty);
-    return grouped;
-  }
-}
