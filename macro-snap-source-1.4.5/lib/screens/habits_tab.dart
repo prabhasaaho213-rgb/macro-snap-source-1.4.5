@@ -59,6 +59,7 @@ class _HabitsTabState extends State<HabitsTab> {
 
     return Scaffold(
       backgroundColor: isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surface,
+      floatingActionButton: _fabButton(context),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(18, 10, 18, 120),
@@ -182,6 +183,22 @@ class _HabitsTabState extends State<HabitsTab> {
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _fabButton(BuildContext context) {
+    return FloatingActionButton(
+      onPressed: () => _onCreateTap(context),
+      backgroundColor: store.habitLimitReached && !_subscribed
+          ? MacroSnapTheme.neonPurple
+          : MacroSnapTheme.neonGreen,
+      foregroundColor: Colors.black,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: Icon(
+        store.habitLimitReached && !_subscribed
+            ? Icons.lock_rounded
+            : Icons.add_rounded,
       ),
     );
   }
@@ -413,74 +430,132 @@ class _HabitsTabState extends State<HabitsTab> {
     final done = h.isCompleted(DateTime.now());
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: GestureDetector(
-        onTap: () {
-          h.toggle(DateTime.now());
-          store.update(h);
+      child: Dismissible(
+        key: ValueKey('habit_${h.id}'),
+        direction: DismissDirection.horizontal,
+        resizeDuration: null,
+        confirmDismiss: (direction) async {
+          if (direction == DismissDirection.startToEnd && !done) {
+            // Swipe right → complete
+            h.toggle(DateTime.now());
+            store.update(h);
+          } else if (direction == DismissDirection.endToStart && done) {
+            // Swipe left → reset
+            h.toggle(DateTime.now());
+            store.update(h);
+          }
+          return false; // snap back, don't remove
         },
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: MacroSnapTheme.habitlyCard(context),
+        background: Container(
+          decoration: BoxDecoration(
+            color: MacroSnapTheme.neonGreen.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(28),
+          ),
+          alignment: Alignment.centerLeft,
+          padding: const EdgeInsets.only(left: 24),
           child: Row(
             children: [
-              // Emoji container
-              Container(
-                width: 52, height: 52,
-                decoration: MacroSnapTheme.emojiContainer(h.color),
-                child: Center(
-                  child: Text(h.emoji, style: const TextStyle(fontSize: 25)),
-                ),
-              ),
-              const SizedBox(width: 13),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      h.name,
-                      style: TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w800,
-                        decoration: done ? TextDecoration.lineThrough : null,
-                        color: done
-                            ? (isDark ? Colors.white38 : const Color(0xFF94A3B8))
-                            : (isDark ? Colors.white : const Color(0xFF1A1A1A)),
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Row(
-                      children: [
-                        const Icon(Icons.local_fire_department_rounded,
-                            color: MacroSnapTheme.neonPink, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${h.currentStreak()} day streak · ${h.frequency}',
-                          style: TextStyle(
-                            color: isDark ? Colors.white54 : const Color(0xFF64748B),
-                            fontSize: 12, fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              // Check/Bolt button
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                width: 46, height: 46,
-                decoration: BoxDecoration(
-                  color: done
-                      ? MacroSnapTheme.neonGreen
-                      : MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  done ? Icons.check_rounded : Icons.bolt_rounded,
-                  color: done ? Colors.black : MacroSnapTheme.neonGreen,
-                  size: 27,
-                ),
-              ),
+              const Icon(Icons.check_circle_rounded,
+                  color: MacroSnapTheme.neonGreen, size: 28),
+              const SizedBox(width: 8),
+              Text('COMPLETE',
+                  style: TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w900,
+                    color: MacroSnapTheme.neonGreen,
+                  )),
             ],
+          ),
+        ),
+        secondaryBackground: Container(
+          decoration: BoxDecoration(
+            color: MacroSnapTheme.neonPink.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(28),
+          ),
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 24),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('RESET',
+                  style: TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w900,
+                    color: MacroSnapTheme.neonPink,
+                  )),
+              const SizedBox(width: 8),
+              const Icon(Icons.undo_rounded,
+                  color: MacroSnapTheme.neonPink, size: 24),
+            ],
+          ),
+        ),
+        child: GestureDetector(
+          onTap: () {
+            h.toggle(DateTime.now());
+            store.update(h);
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: MacroSnapTheme.habitlyCard(context),
+            child: Row(
+              children: [
+                // Emoji container
+                Container(
+                  width: 52, height: 52,
+                  decoration: MacroSnapTheme.emojiContainer(h.color),
+                  child: Center(
+                    child: Text(h.emoji, style: const TextStyle(fontSize: 25)),
+                  ),
+                ),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        h.name,
+                        style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w800,
+                          decoration: done ? TextDecoration.lineThrough : null,
+                          color: done
+                              ? (isDark ? Colors.white38 : const Color(0xFF94A3B8))
+                              : (isDark ? Colors.white : const Color(0xFF1A1A1A)),
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Row(
+                        children: [
+                          const Icon(Icons.local_fire_department_rounded,
+                              color: MacroSnapTheme.neonPink, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${h.currentStreak()} day streak · ${h.frequency}',
+                            style: TextStyle(
+                              color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                              fontSize: 12, fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                // Check/Bolt button
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  width: 46, height: 46,
+                  decoration: BoxDecoration(
+                    color: done
+                        ? MacroSnapTheme.neonGreen
+                        : MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    done ? Icons.check_rounded : Icons.bolt_rounded,
+                    color: done ? Colors.black : MacroSnapTheme.neonGreen,
+                    size: 27,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

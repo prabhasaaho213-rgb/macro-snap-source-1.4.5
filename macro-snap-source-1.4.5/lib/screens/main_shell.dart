@@ -30,12 +30,112 @@ class _MainShellState extends State<MainShell> {
     if (!offered && !subscribed && phone != null && mounted) {
       await prefs.setBool('subscription_offered', true);
       if (mounted) {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+        await showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (ctx) => _proUpsellMini(ctx),
         );
       }
     }
+  }
+
+  Widget _proUpsellMini(BuildContext dialogCtx) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return AlertDialog(
+      backgroundColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Sparkle icon
+          Container(
+            width: 56, height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [MacroSnapTheme.neonGreen, Color(0xFF00CC52)],
+              ),
+            ),
+            child: const Icon(Icons.auto_awesome_rounded,
+                color: Colors.black, size: 28),
+          ),
+          const SizedBox(height: 18),
+          Text('Unlock MacroSnap Pro',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900,
+                  color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+          const SizedBox(height: 14),
+
+          // Feature rows
+          _proFeature(Icons.photo_camera_rounded, 'Unlimited AI food scans', isDark),
+          const SizedBox(height: 12),
+          _proFeature(Icons.favorite_rounded, 'Unlimited habit tracking', isDark),
+          const SizedBox(height: 12),
+          _proFeature(Icons.cloud_upload_rounded, 'Cloud backup & restore', isDark),
+          const SizedBox(height: 12),
+          _proFeature(Icons.insights_rounded, 'Weekly auto-insights & trends', isDark),
+
+          const SizedBox(height: 24),
+
+          // Price & CTA
+          SizedBox(
+            width: double.infinity, height: 50,
+            child: FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: MacroSnapTheme.neonGreen,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+              ),
+              onPressed: () {
+                Navigator.of(dialogCtx).pop();
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
+              },
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.lock_rounded, size: 18),
+                  SizedBox(width: 8),
+                  Text('SUBSCRIBE - ₹29/mo',
+                      style: TextStyle(fontWeight: FontWeight.w900)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Dismiss
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: Text('Not now',
+                style: TextStyle(
+                  fontSize: 14, fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                )),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _proFeature(IconData icon, String label, bool isDark) {
+    return Row(
+      children: [
+        Container(
+          width: 28, height: 28,
+          decoration: BoxDecoration(
+            color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: MacroSnapTheme.neonGreen, size: 14),
+        ),
+        const SizedBox(width: 12),
+        Text(label,
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+      ],
+    );
   }
 
   @override

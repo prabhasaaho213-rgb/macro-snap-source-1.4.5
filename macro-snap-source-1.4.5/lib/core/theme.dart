@@ -3,61 +3,63 @@ import 'package:google_fonts/google_fonts.dart';
 
 final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.system);
 
-/// MacroSnap dark neon theme — inspired by Habitly / Pop UPI aesthetic
+/// MacroSnap dark neon theme — Pop UPI inspired bold & vibrant aesthetic
 class MacroSnapTheme {
-  // ─── Habitly-Inspired Neon Palette ─────────────────────────
+  // ─── Pop UPI Inspired Neon Palette ─────────────────────────
   static const Color neonGreen = Color(0xFF00FF66);
   static const Color neonPink = Color(0xFFFF007F);
-  static const Color neonPurple = Color(0xFF6C3BFF);
-  static const Color neonOrange = Color(0xFFFF9500);
-  static const Color neonCyan = Color(0xFF00B8D4);
+  static const Color neonPurple = Color(0xFF7C3AED);
+  static const Color neonOrange = Color(0xFFFF6B00);
+  static const Color neonCyan = Color(0xFF00D4FF);
+  static const Color neonYellow = Color(0xFFFFD600);
+  static const Color neonRed = Color(0xFFFF1744);
 
   // Legacy MacroSnap colors (kept for backward compat)
-  static const Color emerald = Color(0xFF059669);
-  static const Color emeraldLight = Color(0xFF34D399);
-  static const Color emeraldDark = Color(0xFF047857);
-  static const Color amber = Color(0xFFF59E0B);
-  static const Color rose = Color(0xFFF43F5E);
-  static const Color blue = Color(0xFF3B82F6);
-  static const Color purple = Color(0xFF8B5CF6);
-  static const Color teal = Color(0xFF14B8A6);
-  static const Color orange = Color(0xFFF97316);
-  static const Color surface = Color(0xFFF5F3FF);
+  static const Color emerald = Color(0xFF00C853);
+  static const Color emeraldLight = Color(0xFF69F0AE);
+  static const Color emeraldDark = Color(0xFF009624);
+  static const Color amber = Color(0xFFFFAB00);
+  static const Color rose = Color(0xFFFF1744);
+  static const Color blue = Color(0xFF2979FF);
+  static const Color purple = Color(0xFF7C4DFF);
+  static const Color teal = Color(0xFF00E5FF);
+  static const Color orange = Color(0xFFFF6D00);
+  static const Color surface = Color(0xFFE8E2FF);
 
-  // Habitly dark backgrounds
-  static const Color surfaceDark = Color(0xFF101014);
-  static const Color cardDark = Color(0xFF1A1A22);
-  static const Color cardDarkBorder = Color(0xFF303030);
-  static const Color cardDarkLight = Color(0xFF272727);
+  // Pop UPI dark backgrounds (deeper noir + vibrant accents)
+  static const Color surfaceDark = Color(0xFF07070A);
+  static const Color cardDark = Color(0xFF111118);
+  static const Color cardDarkBorder = Color(0xFF2E2E3E);
+  static const Color cardDarkLight = Color(0xFF181822);
 
   // MacroSnap legacy backgrounds
   static const Color glassDark = Color(0x1AFFFFFF);
   static const Color glassLight = Color(0x0A000000);
 
-  static const List<Color> macroColors = [neonPink, neonOrange, neonCyan, neonGreen, neonPurple];
+  static const List<Color> macroColors = [neonPink, neonOrange, neonCyan, neonGreen, neonPurple, neonYellow];
 
-  // ─── Habitly-style Card Decoration ─────────────────────────
-  /// Dark gradient card with border (Habitly hero card style)
+  // ─── Pop UPI-style Card Decoration ─────────────────────────
+  /// Dark gradient card with neon border (Pop UPI hero card style)
   static BoxDecoration habitlyHeroCard(BuildContext context) {
     return BoxDecoration(
       gradient: const LinearGradient(
-        colors: [Color(0xFF1A1A1A), Color(0xFF272727)],
+        colors: [Color(0xFF050508), Color(0xFF181830), Color(0xFF11151E)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
       borderRadius: BorderRadius.circular(28),
-      border: Border.all(color: const Color(0xFF353535)),
+      border: Border.all(color: const Color(0xFF353550)),
     );
   }
 
-  /// Standard elevated card (Habitly style)
+  /// Standard elevated card (Pop UPI style)
   static BoxDecoration habitlyCard(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return BoxDecoration(
       color: isDark ? cardDark : Colors.white,
       borderRadius: BorderRadius.circular(28),
       border: Border.all(
-        color: isDark ? const Color(0xFF303030) : const Color(0xFFE8DEFF),
+        color: isDark ? const Color(0xFF303045) : const Color(0xFFC8BEFF),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/habit.dart';
+import 'meal_sync_service.dart';
 
 class HabitStore extends ChangeNotifier {
   static final HabitStore _instance = HabitStore._();
@@ -16,6 +17,14 @@ class HabitStore extends ChangeNotifier {
   int waterGoal = 8;
   int get waterToday => _waterLog[dateKey(DateTime.now())] ?? 0;
   final Map<String, int> _waterLog = {};
+
+  /// Public read-only view of the water log (for cloud sync).
+  Map<String, int> get waterLog => Map.unmodifiable(_waterLog);
+
+  /// Whether cloud restore has been attempted
+  bool _cloudRestored = false;
+  /// Whether a cloud restore is currently in progress
+  bool _restoring = false;
 
   Future<void> load() async {
     if (_loaded) return;
@@ -38,6 +47,49 @@ class HabitStore extends ChangeNotifier {
     waterGoal = p.getInt('water_goal') ?? 8;
 
     _loaded = true;
+
+    // Restore from cloud backup
+    await _restoreFromCloud();
+  }
+
+  /// Merge habits + water log from cloud backup (only adds missing data).
+  Future<void> _restoreFromCloud() async {
+    if (_cloudRestored || _restoring) return;
+    _restoring = true;
+    try {
+      final cloud = await MealSyncService.fetchHabits();
+      if (cloud != null) {
+        bool changed = false;
+
+        // Restore habits not already present locally
+        final cloudHabits = (cloud['habits'] as List<Map<String, dynamic>>)
+            .map((e) => Habit.fromJson(e))
+            .toList();
+        final localIds = habits.map((h) => h.id).toSet();
+        for (final habit in cloudHabits) {
+          if (!localIds.contains(habit.id)) {
+            habits.add(habit);
+            changed = true;
+          }
+        }
+
+        // Restore water log entries not already present locally
+        final cloudWaterLog = cloud['waterLog'] as Map<String, int>;
+        final localWaterKeys = _waterLog.keys.toSet();
+        for (final entry in cloudWaterLog.entries) {
+          if (!localWaterKeys.contains(entry.key)) {
+            _waterLog[entry.key] = entry.value;
+            changed = true;
+          }
+        }
+
+        if (changed) {
+          await save(notify: true);
+        }
+      }
+    } catch (_) {}
+    _restoring = false;
+    _cloudRestored = true;
   }
 
   Future<void> save({bool notify = true}) async {
@@ -51,15 +103,18 @@ class HabitStore extends ChangeNotifier {
   Future<void> add(Habit h) async {
     habits.add(h);
     await save();
+    _syncToCloud();
   }
 
   Future<void> update(Habit h) async {
     await save();
+    _syncToCloud();
   }
 
   Future<void> remove(Habit h) async {
     habits.removeWhere((x) => x.id == h.id);
     await save();
+    _syncToCloud();
   }
 
   /// Water tracking
@@ -68,6 +123,7 @@ class HabitStore extends ChangeNotifier {
     _waterLog[key] = (_waterLog[key] ?? 0) + 1;
     notifyListeners();
     save(notify: false);
+    _syncToCloud();
   }
 
   void removeWater() {
@@ -76,12 +132,25 @@ class HabitStore extends ChangeNotifier {
       _waterLog[key] = (_waterLog[key] ?? 1) - 1;
       notifyListeners();
       save(notify: false);
+      _syncToCloud();
     }
   }
 
   void setWaterGoal(int goal) {
     waterGoal = goal;
     save();
+    _syncToCloud();
+  }
+
+  /// Fire-and-forget: sync habits + water log to cloud.
+  /// Skips if a cloud restore is still in progress to avoid overwriting.
+  void _syncToCloud() {
+    if (_restoring) return;
+    MealSyncService.syncHabits(
+      habitsJson: habits.map((h) => h.toJson()).toList(),
+      waterLog: Map.from(_waterLog),
+      waterGoal: waterGoal,
+    );
   }
 
   /// Free tier habit limit

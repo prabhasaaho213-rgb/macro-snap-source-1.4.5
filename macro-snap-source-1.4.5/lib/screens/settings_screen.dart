@@ -7,6 +7,8 @@ import '../widgets/glass_card.dart';
 import '../widgets/animations.dart';
 import '../services/gemini_service.dart';
 import '../services/meal_store.dart';
+import '../services/meal_sync_service.dart';
+import '../services/habit_store.dart';
 import 'subscription_screen.dart';
 import 'phone_login_screen.dart';
 
@@ -23,6 +25,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _subscribed = false;
   String? _subscribedDate;
   String _serverUrl = GeminiService.serverUrl;
+  String _lastSync = '';
+  bool _syncing = false;
 
   @override
   void initState() {
@@ -45,6 +49,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _subscribed = prefs.getBool('subscribed') ?? false;
       _subscribedDate = prefs.getString('subscribed_at');
       _serverUrl = GeminiService.serverUrl;
+      _lastSync = prefs.getString('last_sync') ?? '';
     });
   }
 
@@ -82,7 +87,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  bool get _isGuest => _phone.startsWith('guest_');
+  bool get _isGuest => _phone.isEmpty || _phone.startsWith('guest_');
   String _phone = '';
 
   Future<void> _upgradeFromGuest() async {
@@ -247,7 +252,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const Divider(height: 24),
                 AnimatedEntrance(delayMs: 150, child: _settingTile(Icons.dns_outlined, 'Server URL', _serverUrl.isNotEmpty ? _serverUrl : 'Not configured', _editServerUrl, isDark)),
                 const Divider(height: 24),
-                AnimatedEntrance(delayMs: 200, child: _settingTile(Icons.info_outline_rounded, 'App Version', '1.4.10', null, isDark)),
+                AnimatedEntrance(delayMs: 200, child: _settingTile(Icons.cloud_upload_rounded, 'Cloud Backup', _syncing ? 'Syncing...' : (_lastSync.isNotEmpty ? 'Last sync: $_lastSync' : 'Never backed up'), () => _showBackupDialog(isDark), isDark)),
+                const Divider(height: 24),
+                AnimatedEntrance(delayMs: 220, child: _settingTile(Icons.info_outline_rounded, 'App Version', '1.4.18', null, isDark)),
                 const Divider(height: 24),
                 AnimatedEntrance(delayMs: 250, child: _settingTile(Icons.mail_outline_rounded, 'Contact Support', 'macrosnap7@gmail.com', () async {
                   final uri = Uri.parse('mailto:macrosnap7@gmail.com');
@@ -338,6 +345,239 @@ class _SettingsScreenState extends State<SettingsScreen> {
       case ThemeMode.system: return 'Follow your device setting';
       case ThemeMode.light: return 'Always light background';
       case ThemeMode.dark: return 'Always dark background';
+    }
+  }
+
+  Future<void> _showBackupDialog(bool isDark) async {
+    final canSync = !_isGuest;
+
+    // Fetch current counts for the status display
+    final mealCount = MealStore.instance.allMeals.length;
+    final habitCount = HabitStore.instance.habits.length;
+
+    if (!mounted) return;
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Icon
+            Container(
+              width: 64, height: 64,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [MacroSnapTheme.neonGreen, Color(0xFF00CC52)],
+                ),
+              ),
+              child: const Icon(Icons.cloud_upload_rounded,
+                  color: Colors.black, size: 32),
+            ),
+            const SizedBox(height: 18),
+            Text('Cloud Backup',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900,
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+            const SizedBox(height: 8),
+
+            // Status description
+            Text(
+              _syncing
+                  ? 'Syncing all data...'
+                  : canSync
+                      ? (_lastSync.isNotEmpty
+                          ? 'Data backed up safely'
+                          : 'Your data has never been backed up')
+                      : 'Sign in to enable cloud backup.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, height: 1.4,
+                  color: isDark ? Colors.white54 : const Color(0xFF64748B)),
+            ),
+
+            if (_syncing) ...[const SizedBox(height: 16),
+              const SizedBox(width: 24, height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2,
+                      color: MacroSnapTheme.neonGreen)),
+            ],
+
+            if (!_syncing && canSync) ...[
+              const SizedBox(height: 20),
+
+              // Meals backup status
+              _backupRow(
+                Icons.restaurant_rounded,
+                'Meals',
+                '$mealCount meal${
+                  mealCount == 1 ? '' : 's'
+                } tracked',
+                isDark,
+              ),
+              const SizedBox(height: 10),
+
+              // Habits backup status
+              _backupRow(
+                Icons.favorite_rounded,
+                'Habits + Water',
+                '$habitCount habit${
+                  habitCount == 1 ? '' : 's'
+                }${HabitStore.instance.waterGoal > 0 ? ' · ${HabitStore.instance.waterGoal} glasses goal' : ''}',
+                isDark,
+              ),
+
+              // Last sync time
+              if (_lastSync.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.schedule_rounded, size: 14,
+                        color: isDark ? Colors.white30 : const Color(0xFF94A3B8)),
+                    const SizedBox(width: 6),
+                    Text('Last sync: $_lastSync',
+                        style: TextStyle(fontSize: 12,
+                            color: isDark ? Colors.white30 : const Color(0xFF94A3B8))),
+                  ],
+                ),
+              ],
+            ],
+
+            const SizedBox(height: 22),
+
+            // CTA Button
+            if (canSync && !_syncing)
+              SizedBox(
+                width: double.infinity, height: 50,
+                child: FilledButton.icon(
+                  onPressed: () async {
+                    setState(() => _syncing = true);
+                    Navigator.of(ctx).pop();
+                    await _performSync();
+                  },
+                  icon: const Icon(Icons.sync_rounded, size: 18),
+                  label: const Text('SYNC ALL DATA',
+                      style: TextStyle(fontWeight: FontWeight.w900)),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: MacroSnapTheme.neonGreen,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+              ),
+            if (!canSync)
+              SizedBox(
+                width: double.infinity, height: 50,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: MacroSnapTheme.neonGreen,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                  ),
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    _upgradeFromGuest();
+                  },
+                  child: const Text('SIGN IN TO ENABLE BACKUP',
+                      style: TextStyle(fontWeight: FontWeight.w900)),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _backupRow(IconData icon, String label, String detail, bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? MacroSnapTheme.neonGreen.withValues(alpha: 0.06) : MacroSnapTheme.neonGreen.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32, height: 32,
+            decoration: BoxDecoration(
+              color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: MacroSnapTheme.neonGreen, size: 16),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+                Text(detail,
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500,
+                        color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+              ],
+            ),
+          ),
+          const Icon(Icons.check_circle_rounded,
+              color: MacroSnapTheme.neonGreen, size: 18),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _performSync() async {
+    try {
+      // 1. Sync meals
+      final meals = MealStore.instance.allMeals;
+      await MealSyncService.syncAllMeals(meals);
+
+      // 2. Sync habits + water
+      final habitStore = HabitStore.instance;
+      await MealSyncService.syncHabits(
+        habitsJson: habitStore.habits.map((h) => h.toJson()).toList(),
+        waterLog: Map<String, int>.from(habitStore.waterLog),
+        waterGoal: habitStore.waterGoal,
+      );
+
+      // 3. Save sync timestamp
+      final prefs = await SharedPreferences.getInstance();
+      final now = DateTime.now();
+      final syncTime = '${now.day}/${now.month}/${now.year} ${now.hour}:${now.minute.toString().padLeft(2, '0')}';
+      await prefs.setString('last_sync', syncTime);
+
+      if (mounted) {
+        setState(() {
+          _lastSync = syncTime;
+          _syncing = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ Backed up ${meals.length} meals + ${habitStore.habits.length} habits'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: MacroSnapTheme.neonGreen,
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _syncing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sync failed. Check your connection.'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: MacroSnapTheme.neonPink,
+          ),
+        );
+      }
     }
   }
 
