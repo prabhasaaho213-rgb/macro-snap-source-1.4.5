@@ -4,6 +4,7 @@ import '../core/theme.dart';
 import '../models/habit.dart';
 import '../services/habit_store.dart';
 import '../widgets/animations.dart';
+import '../widgets/consistency_map.dart';
 import '../widgets/gradient_button.dart';
 import 'subscription_screen.dart';
 
@@ -103,6 +104,13 @@ class _HabitsTabState extends State<HabitsTab> {
             AnimatedEntrance(
               delayMs: 50,
               child: _waterCard(waterProgress, isDark),
+            ),
+            const SizedBox(height: 24),
+
+            // ─── Consistency Map ────────────────────────────
+            AnimatedEntrance(
+              delayMs: 100,
+              child: _consistencyMapCard(isDark),
             ),
             const SizedBox(height: 24),
 
@@ -449,6 +457,67 @@ class _HabitsTabState extends State<HabitsTab> {
     );
   }
 
+  // ─── CONSISTENCY MAP CARD ─────────────────────────────────
+  Widget _consistencyMapCard(bool isDark) {
+    final active = store.habits.where((h) => !h.paused).toList();
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: MacroSnapTheme.habitlyCard(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 32, height: 32,
+                    decoration: BoxDecoration(
+                      color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.grid_view_rounded,
+                        color: MacroSnapTheme.neonGreen, size: 18),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text('Consistency',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                ],
+              ),
+              const SizedBox(width: 8),
+              Text('${active.length} habits',
+                  style: TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                  )),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (active.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Center(
+                child: Text(
+                  'Create habits to see your consistency map',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDark ? Colors.white30 : const Color(0xFF94A3B8),
+                  ),
+                ),
+              ),
+            )
+          else
+            ConsistencyMap(
+              habits: active,
+              onCellTap: (date, count, names) =>
+                  _showDayDetail(date, count, names),
+            ),
+        ],
+      ),
+    );
+  }
+
   // ─── HABIT LIMIT CARD ─────────────────────────────────────
   Widget _habitLimitCard(bool isDark) {
     final used = store.habits.length;
@@ -513,6 +582,122 @@ class _HabitsTabState extends State<HabitsTab> {
     } else {
       _showCreateHabitSheet(context);
     }
+  }
+
+  // ─── DAY DETAIL BOTTOM SHEET ────────────────────────────
+  void _showDayDetail(DateTime date, int count, List<String> habitNames) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final now = DateTime.now();
+    final dayDate = DateTime(date.year, date.month, date.day);
+    final todayDate = DateTime(now.year, now.month, now.day);
+
+    String title;
+    if (dayDate == todayDate) {
+      title = 'Today';
+    } else if (dayDate == todayDate.subtract(const Duration(days: 1))) {
+      title = 'Yesterday';
+    } else {
+      title = _monthDay(date);
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(22, 22, 22, 36),
+        decoration: BoxDecoration(
+          color: isDark ? MacroSnapTheme.cardDark : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Container(
+                  width: 40, height: 40,
+                  decoration: BoxDecoration(
+                    color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.calendar_today_rounded,
+                      color: MacroSnapTheme.neonGreen, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.w900,
+                          color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                        )),
+                    Text('$count/${habitNames.length} habits completed',
+                        style: TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                        )),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (habitNames.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Text('😴', style: const TextStyle(fontSize: 36)),
+                      const SizedBox(height: 8),
+                      Text('Nothing logged this day',
+                          style: TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w700,
+                            color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                          )),
+                    ],
+                  ),
+                ),
+              )
+            else
+              ...habitNames.map((name) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 28, height: 28,
+                          decoration: BoxDecoration(
+                            color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.check_rounded,
+                              color: MacroSnapTheme.neonGreen, size: 16),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(name,
+                            style: TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w700,
+                              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                            )),
+                      ],
+                    ),
+                  )),
+          ],
+        ),
+      ),
+    );
   }
 
   // ─── PRO UPSELL ────────────────────────────────────────────
