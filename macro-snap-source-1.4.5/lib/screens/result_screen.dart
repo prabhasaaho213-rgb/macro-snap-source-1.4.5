@@ -115,16 +115,16 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
+                  color: MacroSnapTheme.neonGreen.withValues(alpha:  0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.remove_rounded, size: 18, color: MacroSnapTheme.emerald),
+                child: const Icon(Icons.remove_rounded, size: 18, color: MacroSnapTheme.neonGreen),
               ),
             ),
             const SizedBox(width: 12),
             Text('$_grams',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
             const SizedBox(width: 4),
             Text('g',
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500,
@@ -135,10 +135,10 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
+                  color: MacroSnapTheme.neonGreen.withValues(alpha:  0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.add_rounded, size: 18, color: MacroSnapTheme.emerald),
+                child: const Icon(Icons.add_rounded, size: 18, color: MacroSnapTheme.neonGreen),
               ),
             ),
           ],
@@ -168,14 +168,14 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(Icons.close_rounded,
-              color: isDark ? Colors.white : const Color(0xFF1E293B), size: 24),
+              color: isDark ? Colors.white : const Color(0xFF1A1A1A), size: 24),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           _isAnalyzing ? 'Analyzing...' : _error != null ? 'Error' : 'Results',
           style: TextStyle(
             fontWeight: FontWeight.w700,
-            color: isDark ? Colors.white : const Color(0xFF1E293B),
+            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
           ),
         ),
       ),
@@ -193,14 +193,13 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
+        children: [            SizedBox(
             width: 80,
             height: 80,
             child: CircularProgressIndicator(
               strokeWidth: 4,
-              color: MacroSnapTheme.emerald,
-              backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+              color: MacroSnapTheme.neonGreen,
+              backgroundColor: isDark ? const Color(0xFF303030) : const Color(0xFFE8DEFF),
             ),
           ),
           const SizedBox(height: 24),
@@ -209,7 +208,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : const Color(0xFF1E293B),
+              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
             ),
           ),
           const SizedBox(height: 8),
@@ -258,7 +257,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : const Color(0xFF1E293B),
+                color: isDark ? Colors.white : const Color(0xFF1A1A1A),
               ),
             ),
             const SizedBox(height: 8),
@@ -323,11 +322,11 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                   icon: Icon(
                     _showPerDish ? Icons.view_agenda_rounded : Icons.dashboard_rounded,
                     size: 16,
-                    color: MacroSnapTheme.emerald,
+                    color: MacroSnapTheme.neonGreen,
                   ),
                   label: Text(
                     _showPerDish ? 'Show Totals' : 'Show per Dish',
-                    style: const TextStyle(fontSize: 13, color: MacroSnapTheme.emerald),
+                    style: const TextStyle(fontSize: 13, color: MacroSnapTheme.neonGreen),
                   ),
                 ),
               ],
@@ -369,7 +368,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white : const Color(0xFF1E293B),
+                            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -378,7 +377,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                         _buildNutrientRow('Carbs', r.carbs, 'g', MacroSnapTheme.amber, isDark),
                         _buildNutrientRow('Sugar', r.sugar, 'g', const Color(0xFFDB2777), isDark),
                         _buildNutrientRow('Fats', r.fats, 'g', MacroSnapTheme.blue, isDark),
-                        _buildNutrientRow('Fiber', r.fiber, 'g', MacroSnapTheme.emerald, isDark),
+                        _buildNutrientRow('Fiber', r.fiber, 'g', MacroSnapTheme.neonGreen, isDark),
                       ],
                     ),
                   ),
@@ -400,11 +399,11 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                             width: 48,
                             height: 48,
                             decoration: BoxDecoration(
-                              color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
+                              color: MacroSnapTheme.neonGreen.withValues(alpha:  0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(Icons.auto_awesome_rounded,
-                                color: MacroSnapTheme.emerald, size: 24),
+                                color: MacroSnapTheme.neonGreen, size: 24),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
@@ -416,7 +415,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: isDark ? Colors.white : const Color(0xFF1E293B),
+                                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -480,7 +479,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     final ratio = totalGrams / 100;
     final isBulk = dish.suitableFor == 'bulk';
     final isDiet = dish.suitableFor == 'diet';
-    final badgeColor = isBulk ? MacroSnapTheme.blue : isDiet ? MacroSnapTheme.rose : MacroSnapTheme.emerald;
+    final badgeColor = isBulk ? MacroSnapTheme.blue : isDiet ? MacroSnapTheme.rose : MacroSnapTheme.neonGreen;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: GlassCard(
@@ -495,14 +494,14 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
+                        color: MacroSnapTheme.neonGreen.withValues(alpha:  0.12),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
                         dish.name,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w700, color: MacroSnapTheme.emerald,
+                          fontSize: 13, fontWeight: FontWeight.w700, color: MacroSnapTheme.neonGreen,
                         ),
                       ),
                     ),
@@ -536,7 +535,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                   _buildDishMacro('P', (dish.proteinPer100g * ratio), MacroSnapTheme.rose, isDark),
                   _buildDishMacro('C', (dish.carbsPer100g * ratio), MacroSnapTheme.amber, isDark),
                   _buildDishMacro('F', (dish.fatsPer100g * ratio), MacroSnapTheme.blue, isDark),
-                  _buildDishMacro('Fib', (dish.fiberPer100g * ratio), MacroSnapTheme.emerald, isDark),
+                  _buildDishMacro('Fib', (dish.fiberPer100g * ratio), MacroSnapTheme.neonGreen, isDark),
                 ],
               ),
             ],
@@ -566,13 +565,13 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
+            color: MacroSnapTheme.neonGreen.withValues(alpha:  0.12),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
             r.dishes.length == 1 ? r.dishes.first.name : '${r.dishes.length} Items',
             style: const TextStyle(
-              color: MacroSnapTheme.emerald,
+              color: MacroSnapTheme.neonGreen,
               fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
@@ -587,7 +586,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
   Widget _buildSuitabilityBadge(bool isDark, NutritionResult r) {
     final isBulk = r.suitableFor == 'bulk';
     final isDiet = r.suitableFor == 'diet';
-    final color = isBulk ? MacroSnapTheme.blue : isDiet ? MacroSnapTheme.rose : MacroSnapTheme.emerald;
+    final color = isBulk ? MacroSnapTheme.blue : isDiet ? MacroSnapTheme.rose : MacroSnapTheme.neonGreen;
     final icon = isBulk ? Icons.fitness_center_rounded : isDiet ? Icons.eco_rounded : Icons.check_circle_rounded;
     final label = isBulk ? 'Best for Bulk' : isDiet ? 'Best for Diet' : 'Balanced';
     return Container(
@@ -622,7 +621,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
           style: TextStyle(
             fontSize: 56,
             fontWeight: FontWeight.w800,
-            color: isDark ? Colors.white : const Color(0xFF1E293B),
+            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
             letterSpacing: -2,
             height: 1,
           ),
@@ -714,7 +713,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : const Color(0xFF1E293B),
+              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
             ),
           ),
         ],

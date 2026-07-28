@@ -7,6 +7,7 @@ import 'models/diet_profile.dart';
 import 'services/notification_service.dart';
 import 'services/gemini_service.dart';
 import 'services/razorpay_service.dart';
+import 'services/habit_store.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,5 +29,6 @@ void main() async {
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await MealStore.instance.load();
   await DietPlanService.instance.load();
+  await HabitStore.instance.load();
   runApp(const MacroSnapApp());
 }

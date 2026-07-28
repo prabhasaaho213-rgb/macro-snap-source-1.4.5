@@ -57,7 +57,7 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
       appBar: AppBar(
         title: Text('Scan Barcode',
             style: TextStyle(fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
       ),
       body: _found != null ? _buildResult(isDark) : _buildScanner(isDark),
     );
@@ -117,7 +117,7 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(f.name, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                 const SizedBox(height: 4),
                 Text(f.brand, style: TextStyle(fontSize: 14,
                     color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
@@ -172,7 +172,7 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
               color: isDark ? Colors.white70 : const Color(0xFF475569))),
           const Spacer(),
           Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : const Color(0xFF1E293B))),
+              color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
         ],
       ),
     );

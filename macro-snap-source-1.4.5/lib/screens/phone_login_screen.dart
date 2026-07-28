@@ -177,7 +177,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF1E293B) : Colors.white,
+            ? MacroSnapTheme.cardDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('What should we call you?'),
         content: TextField(
@@ -349,7 +349,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                 const SizedBox(height: 20),
                 Text('Welcome to MacroSnap',
                   style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                    color: isDark ? Colors.white : const Color(0xFF0F172A),
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -395,7 +395,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                                     Text('Log in with Google',
                                       style: TextStyle(
                                         fontSize: 15, fontWeight: FontWeight.w600,
-                                        color: isDark ? Colors.white : const Color(0xFF1E293B),
+                                        color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                                       ),
                                     ),
                                   ],
@@ -425,7 +425,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                 Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+                    color: isDark ? MacroSnapTheme.cardDark : const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Row(
@@ -446,7 +446,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                               style: TextStyle(
                                 fontSize: 14, fontWeight: FontWeight.w600,
                                 color: _authTab == 0
-                                    ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                                    ? (isDark ? Colors.white : const Color(0xFF1A1A1A))
                                     : (isDark ? Colors.white38 : const Color(0xFF94A3B8)),
                               ),
                             ),
@@ -469,7 +469,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                               style: TextStyle(
                                 fontSize: 14, fontWeight: FontWeight.w600,
                                 color: _authTab == 1
-                                    ? (isDark ? Colors.white : const Color(0xFF0F172A))
+                                    ? (isDark ? Colors.white : const Color(0xFF1A1A1A))
                                     : (isDark ? Colors.white38 : const Color(0xFF94A3B8)),
                               ),
                             ),
@@ -531,11 +531,11 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                         textAlign: TextAlign.center,
                         keyboardType: TextInputType.number,
                         maxLength: 1,
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF0F172A)),
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1A1A1A)),
                         decoration: InputDecoration(
                           counterText: '',
                           filled: true,
-                          fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                          fillColor: isDark ? MacroSnapTheme.cardDark : const Color(0xFFF8FAFC),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),

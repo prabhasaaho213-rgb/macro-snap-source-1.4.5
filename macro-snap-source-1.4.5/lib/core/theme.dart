@@ -3,8 +3,16 @@ import 'package:google_fonts/google_fonts.dart';
 
 final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.system);
 
+/// MacroSnap dark neon theme — inspired by Habitly / Pop UPI aesthetic
 class MacroSnapTheme {
-  // Modern vibrant palette - habit tracker inspired
+  // ─── Habitly-Inspired Neon Palette ─────────────────────────
+  static const Color neonGreen = Color(0xFF00FF66);
+  static const Color neonPink = Color(0xFFFF007F);
+  static const Color neonPurple = Color(0xFF6C3BFF);
+  static const Color neonOrange = Color(0xFFFF9500);
+  static const Color neonCyan = Color(0xFF00B8D4);
+
+  // Legacy MacroSnap colors (kept for backward compat)
   static const Color emerald = Color(0xFF059669);
   static const Color emeraldLight = Color(0xFF34D399);
   static const Color emeraldDark = Color(0xFF047857);
@@ -14,83 +22,137 @@ class MacroSnapTheme {
   static const Color purple = Color(0xFF8B5CF6);
   static const Color teal = Color(0xFF14B8A6);
   static const Color orange = Color(0xFFF97316);
-  static const Color surface = Color(0xFFF8FAFC);
-  static const Color surfaceDark = Color(0xFF0A0E1A);
-  static const Color cardDark = Color(0xFF1E293B);
+  static const Color surface = Color(0xFFF5F3FF);
+
+  // Habitly dark backgrounds
+  static const Color surfaceDark = Color(0xFF101014);
+  static const Color cardDark = Color(0xFF1A1A22);
+  static const Color cardDarkBorder = Color(0xFF303030);
+  static const Color cardDarkLight = Color(0xFF272727);
+
+  // MacroSnap legacy backgrounds
   static const Color glassDark = Color(0x1AFFFFFF);
   static const Color glassLight = Color(0x0A000000);
 
-  static const List<Color> macroColors = [rose, amber, blue, emerald, purple];
+  static const List<Color> macroColors = [neonPink, neonOrange, neonCyan, neonGreen, neonPurple];
 
+  // ─── Habitly-style Card Decoration ─────────────────────────
+  /// Dark gradient card with border (Habitly hero card style)
+  static BoxDecoration habitlyHeroCard(BuildContext context) {
+    return BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [Color(0xFF1A1A1A), Color(0xFF272727)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(28),
+      border: Border.all(color: const Color(0xFF353535)),
+    );
+  }
+
+  /// Standard elevated card (Habitly style)
+  static BoxDecoration habitlyCard(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return BoxDecoration(
+      color: isDark ? cardDark : Colors.white,
+      borderRadius: BorderRadius.circular(28),
+      border: Border.all(
+        color: isDark ? const Color(0xFF303030) : const Color(0xFFE8DEFF),
+      ),
+    );
+  }
+
+  /// Mission-style emoji icon container
+  static BoxDecoration emojiContainer(Color color) {
+    return BoxDecoration(
+      color: color.withValues(alpha: 0.16),
+      borderRadius: BorderRadius.circular(16),
+    );
+  }
+
+  /// Neon accent pill
+  static BoxDecoration neonPill(Color color) {
+    return BoxDecoration(
+      color: color.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(24),
+      border: Border.all(color: color.withValues(alpha: 0.25)),
+    );
+  }
+
+  // ─── Input Theme ───────────────────────────────────────────
   static InputDecorationTheme _inputTheme(bool dark) {
     final bg = dark ? cardDark : Colors.white;
-    final border = dark ? Colors.white10 : const Color(0xFFE2E8F0);
+    final border = dark ? Colors.white10 : const Color(0xFFE8DEFF);
     return InputDecorationTheme(
       filled: true,
       fillColor: bg,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: border)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: emerald, width: 2)),
-      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: rose, width: 1.5)),
-      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: rose, width: 2)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: neonGreen, width: 2)),
+      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: neonPink, width: 1.5)),
+      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: neonPink, width: 2)),
       labelStyle: TextStyle(fontSize: 14, color: dark ? Colors.white54 : const Color(0xFF94A3B8)),
       hintStyle: TextStyle(fontSize: 14, color: dark ? Colors.white24 : const Color(0xFFCBD5E1)),
     );
   }
 
+  // ─── Light Theme ───────────────────────────────────────────
   static ThemeData get light {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
       colorScheme: ColorScheme.light(
-        primary: emerald,
-        secondary: amber,
-        tertiary: blue,
+        primary: neonGreen,
+        secondary: neonPink,
+        tertiary: neonCyan,
         surface: surface,
-        error: rose,
+        error: neonPink,
       ),
       scaffoldBackgroundColor: surface,
       inputDecorationTheme: _inputTheme(false),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: emerald,
-          foregroundColor: Colors.white,
+          backgroundColor: neonGreen,
+          foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: emerald, textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+        style: TextButton.styleFrom(
+          foregroundColor: neonGreen,
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        ),
       ),
       textTheme: GoogleFonts.interTextTheme().copyWith(
-        displayLarge: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w800, letterSpacing: -1),
-        displayMedium: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -0.5),
-        headlineLarge: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w700),
-        headlineMedium: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700),
-        titleLarge: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600),
-        titleMedium: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
-        bodyLarge: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w400),
-        bodyMedium: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400),
-        labelLarge: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+        displayLarge: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1),
+        displayMedium: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+        headlineLarge: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w800),
+        headlineMedium: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800),
+        titleLarge: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
+        titleMedium: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
+        bodyLarge: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w500),
+        bodyMedium: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
+        labelLarge: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700),
       ),
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: true,
-        backgroundColor: surface,
-        foregroundColor: const Color(0xFF0F172A),
-        titleTextStyle: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+        backgroundColor: Colors.transparent,
+        foregroundColor: Color(0xFF1A1A1A),
+        titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A)),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
         color: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        shadowColor: emerald.withValues(alpha: 0.08),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        shadowColor: neonGreen.withValues(alpha: 0.08),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         elevation: 0,
-        selectedItemColor: emerald,
+        selectedItemColor: neonGreen,
         unselectedItemColor: Color(0xFF94A3B8),
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
@@ -98,83 +160,78 @@ class MacroSnapTheme {
     );
   }
 
+  // ─── Dark Theme (Habitly Noir) ─────────────────────────────
   static ThemeData get dark {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: ColorScheme.dark(
-        primary: emeraldLight,
-        secondary: amber,
-        tertiary: blue,
+        primary: neonGreen,
+        secondary: neonPink,
+        tertiary: neonCyan,
         surface: surfaceDark,
-        error: rose,
+        error: neonPink,
       ),
       scaffoldBackgroundColor: surfaceDark,
       inputDecorationTheme: _inputTheme(true),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: emerald,
-          foregroundColor: Colors.white,
+          backgroundColor: neonGreen,
+          foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: emeraldLight, textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+        style: TextButton.styleFrom(
+          foregroundColor: neonGreen,
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        ),
       ),
       textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
-        displayLarge: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w800, letterSpacing: -1, color: Colors.white),
-        displayMedium: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: Colors.white),
-        headlineLarge: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w700, color: Colors.white),
-        headlineMedium: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
-        titleLarge: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
-        titleMedium: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
-        bodyLarge: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w400, color: Colors.white70),
-        bodyMedium: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white70),
-        labelLarge: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
+        displayLarge: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1, color: Colors.white),
+        displayMedium: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -0.5, color: Colors.white),
+        headlineLarge: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white),
+        headlineMedium: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
+        titleLarge: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+        titleMedium: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+        bodyLarge: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white70),
+        bodyMedium: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white70),
+        labelLarge: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white),
       ),
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: true,
-        backgroundColor: surfaceDark,
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
-        titleTextStyle: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+        titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
         color: cardDark,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         elevation: 0,
-        selectedItemColor: emeraldLight,
-        unselectedItemColor: Colors.white38,
+        selectedItemColor: neonGreen,
+        unselectedItemColor: Colors.white30,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Color(0xFF1E293B),
+        backgroundColor: Color(0xFF17171D),
       ),
     );
   }
 
-  /// Glass card decoration matching the habit tracker aesthetic
+  // ─── Legacy glass decoration (keep for backward compat) ───
   static BoxDecoration glassDecoration(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return BoxDecoration(
-      color: isDark
-          ? const Color(0xFF1E293B).withValues(alpha: 0.85)
-          : Colors.white.withValues(alpha: 0.85),
+    return isDark ? habitlyCard(context) : BoxDecoration(
+      color: Colors.white.withValues(alpha: 0.85),
       borderRadius: BorderRadius.circular(24),
-      border: Border.all(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.08)
-            : Colors.black.withValues(alpha: 0.04),
-        width: 1,
-      ),
+      border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
       boxShadow: [
         BoxShadow(
-          color: isDark
-              ? Colors.black.withValues(alpha: 0.3)
-              : const Color(0xFF059669).withValues(alpha: 0.08),
+          color: const Color(0xFF059669).withValues(alpha: 0.08),
           blurRadius: 30,
           offset: const Offset(0, 8),
         ),
@@ -182,7 +239,6 @@ class MacroSnapTheme {
     );
   }
 
-  /// Gradient for glass border shine
   static BoxDecoration glassShine(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return BoxDecoration(
@@ -191,12 +247,12 @@ class MacroSnapTheme {
         end: Alignment.bottomRight,
         colors: [
           isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
-          isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
-          isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+          isDark ? cardDark : const Color(0xFFF8FAFC),
+          isDark ? cardDark : const Color(0xFFF8FAFC),
           isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.5),
         ],
       ),
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(28),
       border: Border.all(
         color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.04),
       ),

@@ -156,7 +156,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         canPop: false,
         child: AlertDialog(
           backgroundColor: Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xFF1E293B) : Colors.white,
+              ? MacroSnapTheme.cardDark : Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
           content: Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
@@ -173,7 +173,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               const SizedBox(height: 20),
               Text('Payment Submitted',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
-                      color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                      color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
               const SizedBox(height: 8),
               Text('Your payment is being verified.\nYou\'ll get access once confirmed.',
                   textAlign: TextAlign.center,
@@ -221,7 +221,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           animation: _checkAnim!,
           builder: (_, _) => AlertDialog(
             backgroundColor: Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF1E293B) : Colors.white,
+                ? MacroSnapTheme.cardDark : Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
             content: Padding(
               padding: const EdgeInsets.symmetric(vertical: 20),
@@ -241,7 +241,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 const SizedBox(height: 20),
                 Text('Welcome to Pro!',
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800,
-                        color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                        color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                 const SizedBox(height: 6),
                 Text('Your subscription is now active',
                     textAlign: TextAlign.center,
@@ -336,7 +336,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded,
-              color: isDark ? Colors.white : const Color(0xFF1E293B), size: 20),
+              color: isDark ? Colors.white : const Color(0xFF1A1A1A), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('MacroSnap Pro'),
@@ -367,7 +367,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 _subscribed ? "You're a Pro!" : 'Never manually calculate macros again',
                 style: TextStyle(
                   fontSize: 26, fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                   letterSpacing: -0.5,
                 ),
               ),
@@ -411,7 +411,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                               style: TextStyle(fontSize: 56,
                                   fontWeight: FontWeight.w800,
                                   color: isDark ? Colors.white
-                                      : const Color(0xFF1E293B),
+                                      : MacroSnapTheme.cardDark,
                                   letterSpacing: -2, height: 1)),
                           const SizedBox(width: 4),
                           Padding(
@@ -495,7 +495,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                                     style: TextStyle(fontSize: 15,
                                         fontWeight: FontWeight.w700,
                                         color: isDark ? Colors.white
-                                            : const Color(0xFF1E293B))),
+                                            : MacroSnapTheme.cardDark)),
                                 Text('UPI, Card, Netbanking, Wallet',
                                     style: TextStyle(fontSize: 13,
                                         color: isDark ? Colors.white38
@@ -563,7 +563,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                                     style: TextStyle(fontSize: 15,
                                         fontWeight: FontWeight.w700,
                                         color: isDark ? Colors.white
-                                            : const Color(0xFF1E293B))),
+                                            : MacroSnapTheme.cardDark)),
                                 Text('Send \u20B929 to the ID below',
                                     style: TextStyle(fontSize: 13,
                                         color: isDark ? Colors.white38
@@ -599,7 +599,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
                                     color: isDark ? Colors.white
-                                        : const Color(0xFF1E293B),
+                                        : MacroSnapTheme.cardDark,
                                     letterSpacing: 0.5,
                                   )),
                               const SizedBox(width: 8),
@@ -645,7 +645,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                                 style: TextStyle(fontSize: 15,
                                     fontWeight: FontWeight.w700,
                                     color: isDark ? Colors.white
-                                        : const Color(0xFF1E293B))),
+                                        : MacroSnapTheme.cardDark)),
                           ],
                         ),
                         const SizedBox(height: 6),
@@ -766,7 +766,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                                 style: TextStyle(fontSize: 15,
                                     fontWeight: FontWeight.w700,
                                     color: isDark ? Colors.white
-                                        : const Color(0xFF1E293B))),
+                                        : MacroSnapTheme.cardDark)),
                             Text('Both get Pro free for a month',
                                 style: TextStyle(fontSize: 13,
                                     color: isDark ? Colors.white38
@@ -808,7 +808,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               children: [
                 Text(title,
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                        color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                 Text(subtitle,
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w400,
                         color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),

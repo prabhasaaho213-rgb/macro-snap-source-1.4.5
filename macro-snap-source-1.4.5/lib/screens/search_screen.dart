@@ -39,7 +39,7 @@ class _SearchScreenState extends State<SearchScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded,
-              color: isDark ? Colors.white : const Color(0xFF1E293B), size: 20),
+              color: isDark ? Colors.white : const Color(0xFF1A1A1A), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('Search Food'),
@@ -69,7 +69,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         )
                       : null,
                   filled: true,
-                  fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  fillColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -87,7 +87,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                 ),
                 style: TextStyle(
-                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                  color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                   fontSize: 15,
                 ),
               ),
@@ -192,7 +192,7 @@ class _SearchScreenState extends State<SearchScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : const Color(0xFF1E293B),
+                color: isDark ? Colors.white : const Color(0xFF1A1A1A),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -210,7 +210,7 @@ class _SearchScreenState extends State<SearchScreen> {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          color: isDark ? MacroSnapTheme.cardDark : Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
         ),
@@ -225,7 +225,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : const Color(0xFF1E293B),
+                      color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -249,7 +249,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : const Color(0xFF1E293B),
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                   ),
                 ),
                 Text(

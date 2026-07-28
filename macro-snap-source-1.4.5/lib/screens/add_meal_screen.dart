@@ -19,7 +19,7 @@ class AddMealScreen extends StatelessWidget {
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded,
-              color: isDark ? Colors.white : const Color(0xFF1E293B), size: 20),
+              color: isDark ? Colors.white : const Color(0xFF1A1A1A), size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('Log Meal'),
@@ -62,7 +62,7 @@ class AddMealScreen extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w800,
-                                  color: isDark ? Colors.white : const Color(0xFF1E293B),
+                                  color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -96,7 +96,7 @@ class AddMealScreen extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : const Color(0xFF1E293B),
+                        color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -149,7 +149,7 @@ class AddMealScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 56,
             fontWeight: FontWeight.w800,
-            color: isDark ? Colors.white : const Color(0xFF1E293B),
+            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
             letterSpacing: -2,
             height: 1,
           ),
@@ -217,7 +217,7 @@ class AddMealScreen extends StatelessWidget {
           const SizedBox(width: 12),
           Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: isDark ? Colors.white70 : const Color(0xFF475569))),
           const Spacer(),
-          Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+          Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
         ],
       ),
     );

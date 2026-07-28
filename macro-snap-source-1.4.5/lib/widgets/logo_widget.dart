@@ -89,7 +89,7 @@ class LogoWidget extends StatelessWidget {
               fontWeight: FontWeight.w800,
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.white
-                  : const Color(0xFF0F172A),
+                  : const Color(0xFF1A1A1A),
               letterSpacing: -0.5,
             ),
           ),

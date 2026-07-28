@@ -66,7 +66,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
       appBar: AppBar(
         title: Text('Refer a Friend',
             style: TextStyle(fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -86,7 +86,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                 const SizedBox(height: 16),
                 Text('Give a Free Month',
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800,
-                        color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                        color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                 const SizedBox(height: 8),
                 Text('Share your code and both get Pro free for a month',
                     textAlign: TextAlign.center,
@@ -101,7 +101,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                         decoration: BoxDecoration(
-                          color: (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
+                          color: (isDark ? MacroSnapTheme.cardDark : const Color(0xFFF1F5F9)),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: MacroSnapTheme.emerald.withValues(alpha:  0.3),
@@ -139,7 +139,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
           const SizedBox(height: 24),
           Text('Have a code? Enter it below',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                  color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -150,7 +150,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                   decoration: InputDecoration(
                     hintText: 'Enter referral code',
                     filled: true,
-                    fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+                    fillColor: isDark ? MacroSnapTheme.cardDark : const Color(0xFFF8FAFC),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
@@ -159,7 +159,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                   ),
                   style: TextStyle(
                     fontSize: 18, letterSpacing: 4, fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : const Color(0xFF1E293B),
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                   ),
                 ),
               ),
@@ -186,7 +186,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                     const SizedBox(width: 10),
                     Text('Free month activated!',
                         style: TextStyle(fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                            color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                   ],
                 ),
               ),

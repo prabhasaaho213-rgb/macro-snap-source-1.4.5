@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../core/theme.dart';
 
 class MacroRing extends StatelessWidget {
   final double progress;
@@ -36,7 +37,7 @@ class MacroRing extends StatelessWidget {
                 painter: _RingPainter(
                   progress: progress,
                   color: color,
-                  backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                  backgroundColor: isDark ? MacroSnapTheme.cardDark : const Color(0xFFF1F5F9),
                 ),
               ),
               Column(
@@ -47,7 +48,7 @@ class MacroRing extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: isDark ? Colors.white : const Color(0xFF1E293B),
+                      color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                       height: 1,
                     ),
                   ),

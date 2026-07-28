@@ -4,6 +4,7 @@ import '../models/meal_record.dart';
 import '../services/meal_store.dart';
 import 'package:macro_snap/services/food_database.dart';
 import 'home_screen.dart';
+import 'habits_tab.dart';
 import 'scan_screen.dart';
 import 'search_screen.dart';
 import 'settings_screen.dart';
@@ -49,6 +50,7 @@ class _MainShellState extends State<MainShell> {
                 index: _nonScanIndex(_currentIndex),
                 children: const [
                   HomeScreen(),
+                  HabitsTab(),
                   _MealsTab(),
                   SettingsScreen(),
                 ],
@@ -61,15 +63,16 @@ class _MainShellState extends State<MainShell> {
   /// Maps bottom nav index to IndexedStack position (excluding Scan tab at index 1).
   int _nonScanIndex(int current) {
     if (current == 0) return 0; // Home
-    if (current == 2) return 1; // Meals
-    return 2;                   // Settings
+    if (current == 2) return 1; // Habits
+    if (current == 3) return 2; // Meals
+    return 3;                   // Settings
   }
 
   Widget _buildBottomNav(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: isDark ? const Color(0xFF17171D) : Colors.white,
         border: Border(
           top: BorderSide(
             color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
@@ -97,16 +100,22 @@ class _MainShellState extends State<MainShell> {
                 onTap: () => setState(() => _currentIndex = 1),
               ),
               _NavItem(
-                icon: Icons.restaurant_rounded,
-                label: 'Meals',
+                icon: Icons.favorite_rounded,
+                label: 'Habits',
                 isSelected: _currentIndex == 2,
                 onTap: () => setState(() => _currentIndex = 2),
               ),
               _NavItem(
-                icon: Icons.person_rounded,
-                label: 'Profile',
+                icon: Icons.restaurant_rounded,
+                label: 'Meals',
                 isSelected: _currentIndex == 3,
                 onTap: () => setState(() => _currentIndex = 3),
+              ),
+              _NavItem(
+                icon: Icons.person_rounded,
+                label: 'Profile',
+                isSelected: _currentIndex == 4,
+                onTap: () => setState(() => _currentIndex = 4),
               ),
             ],
           ),
@@ -144,17 +153,17 @@ class _NavItem extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: isSelected
-                ? const LinearGradient(colors: [MacroSnapTheme.emerald, MacroSnapTheme.emeraldLight])
+                ? const LinearGradient(colors: [MacroSnapTheme.neonGreen, Color(0xFF00CC52)])
                 : LinearGradient(
                     colors: [
-                      (isDark ? Colors.white : MacroSnapTheme.emerald).withValues(alpha: 0.1),
-                      (isDark ? Colors.white : MacroSnapTheme.emerald).withValues(alpha: 0.05),
+                      (isDark ? Colors.white : MacroSnapTheme.neonGreen).withValues(alpha: 0.1),
+                      (isDark ? Colors.white : MacroSnapTheme.neonGreen).withValues(alpha: 0.05),
                     ],
                   ),
             border: Border.all(
               color: isSelected
-                  ? MacroSnapTheme.emeraldLight
-                  : (isDark ? Colors.white : MacroSnapTheme.emerald).withValues(alpha: 0.2),
+                  ? MacroSnapTheme.neonGreen
+                  : (isDark ? Colors.white : MacroSnapTheme.neonGreen).withValues(alpha: 0.2),
               width: 1.5,
             ),
           ),
@@ -162,7 +171,7 @@ class _NavItem extends StatelessWidget {
             icon,
             color: isSelected
                 ? Colors.white
-                : (isDark ? Colors.white54 : MacroSnapTheme.emerald.withValues(alpha: 0.6)),
+                : (isDark ? Colors.white54 : MacroSnapTheme.neonGreen.withValues(alpha: 0.6)),
             size: 24,
           ),
         ),
@@ -176,7 +185,7 @@ class _NavItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? (isDark ? MacroSnapTheme.emerald.withValues(alpha: 0.15) : MacroSnapTheme.emerald.withValues(alpha: 0.1))
+              ? (isDark ? MacroSnapTheme.neonGreen.withValues(alpha: 0.15) : MacroSnapTheme.neonGreen.withValues(alpha: 0.1))
               : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
@@ -187,7 +196,7 @@ class _NavItem extends StatelessWidget {
               icon,
               size: 20,
               color: isSelected
-                  ? MacroSnapTheme.emerald
+                  ? MacroSnapTheme.neonGreen
                   : (isDark ? Colors.white38 : const Color(0xFF94A3B8)),
             ),
             if (isSelected) ...[
@@ -197,7 +206,7 @@ class _NavItem extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: MacroSnapTheme.emerald,
+                  color: MacroSnapTheme.neonGreen,
                 ),
               ),
             ],
@@ -242,7 +251,7 @@ class _MealsTabState extends State<_MealsTab> {
     return Scaffold(
       backgroundColor: isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surface,
       appBar: AppBar(
-        title: Text('My Meals', style: TextStyle(fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF0F172A))),
+        title: Text('My Meals', style: TextStyle(fontWeight: FontWeight.w800, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
         actions: [
           IconButton(
             icon: Icon(Icons.search_rounded, color: isDark ? Colors.white54 : const Color(0xFF64748B)),
@@ -295,13 +304,13 @@ class _MealsTabState extends State<_MealsTab> {
   Widget _buildTotalCard(BuildContext context, int cals, int count, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: MacroSnapTheme.glassDecoration(context),
+      decoration: MacroSnapTheme.habitlyCard(context),
       child: Row(
         children: [
           Container(
             width: 56, height: 56,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [MacroSnapTheme.emerald, MacroSnapTheme.emeraldLight]),
+              gradient: const LinearGradient(colors: [MacroSnapTheme.neonGreen, Color(0xFF00CC52)]),
               borderRadius: BorderRadius.circular(18),
             ),
             child: const Icon(Icons.local_fire_department_rounded, color: Colors.white, size: 28),
@@ -310,7 +319,7 @@ class _MealsTabState extends State<_MealsTab> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('$cals kcal', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: isDark ? Colors.white : const Color(0xFF0F172A))),
+              Text('$cals kcal', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
               const SizedBox(height: 4),
               Text('$count meal${count == 1 ? '' : 's'} today', style: TextStyle(fontSize: 13, color: isDark ? Colors.white54 : const Color(0xFF64748B))),
             ],
@@ -329,7 +338,7 @@ class _MealsTabState extends State<_MealsTab> {
     };
     final groupColors = {
       'Breakfast': MacroSnapTheme.amber,
-      'Lunch': MacroSnapTheme.emerald,
+      'Lunch': MacroSnapTheme.neonGreen,
       'Dinner': MacroSnapTheme.blue,
       'Snacks': MacroSnapTheme.rose,
     };
@@ -339,7 +348,7 @@ class _MealsTabState extends State<_MealsTab> {
       padding: const EdgeInsets.only(bottom: 16),
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: MacroSnapTheme.glassDecoration(context),
+        decoration: MacroSnapTheme.habitlyCard(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -369,11 +378,11 @@ class _MealsTabState extends State<_MealsTab> {
                   Expanded(child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(m.name, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isDark ? Colors.white : const Color(0xFF0F172A))),
+                      Text(m.name, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                       Text(m.serving, style: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
                     ],
                   )),
-                  Text('${m.calories}', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF0F172A))),
+                  Text('${m.calories}', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                 ],
               ),
             )),

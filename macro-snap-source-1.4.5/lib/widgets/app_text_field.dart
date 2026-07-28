@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/theme.dart';
 
 class AppTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -24,7 +25,7 @@ class AppTextField extends StatelessWidget {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: TextStyle(fontSize: 15, color: isDark ? Colors.white : const Color(0xFF1E293B)),
+      style: TextStyle(fontSize: 15, color: isDark ? Colors.white : const Color(0xFF1A1A1A)),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
@@ -32,7 +33,7 @@ class AppTextField extends StatelessWidget {
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        fillColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
@@ -43,7 +44,7 @@ class AppTextField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF059669), width: 2),
+          borderSide: const BorderSide(color: MacroSnapTheme.neonGreen, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         labelStyle: TextStyle(fontSize: 14, color: isDark ? Colors.white54 : const Color(0xFF94A3B8)),

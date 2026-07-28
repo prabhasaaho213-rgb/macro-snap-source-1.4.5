@@ -110,7 +110,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
         title: Text(
           widget.recipeId != null ? 'Edit Recipe' : 'New Recipe',
           style: TextStyle(fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : const Color(0xFF1E293B)),
+              color: isDark ? Colors.white : const Color(0xFF1A1A1A)),
         ),
       ),
       body: Form(
@@ -134,7 +134,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
             ),
             const SizedBox(height: 24),
             Text('Ingredients', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
             const SizedBox(height: 12),
             if (_ingredients.isNotEmpty)
               ..._ingredients.asMap().entries.map((e) => _buildIngredientTile(e.key, isDark)),
@@ -205,7 +205,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                 child: Column(
                   children: [
                     Text('Recipe Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                        color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                     const SizedBox(height: 12),
                     _summaryRow('Calories', '${totalCal.toStringAsFixed(0)} kcal', '${perServingCal.toStringAsFixed(0)} kcal', isDark),
                     _summaryRow('Protein', '${_ingredients.fold(0.0, (s, i) => s + i.protein).toStringAsFixed(1)}g',
@@ -253,7 +253,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(ing.name, style: TextStyle(fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                      color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                   Text('${ing.grams.toInt()}g · ${ing.caloriesPer100g.toInt()} cal/100g',
                       style: TextStyle(fontSize: 12,
                           color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
@@ -277,7 +277,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
               color: isDark ? Colors.white60 : const Color(0xFF64748B), fontSize: 13))),
           Expanded(child: Text(total, textAlign: TextAlign.center,
               style: TextStyle(fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : const Color(0xFF1E293B), fontSize: 13))),
+                  color: isDark ? Colors.white : const Color(0xFF1A1A1A), fontSize: 13))),
           Expanded(child: Text(perServing, textAlign: TextAlign.center,
               style: TextStyle(fontWeight: FontWeight.w700, color: MacroSnapTheme.emerald, fontSize: 13))),
         ],
@@ -288,13 +288,13 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
   InputDecoration _input(String label, bool isDark) => InputDecoration(
     labelText: label,
     filled: true,
-    fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+    fillColor: isDark ? MacroSnapTheme.cardDark : const Color(0xFFF8FAFC),
     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     labelStyle: TextStyle(fontSize: 13, color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
   );
 
   TextStyle _textStyle(bool isDark) => TextStyle(
-    fontSize: 15, color: isDark ? Colors.white : const Color(0xFF1E293B),
+    fontSize: 15, color: isDark ? Colors.white : const Color(0xFF1A1A1A),
   );
 }

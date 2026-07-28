@@ -151,7 +151,7 @@ class _ScanScreenState extends State<ScanScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF1E293B) : Colors.white,
+            ? MacroSnapTheme.cardDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         content: Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -168,7 +168,7 @@ class _ScanScreenState extends State<ScanScreen>
             const SizedBox(height: 16),
             Text('Free scans used up',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
             const SizedBox(height: 8),
             Text('You get 3 free AI scans per month.\nGo Pro for unlimited scans.',
                 textAlign: TextAlign.center,
@@ -203,7 +203,7 @@ class _ScanScreenState extends State<ScanScreen>
 
     if (_cameraError) {
       return Scaffold(
-        backgroundColor: const Color(0xFF0A0E1A),
+        backgroundColor: MacroSnapTheme.surfaceDark,
         appBar: AppBar(
           backgroundColor: Colors.transparent, elevation: 0,
           leading: IconButton(
@@ -224,7 +224,7 @@ class _ScanScreenState extends State<ScanScreen>
                 onPressed: _pickFromGallery,
                 icon: const Icon(Icons.photo_library_rounded),
                 label: const Text('Choose from Gallery'),
-                style: FilledButton.styleFrom(backgroundColor: MacroSnapTheme.emerald),
+                style: FilledButton.styleFrom(backgroundColor: MacroSnapTheme.neonGreen, foregroundColor: Colors.black),
               ),
             ],
           ),
@@ -234,12 +234,12 @@ class _ScanScreenState extends State<ScanScreen>
 
     if (!_initialized) {
       return Scaffold(
-        backgroundColor: const Color(0xFF0A0E1A),
+        backgroundColor: MacroSnapTheme.surfaceDark,
         body: const Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(color: MacroSnapTheme.emerald),
+              CircularProgressIndicator(color: MacroSnapTheme.neonGreen),
               SizedBox(height: 16),
               Text('Starting camera...', style: TextStyle(color: Colors.white38)),
             ],
@@ -249,7 +249,7 @@ class _ScanScreenState extends State<ScanScreen>
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E1A),
+      backgroundColor: MacroSnapTheme.surfaceDark,
       body: Stack(
         children: [
           // Live camera preview — OverflowBox allows camera to exceed
@@ -310,23 +310,23 @@ class _ScanScreenState extends State<ScanScreen>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: (canUse ? MacroSnapTheme.emerald : MacroSnapTheme.rose).withValues(alpha:  0.25),
+                        color: (canUse ? MacroSnapTheme.neonGreen : MacroSnapTheme.neonPink).withValues(alpha:  0.25),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: (canUse ? MacroSnapTheme.emerald : MacroSnapTheme.rose).withValues(alpha:  0.3),
+                          color: (canUse ? MacroSnapTheme.neonGreen : MacroSnapTheme.neonPink).withValues(alpha:  0.3),
                         ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.flash_on_rounded, size: 14,
-                              color: canUse ? MacroSnapTheme.emerald : MacroSnapTheme.rose),
+                              color: canUse ? MacroSnapTheme.neonGreen : MacroSnapTheme.neonPink),
                           const SizedBox(width: 4),
                           Text(
                             _scansLeft >= 99 ? 'Unlimited' : '$_scansLeft left',
                             style: TextStyle(
                               fontSize: 12, fontWeight: FontWeight.w700,
-                              color: canUse ? MacroSnapTheme.emerald : MacroSnapTheme.rose,
+                              color: canUse ? MacroSnapTheme.neonGreen : MacroSnapTheme.neonPink,
                             ),
                           ),
                         ],
@@ -375,11 +375,11 @@ class _ScanScreenState extends State<ScanScreen>
                           decoration: const BoxDecoration(
                             shape: BoxShape.circle,
                             gradient: LinearGradient(
-                              colors: [MacroSnapTheme.emerald, MacroSnapTheme.emeraldLight],
+                              colors: [MacroSnapTheme.neonGreen, Color(0xFF00CC52)],
                             ),
                           ),
                           child: const Icon(Icons.camera_alt_rounded,
-                              color: Colors.white, size: 28),
+                              color: Colors.black, size: 28),
                         ),
                       ),
                     ),

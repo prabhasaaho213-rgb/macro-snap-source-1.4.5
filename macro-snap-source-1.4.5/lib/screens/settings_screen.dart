@@ -54,7 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF1E293B) : Colors.white,
+            ? MacroSnapTheme.cardDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Server URL'),
         content: TextField(
@@ -108,7 +108,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        backgroundColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Log Out'),
         content: const Text('Are you sure you want to log out?'),
@@ -143,7 +143,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF1E293B) : Colors.white,
+            ? MacroSnapTheme.cardDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Edit Name'),
         content: TextField(
@@ -180,7 +180,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surface,
       appBar: AppBar(
-        title: Text('Settings', style: TextStyle(fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF0F172A))),
+        title: Text('Settings', style: TextStyle(fontWeight: FontWeight.w800, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -193,7 +193,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [MacroSnapTheme.emerald, MacroSnapTheme.emeraldLight], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                gradient: const LinearGradient(colors: [MacroSnapTheme.neonGreen, Color(0xFF00CC52)], begin: Alignment.topLeft, end: Alignment.bottomRight),
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -286,10 +286,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ThemeMode selected = current;
         return StatefulBuilder(
           builder: (ctx, setDialogState) => AlertDialog(
-            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+            backgroundColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: Text('Choose Theme',
-                style: TextStyle(color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                style: TextStyle(color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
             content: RadioGroup<ThemeMode>(
               groupValue: selected,
               onChanged: (v) {
@@ -300,10 +300,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   RadioListTile<ThemeMode>(
                     value: mode,
                     title: Text(_themeModeLabel(mode),
-                        style: TextStyle(color: isDark ? Colors.white : const Color(0xFF1E293B))),
+                        style: TextStyle(color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                     subtitle: Text(_themeModeSubtitle(mode),
                         style: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
-                    activeColor: MacroSnapTheme.emerald,
+                    activeColor: MacroSnapTheme.neonGreen,
                   ),
               ]),
             ),
@@ -348,12 +348,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Row(children: [
         Container(
           width: 40, height: 40,
-          decoration: BoxDecoration(color: MacroSnapTheme.emerald.withValues(alpha:  0.1), borderRadius: BorderRadius.circular(12)),
-          child: Icon(icon, color: MacroSnapTheme.emerald, size: 20),
+          decoration: BoxDecoration(color: MacroSnapTheme.neonGreen.withValues(alpha:  0.12), borderRadius: BorderRadius.circular(15)),
+          child: Icon(icon, color: MacroSnapTheme.neonGreen, size: 20),
         ),
         const SizedBox(width: 14),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: isDark ? Colors.white : const Color(0xFF1E293B))),
+          Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
           Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
         ])),
         if (onTap != null) Icon(Icons.chevron_right_rounded, color: isDark ? Colors.white24 : const Color(0xFFCBD5E1), size: 20),
