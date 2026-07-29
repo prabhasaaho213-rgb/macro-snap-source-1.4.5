@@ -274,7 +274,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
       child: Row(
         children: [
           SizedBox(width: 80, child: Text(label, style: TextStyle(
-              color: isDark ? Colors.white60 : const Color(0xFF64748B), fontSize: 13))),
+              color:              MacroSnapTheme.textSecondary(context), fontSize: 13))),
           Expanded(child: Text(total, textAlign: TextAlign.center,
               style: TextStyle(fontWeight: FontWeight.w600,
                   color: isDark ? Colors.white : const Color(0xFF1A1A1A), fontSize: 13))),

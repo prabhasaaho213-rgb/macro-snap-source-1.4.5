@@ -418,7 +418,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                       Expanded(child: Divider(color: MacroSnapTheme.borderSubtle(context))),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text('or', style: TextStyle(fontSize: 13, color: isDark ? Colors.white30 : const Color(0xFF94A3B8))),
+                        child: Text('or', style: TextStyle(fontSize: 13, color: MacroSnapTheme.textTertiary(context))),
                       ),
                       Expanded(child: Divider(color: MacroSnapTheme.borderSubtle(context))),
                     ],

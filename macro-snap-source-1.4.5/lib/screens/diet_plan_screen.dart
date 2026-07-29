@@ -296,7 +296,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
         child: Center(child: Text('$value', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color))),
       ),
       const SizedBox(height: 4),
-      Text('$label ($unit)', style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : const Color(0xFF94A3B8))),
+      Text('$label ($unit)', style: TextStyle(fontSize: 12, color: MacroSnapTheme.textTertiary(context))),
     ]);
   }
 
@@ -325,8 +325,8 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
               ...((_aiPlan!['plan'] as Map)['tips'] as List).map((tip) => Padding(
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('ðŸ’¡ ', style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : const Color(0xFF94A3B8))),
-                  Expanded(child: Text('$tip', style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : const Color(0xFF94A3B8)))),
+                  Text('ðŸ’¡ ', style: TextStyle(fontSize: 12, color: MacroSnapTheme.textTertiary(context))),
+                  Expanded(child: Text('$tip', style: TextStyle(fontSize: 12, color: MacroSnapTheme.textTertiary(context)))),
                 ]),
               )),
             ],
@@ -335,7 +335,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
               Row(children: [
                 Icon(Icons.water_drop, size: 16, color: MacroSnapTheme.macroFats),
                 const SizedBox(width: 6),
-                Text('${_aiPlan!['plan']['water']}', style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : const Color(0xFF94A3B8))),
+                Text('${_aiPlan!['plan']['water']}', style: TextStyle(fontSize: 12, color: MacroSnapTheme.textTertiary(context))),
               ]),
             ],
           ] else ...[
@@ -474,7 +474,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
           const SizedBox(height: 4),
-          Text(suggestion, style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : const Color(0xFF94A3B8))),
+          Text(suggestion, style: TextStyle(fontSize: 12, color: MacroSnapTheme.textTertiary(context))),
         ])),
       ]),
     );

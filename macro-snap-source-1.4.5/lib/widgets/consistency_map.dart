@@ -119,7 +119,7 @@ class ConsistencyMap extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
-                                  color: isDark ? Colors.white30 : const Color(0xFF94A3B8),
+                                  color: MacroSnapTheme.textTertiary(context),
                                 ),
                               ),
                             )
@@ -214,7 +214,7 @@ class ConsistencyMap extends StatelessWidget {
               'Less',
               style: TextStyle(
                 fontSize: 10,
-                color: isDark ? Colors.white30 : const Color(0xFF94A3B8),
+                color: MacroSnapTheme.textTertiary(context),
               ),
             ),
             const SizedBox(width: 6),
@@ -247,7 +247,7 @@ class ConsistencyMap extends StatelessWidget {
               'More',
               style: TextStyle(
                 fontSize: 10,
-                color: isDark ? Colors.white30 : const Color(0xFF94A3B8),
+                color: MacroSnapTheme.textTertiary(context),
               ),
             ),
           ],

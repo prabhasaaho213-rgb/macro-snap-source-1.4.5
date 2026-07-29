@@ -678,7 +678,7 @@ class _HomeScreenState extends State<HomeScreen>
                       if (m.serving.isNotEmpty) ...[
                         Text(' · ${m.serving}',
                             style: TextStyle(
-                              color: isDark ? Colors.white30 : const Color(0xFF94A3B8),
+                              color: MacroSnapTheme.textTertiary(context),
                               fontSize: 12,
                             )),
                       ],
@@ -693,7 +693,7 @@ class _HomeScreenState extends State<HomeScreen>
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
-                    backgroundColor: isDark ? const Color(0xFF1A1A22) : Colors.white,
+                    backgroundColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
                     title: const Text('Delete Meal', style: TextStyle(fontWeight: FontWeight.w800)),
                     content: Text('Remove "${m.name}" from your log?'),

@@ -49,3 +49,8 @@ app.*.map.json
 
 # Build reports
 android/build/
+nul
+*.apk
+*.tar.gz
+*.zip
+update_card_colors.py

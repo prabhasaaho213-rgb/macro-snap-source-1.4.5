@@ -150,9 +150,10 @@ class _HabitsTabState extends State<HabitsTab> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   "Today's Missions",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900,
+                      color: isDark ? Colors.white : const Color(0xFF1A1A1A)),
                 ),
                 Text(
                   '$completed/${active.length}',
@@ -719,7 +720,7 @@ class _HabitsTabState extends State<HabitsTab> {
                   'Create habits to see your consistency map',
                   style: TextStyle(
                     fontSize: 13,
-                    color: isDark ? Colors.white30 : const Color(0xFF94A3B8),
+                    color: MacroSnapTheme.textTertiary(context),
                   ),
                 ),
               ),
@@ -973,24 +974,22 @@ class _HabitsTabState extends State<HabitsTab> {
   Widget _emptyState(bool isDark) {
     return Container(
       padding: const EdgeInsets.all(30),
-      decoration: BoxDecoration(
-        color: isDark ? MacroSnapTheme.cardDark : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: const Column(
-        children: [
-          Text('✨', style: TextStyle(fontSize: 42)),
-          SizedBox(height: 10),
-          Text('Start your rhythm',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
-          SizedBox(height: 6),
-          Text(
-            'Add a habit and turn small wins into momentum.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white54),
-          ),
-        ],
-      ),
+      decoration: MacroSnapTheme.habitlyCard(context),
+    child: Column(
+      children: [
+        const Text('✨', style: TextStyle(fontSize: 42)),
+        const SizedBox(height: 10),
+        Text('Start your rhythm',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900,
+                color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+        const SizedBox(height: 6),
+        Text(
+          'Add a habit and turn small wins into momentum.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: MacroSnapTheme.textSecondary(context)),
+        ),
+      ],
+    ),
     );
   }
 

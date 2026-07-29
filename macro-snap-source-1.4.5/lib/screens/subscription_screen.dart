@@ -419,8 +419,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                             child: Text('/ month',
                                 style: TextStyle(fontSize: 16,
                                     fontWeight: FontWeight.w500,
-                                    color: isDark ? Colors.white38
-                                        : const Color(0xFF94A3B8))),
+                                    color: MacroSnapTheme.textTertiary(context))),
                           ),
                         ],
                       ),
@@ -498,8 +497,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                                             : MacroSnapTheme.cardDark)),
                                 Text('UPI, Card, Netbanking, Wallet',
                                     style: TextStyle(fontSize: 13,
-                                        color: isDark ? Colors.white38
-                                            : const Color(0xFF94A3B8))),
+                                        color: MacroSnapTheme.textTertiary(context))),
                               ],
                             ),
                           ),
@@ -516,7 +514,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       const SizedBox(height: 8),
                       Text('Secure payment • Instant activation',
                           style: TextStyle(fontSize: 12,
-                              color: isDark ? Colors.white30 : const Color(0xFF94A3B8))),
+                              color: MacroSnapTheme.textTertiary(context))),
                     ]),
                   ),
                   const SizedBox(height: 16),
@@ -527,7 +525,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: Text('OR',
                             style: TextStyle(fontSize: 12,
-                                color: isDark ? Colors.white30 : const Color(0xFF94A3B8))),
+                                color: MacroSnapTheme.textTertiary(context))),
                       ),
                       const Expanded(child: Divider()),
                     ],
@@ -566,8 +564,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                                             : MacroSnapTheme.cardDark)),
                                 Text('Send \u20B929 to the ID below',
                                     style: TextStyle(fontSize: 13,
-                                        color: isDark ? Colors.white38
-                                            : const Color(0xFF94A3B8))),
+                                        color: MacroSnapTheme.textTertiary(context))),
                               ],
                             ),
                           ),
@@ -612,8 +609,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       const SizedBox(height: 8),
                       Text('Tap to copy  |  \u20B929 one-time',
                           style: TextStyle(fontSize: 12,
-                              color: isDark ? Colors.white30
-                                  : const Color(0xFF94A3B8))),
+                              color: MacroSnapTheme.textTertiary(context))),
                       const SizedBox(height: 16),
                       GradientButton(
                         label: 'Open UPI App',
@@ -651,16 +647,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         const SizedBox(height: 6),
                         Text('After paying, enter the transaction reference (UTR) here',
                             style: TextStyle(fontSize: 13,
-                                color: isDark ? Colors.white38
-                                    : const Color(0xFF94A3B8))),
+                                color: MacroSnapTheme.textTertiary(context))),
                         const SizedBox(height: 14),
                         AppTextField(
                           controller: _txnController,
                           label: 'Transaction Reference',
                           hint: 'e.g. HDFC123456789',
                           prefixIcon: Icon(Icons.tag_rounded, size: 20,
-                              color: isDark ? Colors.white38
-                                  : const Color(0xFF94A3B8)),
+                              color: MacroSnapTheme.textTertiary(context)),
                         ),
                         const SizedBox(height: 14),
                         GradientButton(
@@ -732,8 +726,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               const SizedBox(height: 16),
               Text('Cancel anytime. No questions asked.',
                   style: TextStyle(fontSize: 13,
-                      color: isDark ? Colors.white30
-                          : const Color(0xFFCBD5E1))),
+                      color: MacroSnapTheme.textTertiary(context))),
               const SizedBox(height: 24),
               GestureDetector(
                 onTap: () => Navigator.push(context,
@@ -769,8 +762,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                                         : MacroSnapTheme.cardDark)),
                             Text('Both get Pro free for a month',
                                 style: TextStyle(fontSize: 13,
-                                    color: isDark ? Colors.white38
-                                        : const Color(0xFF94A3B8))),
+                                    color: MacroSnapTheme.textTertiary(context))),
                           ],
                         ),
                       ),

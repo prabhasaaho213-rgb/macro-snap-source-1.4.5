@@ -201,7 +201,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                     const SizedBox(width: 10),
                     Expanded(child: Text(_applyResult!,
                         style: TextStyle(fontSize: 13,
-                            color: isDark ? Colors.white60 : const Color(0xFF475569)))),
+                            color: MacroSnapTheme.textSecondary(context)))),
                   ],
                 ),
               ),

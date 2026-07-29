@@ -47,7 +47,7 @@ class AppTextField extends StatelessWidget {
           borderSide: const BorderSide(color: MacroSnapTheme.neonGreen, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        labelStyle: TextStyle(fontSize: 14, color: isDark ? Colors.white54 : const Color(0xFF94A3B8)),
+        labelStyle: TextStyle(fontSize: 14, color: MacroSnapTheme.textTertiary(context)),
       ),
     );
   }

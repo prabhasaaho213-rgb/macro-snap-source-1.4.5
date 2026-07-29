@@ -498,11 +498,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.schedule_rounded, size: 14,
-                        color: isDark ? Colors.white30 : const Color(0xFF94A3B8)),
+                        color: MacroSnapTheme.textTertiary(context)),
                     const SizedBox(width: 6),
                     Text('Last sync: $_lastSync',
                         style: TextStyle(fontSize: 12,
-                            color: isDark ? Colors.white30 : const Color(0xFF94A3B8))),
+                            color: MacroSnapTheme.textTertiary(context))),
                   ],
                 ),
               ],
