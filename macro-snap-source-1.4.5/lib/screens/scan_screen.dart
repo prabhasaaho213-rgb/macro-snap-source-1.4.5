@@ -1,4 +1,5 @@
-﻿import 'dart:io';
+﻿import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
@@ -26,6 +27,8 @@ class _ScanScreenState extends State<ScanScreen>
   bool _initialized = false;
   bool _cameraError = false;
   int _scansLeft = 3;
+  String? _capturedImagePath;
+  Timer? _previewTimer;
 
   @override
   void initState() {
@@ -43,6 +46,7 @@ class _ScanScreenState extends State<ScanScreen>
 
   @override
   void dispose() {
+    _previewTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     MealStore.instance.changeNotifier.removeListener(_onDataChanged);
     _controller?.dispose();
@@ -94,6 +98,36 @@ class _ScanScreenState extends State<ScanScreen>
     }
   }
 
+  void _navigateToResult(String path) {
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 500),
+        reverseTransitionDuration: const Duration(milliseconds: 300),
+        pageBuilder: (_, __, ___) => ResultScreen(imagePath: path),
+        transitionsBuilder: (_, animation, __, child) {
+          return FadeTransition(
+            opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
+  void _showPreview(String path) {
+    setState(() => _capturedImagePath = path);
+    // Auto-navigate after a brief preview so Hero can animate
+    _previewTimer?.cancel();
+    _previewTimer = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        setState(() => _capturedImagePath = null);
+        _navigateToResult(path);
+      }
+    });
+  }
+
   Future<void> _capture() async {
     if (!await ScanGate.canScan()) {
       if (mounted) _showLimitDialog();
@@ -108,12 +142,7 @@ class _ScanScreenState extends State<ScanScreen>
       // Only increment scan AFTER successful capture + save
       await ScanGate.incrementScan();
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ResultScreen(imagePath: tempFile.path),
-          ),
-        );
+        _showPreview(tempFile.path);
       }
     } catch (e) {
       if (mounted) {
@@ -139,12 +168,7 @@ class _ScanScreenState extends State<ScanScreen>
       // Only increment scan AFTER successful read + save
       await ScanGate.incrementScan();
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ResultScreen(imagePath: tempFile.path),
-          ),
-        );
+        _showPreview(tempFile.path);
       }
     }
   }
@@ -280,6 +304,85 @@ class _ScanScreenState extends State<ScanScreen>
               ),
             ),
 
+          // ─── Captured Image Preview (Hero source) ─────────
+          if (_capturedImagePath != null)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () {
+                  _previewTimer?.cancel();
+                  if (mounted) {
+                    final path = _capturedImagePath!;
+                    setState(() => _capturedImagePath = null);
+                    _navigateToResult(path);
+                  }
+                },
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Hero(
+                      tag: 'food_image_${_capturedImagePath}',
+                      child: Image.file(
+                        File(_capturedImagePath!),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    // Dark overlay + hint text
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.6),
+                            Colors.transparent,
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 40,
+                      left: 0, right: 0,
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.4),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.auto_awesome_rounded, color: MacroSnapTheme.neonGreen, size: 18),
+                                SizedBox(width: 8),
+                                Text('Analyzing your meal...',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    )),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text('Tap anywhere to continue',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.5),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              )),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          // ─── Camera overlays (hidden during preview) ───────
+          if (_capturedImagePath == null) ...[
+
           // Dark gradient overlay at bottom for button visibility
           Positioned(
             left: 0, right: 0, bottom: 0,
@@ -410,6 +513,8 @@ class _ScanScreenState extends State<ScanScreen>
               ),
             ),
           ),
+
+          ], // end if _capturedImagePath == null
         ],
       ),
     );

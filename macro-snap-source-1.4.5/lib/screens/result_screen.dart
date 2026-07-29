@@ -288,7 +288,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
         leading: IconButton(
           icon: Icon(Icons.close_rounded,
               color: isDark ? Colors.white : const Color(0xFF1A1A1A), size: 24),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
         ),
         title: Text(
           _isAnalyzing ? 'Analyzing...' : _error != null ? 'Error' : 'Results',
@@ -298,12 +298,18 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
           ),
         ),
       ),
-      body: SafeArea(
-        child: _isAnalyzing
-            ? _buildLoadingState(isDark)
-            : _error != null
-                ? _buildError(isDark)
-                : _buildResults(isDark),
+      body: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) Navigator.of(context).popUntil((route) => route.isFirst);
+        },
+        child: SafeArea(
+          child: _isAnalyzing
+              ? _buildLoadingState(isDark)
+              : _error != null
+                  ? _buildError(isDark)
+                  : _buildResults(isDark),
+        ),
       ),
     );
   }
@@ -490,13 +496,16 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
         children: [
           FadeTransition(
             opacity: _fadeAnim,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: Image.file(
-                File(widget.imagePath),
-                height: 220,
-                width: double.infinity,
-                fit: BoxFit.cover,
+            child: Hero(
+              tag: 'food_image_${widget.imagePath}',
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Image.file(
+                  File(widget.imagePath),
+                  height: 220,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ),
