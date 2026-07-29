@@ -366,12 +366,13 @@ class _HabitsTabState extends State<HabitsTab> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Text('💧', style: TextStyle(fontSize: 22)),
-                  SizedBox(width: 10),
+                  const Text('💧', style: TextStyle(fontSize: 22)),
+                  const SizedBox(width: 10),
                   Text('Water Intake',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900,
+                          color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                 ],
               ),
               Text('$glasses / $goal',
@@ -699,8 +700,9 @@ class _HabitsTabState extends State<HabitsTab> {
                         color: MacroSnapTheme.neonGreen, size: 18),
                   ),
                   const SizedBox(width: 10),
-                  const Text('Consistency',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                  Text('Consistency',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900,
+                          color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                 ],
               ),
               const SizedBox(width: 8),
