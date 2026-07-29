@@ -1,11 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.system);
 
 /// MacroSnap dark neon theme — Pop UPI inspired bold & vibrant aesthetic
 class MacroSnapTheme {
-  // ─── Pop UPI Inspired Neon Palette ─────────────────────────
+  // ─── Neon Palette ──────────────────────────────────────────
   static const Color neonGreen = Color(0xFF00FF66);
   static const Color neonPink = Color(0xFFFF007F);
   static const Color neonPurple = Color(0xFF7C3AED);
@@ -14,31 +14,61 @@ class MacroSnapTheme {
   static const Color neonYellow = Color(0xFFFFD600);
   static const Color neonRed = Color(0xFFFF1744);
 
-  // Legacy MacroSnap colors (kept for backward compat)
-  static const Color emerald = Color(0xFF00C853);
-  static const Color emeraldLight = Color(0xFF69F0AE);
-  static const Color emeraldDark = Color(0xFF009624);
-  static const Color amber = Color(0xFFFFAB00);
-  static const Color rose = Color(0xFFFF1744);
-  static const Color blue = Color(0xFF2979FF);
-  static const Color purple = Color(0xFF7C4DFF);
-  static const Color teal = Color(0xFF00E5FF);
-  static const Color orange = Color(0xFFFF6D00);
-  static const Color surface = Color(0xFFE8E2FF);
+  // ─── Semantic Macro Color Aliases ──────────────────────────
+  /// Calories → amber/orange energy
+  static const Color macroCalories = neonOrange;
+  /// Protein → pink/rose
+  static const Color macroProtein = neonPink;
+  /// Carbs → yellow
+  static const Color macroCarbs = neonYellow;
+  /// Fats → cyan
+  static const Color macroFats = neonCyan;
+  /// Fiber → green
+  static const Color macroFiber = neonGreen;
 
-  // Pop UPI dark backgrounds (deeper noir + vibrant accents)
+  // ─── General Purpose Semantic Tokens ───────────────────────
+  /// Primary text color, slightly muted (body text, descriptions)
+  static Color textPrimaryMuted(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? Colors.white70
+          : const Color(0xFF475569);
+  /// Secondary text color (subtle, for metadata/descriptions)
+  static Color textSecondary(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? Colors.white54
+          : const Color(0xFF64748B);
+  /// Tertiary text color (very subtle, for hints/placeholders)
+  static Color textTertiary(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? Colors.white38
+          : const Color(0xFF94A3B8);
+  /// Quaternary text color (barely visible, decorative)
+  static Color textQuaternary(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? Colors.white24
+          : const Color(0xFFCBD5E1);
+  /// Card background color (themed)
+  static Color cardBackground(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? cardDark
+          : Colors.white;
+  /// Subtle border color
+  static Color borderSubtle(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? Colors.white10
+          : const Color(0xFFE2E8F0);
+
+  /// Convenience: list of all macro colors for cycling
+  static const List<Color> macroColors = [neonPink, neonOrange, neonCyan, neonGreen, neonPurple, neonYellow];
+
+  // ─── Background & Surface Colors ───────────────────────────
   static const Color surfaceDark = Color(0xFF07070A);
+  static const Color surfaceLight = Color(0xFFE8E2FF);
   static const Color cardDark = Color(0xFF111118);
   static const Color cardDarkBorder = Color(0xFF2E2E3E);
   static const Color cardDarkLight = Color(0xFF181822);
 
-  // MacroSnap legacy backgrounds
-  static const Color glassDark = Color(0x1AFFFFFF);
-  static const Color glassLight = Color(0x0A000000);
-
-  static const List<Color> macroColors = [neonPink, neonOrange, neonCyan, neonGreen, neonPurple, neonYellow];
-
-  // ─── Pop UPI-style Card Decoration ─────────────────────────
+  // ─── Card Decorations ──────────────────────────────────────
   /// Dark gradient card with neon border (Pop UPI hero card style)
   static BoxDecoration habitlyHeroCard(BuildContext context) {
     return BoxDecoration(
@@ -108,10 +138,10 @@ class MacroSnapTheme {
         primary: neonGreen,
         secondary: neonPink,
         tertiary: neonCyan,
-        surface: surface,
+        surface: surfaceLight,
         error: neonPink,
       ),
-      scaffoldBackgroundColor: surface,
+      scaffoldBackgroundColor: surfaceLight,
       inputDecorationTheme: _inputTheme(false),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
@@ -224,7 +254,7 @@ class MacroSnapTheme {
     );
   }
 
-  // ─── Legacy glass decoration (keep for backward compat) ───
+  // ─── Glass Decoration (unified) ────────────────────────────
   static BoxDecoration glassDecoration(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return isDark ? habitlyCard(context) : BoxDecoration(
@@ -233,7 +263,7 @@ class MacroSnapTheme {
       border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
       boxShadow: [
         BoxShadow(
-          color: const Color(0xFF059669).withValues(alpha: 0.08),
+          color: neonGreen.withValues(alpha: 0.08),
           blurRadius: 30,
           offset: const Offset(0, 8),
         ),
@@ -261,4 +291,3 @@ class MacroSnapTheme {
     );
   }
 }
-

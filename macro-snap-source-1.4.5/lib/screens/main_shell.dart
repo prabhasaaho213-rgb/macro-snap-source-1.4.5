@@ -111,7 +111,7 @@ class _MainShellState extends State<MainShell> {
             child: Text('Not now',
                 style: TextStyle(
                   fontSize: 14, fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                  color: MacroSnapTheme.textTertiary(context),
                 )),
           ),
         ],
@@ -162,7 +162,13 @@ class _MainShellState extends State<MainShell> {
         },
         child: _currentIndex == 1
             // Scan tab: build fresh each time so camera initializes properly
-            ? ScanScreen(key: ValueKey('scan_${DateTime.now().millisecondsSinceEpoch}'))
+            ? PopScope(
+                canPop: false,
+                onPopInvokedWithResult: (didPop, _) {
+                  if (!didPop) setState(() => _currentIndex = 0);
+                },
+                child: ScanScreen(key: ValueKey('scan_${DateTime.now().millisecondsSinceEpoch}')),
+              )
             // Other tabs: use IndexedStack to preserve state
             : IndexedStack(
                 index: _nonScanIndex(_currentIndex),
@@ -300,7 +306,7 @@ class _NavItem extends StatelessWidget {
               size: 20,
               color: isSelected
                   ? MacroSnapTheme.neonGreen
-                  : (isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                  : (MacroSnapTheme.textTertiary(context)),
             ),
             if (isSelected) ...[
               const SizedBox(width: 6),

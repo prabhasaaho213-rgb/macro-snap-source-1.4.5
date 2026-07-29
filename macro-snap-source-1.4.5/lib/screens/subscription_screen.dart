@@ -165,10 +165,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 width: 72, height: 72,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
+                  color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
                 ),
                 child: Icon(Icons.hourglass_top_rounded,
-                    color: MacroSnapTheme.emerald, size: 40),
+                    color: MacroSnapTheme.neonGreen, size: 40),
               ),
               const SizedBox(height: 20),
               Text('Payment Submitted',
@@ -178,14 +178,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               Text('Your payment is being verified.\nYou\'ll get access once confirmed.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 14,
-                      color: isDark ? Colors.white54 : const Color(0xFF64748B))),
+                      color: MacroSnapTheme.textSecondary(context))),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity, height: 48,
                 child: FilledButton(
                   onPressed: () => Navigator.of(ctx).pop(),
                   style: FilledButton.styleFrom(
-                    backgroundColor: MacroSnapTheme.emerald,
+                    backgroundColor: MacroSnapTheme.neonGreen,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
                   ),
@@ -232,10 +232,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     width: 80, height: 80,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
+                      color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
                     ),
                     child: Icon(Icons.check_circle_rounded,
-                        color: MacroSnapTheme.emerald, size: 56),
+                        color: MacroSnapTheme.neonGreen, size: 56),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -246,14 +246,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 Text('Your subscription is now active',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 14,
-                        color: isDark ? Colors.white54 : const Color(0xFF64748B))),
+                        color: MacroSnapTheme.textSecondary(context))),
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity, height: 48,
                   child: FilledButton(
                     onPressed: () => Navigator.of(ctx).pop(),
                     style: FilledButton.styleFrom(
-                      backgroundColor: MacroSnapTheme.emerald,
+                      backgroundColor: MacroSnapTheme.neonGreen,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
                     ),
@@ -274,7 +274,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
       behavior: SnackBarBehavior.floating,
-      backgroundColor: MacroSnapTheme.rose,
+      backgroundColor: MacroSnapTheme.neonPink,
     ));
   }
 
@@ -351,11 +351,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: const LinearGradient(
-                    colors: [MacroSnapTheme.emerald, MacroSnapTheme.emeraldLight],
+                    colors: [MacroSnapTheme.neonGreen, MacroSnapTheme.neonGreen],
                   ),
                   boxShadow: [
                     BoxShadow(
-                        color: MacroSnapTheme.emerald.withValues(alpha:  0.3),
+                        color: MacroSnapTheme.neonGreen.withValues(alpha:  0.3),
                         blurRadius: 20, offset: const Offset(0, 6))
                   ],
                 ),
@@ -379,7 +379,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     fontSize: 15, fontWeight: FontWeight.w400,
-                    color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                    color: MacroSnapTheme.textTertiary(context)),
               ),
               const SizedBox(height: 32),
               _buildFeatureRow(Icons.local_fire_department_rounded, 'Streak Tracking',
@@ -405,7 +405,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                           Text('\u20B9',
                               style: TextStyle(fontSize: 24,
                                   fontWeight: FontWeight.w700,
-                                  color: MacroSnapTheme.emerald)),
+                                  color: MacroSnapTheme.neonGreen)),
                           const SizedBox(width: 2),
                           Text('29',
                               style: TextStyle(fontSize: 56,
@@ -431,7 +431,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                             : 'One-time payment \u2022 Unlimited access',
                         style: TextStyle(fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: MacroSnapTheme.emerald.withValues(alpha:  0.8)),
+                            color: MacroSnapTheme.neonGreen.withValues(alpha:  0.8)),
                       ),
                     ],
                   ),
@@ -443,7 +443,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.check_circle,
-                        color: MacroSnapTheme.emerald, size: 16),
+                        color: MacroSnapTheme.neonGreen, size: 16),
                     const SizedBox(width: 6),
                     Text('Logged in as $_phone',
                         style: TextStyle(fontSize: 13,
@@ -472,7 +472,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       color: isDark ? MacroSnapTheme.cardDark : Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                          color: MacroSnapTheme.borderSubtle(context)),
                     ),
                     child: Column(children: [
                       Row(
@@ -480,11 +480,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                           Container(
                             width: 44, height: 44,
                             decoration: BoxDecoration(
-                              color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
+                              color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(Icons.credit_card_rounded,
-                                color: MacroSnapTheme.emerald, size: 22),
+                                color: MacroSnapTheme.neonGreen, size: 22),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
@@ -540,7 +540,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       color: isDark ? MacroSnapTheme.cardDark : Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                          color: MacroSnapTheme.borderSubtle(context)),
                     ),
                     child: Column(children: [
                       Row(
@@ -548,11 +548,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                           Container(
                             width: 44, height: 44,
                             decoration: BoxDecoration(
-                              color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
+                              color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(Icons.payments_rounded,
-                                color: MacroSnapTheme.emerald, size: 22),
+                                color: MacroSnapTheme.neonGreen, size: 22),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
@@ -583,16 +583,16 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                           decoration: BoxDecoration(
-                            color: MacroSnapTheme.emerald.withValues(alpha:  0.06),
+                            color: MacroSnapTheme.neonGreen.withValues(alpha:  0.06),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                                color: MacroSnapTheme.emerald.withValues(alpha:  0.2)),
+                                color: MacroSnapTheme.neonGreen.withValues(alpha:  0.2)),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(Icons.account_balance_rounded,
-                                  color: MacroSnapTheme.emerald, size: 18),
+                                  color: MacroSnapTheme.neonGreen, size: 18),
                               const SizedBox(width: 8),
                               Text('7569086885@yespop',
                                   style: TextStyle(
@@ -604,7 +604,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                                   )),
                               const SizedBox(width: 8),
                               Icon(Icons.copy_rounded,
-                                  color: MacroSnapTheme.emerald, size: 18),
+                                  color: MacroSnapTheme.neonGreen, size: 18),
                             ],
                           ),
                         ),
@@ -631,7 +631,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       color: isDark ? MacroSnapTheme.cardDark : Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                          color: MacroSnapTheme.borderSubtle(context)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -639,7 +639,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         Row(
                           children: [
                             Icon(Icons.verified_outlined,
-                                color: MacroSnapTheme.emerald, size: 20),
+                                color: MacroSnapTheme.neonGreen, size: 20),
                             const SizedBox(width: 8),
                             Text('Verify Payment',
                                 style: TextStyle(fontSize: 15,
@@ -681,12 +681,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                                   width: 14, height: 14,
                                   child: CircularProgressIndicator(
                                       strokeWidth: 1.5,
-                                      color: MacroSnapTheme.emerald),
+                                      color: MacroSnapTheme.neonGreen),
                                 ),
                                 const SizedBox(width: 8),
                                 Text('Awaiting confirmation...',
                                     style: TextStyle(fontSize: 13,
-                                        color: MacroSnapTheme.emerald,
+                                        color: MacroSnapTheme.neonGreen,
                                         fontWeight: FontWeight.w600)),
                               ],
                             ),
@@ -709,7 +709,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     ),
                     child: Text('Subscribed \u2713',
                         style: TextStyle(
-                            color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                            color: MacroSnapTheme.textSecondary(context),
                             fontSize: 16, fontWeight: FontWeight.w700)),
                   ),
                 ),
@@ -726,7 +726,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     });
                   },
                   child: const Text('Cancel Subscription',
-                      style: TextStyle(color: MacroSnapTheme.rose)),
+                      style: TextStyle(color: MacroSnapTheme.neonPink)),
                 ),
               ],
               const SizedBox(height: 16),
@@ -741,21 +741,21 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: MacroSnapTheme.emerald.withValues(alpha:  0.06),
+                    color: MacroSnapTheme.neonGreen.withValues(alpha:  0.06),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: MacroSnapTheme.emerald.withValues(alpha:  0.15)),
+                        color: MacroSnapTheme.neonGreen.withValues(alpha:  0.15)),
                   ),
                   child: Row(
                     children: [
                       Container(
                         width: 44, height: 44,
                         decoration: BoxDecoration(
-                          color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
+                          color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: const Icon(Icons.emoji_events_rounded,
-                            color: MacroSnapTheme.emerald, size: 22),
+                            color: MacroSnapTheme.neonGreen, size: 22),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -775,7 +775,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         ),
                       ),
                       Icon(Icons.chevron_right_rounded,
-                          color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                          color: MacroSnapTheme.textTertiary(context)),
                     ],
                   ),
                 ),
@@ -797,9 +797,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           Container(
             width: 44, height: 44,
             decoration: BoxDecoration(
-                color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
+                color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
                 borderRadius: BorderRadius.circular(14)),
-            child: Icon(icon, color: MacroSnapTheme.emerald, size: 22),
+            child: Icon(icon, color: MacroSnapTheme.neonGreen, size: 22),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -811,12 +811,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                 Text(subtitle,
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w400,
-                        color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                        color: MacroSnapTheme.textTertiary(context))),
               ],
             ),
           ),
           Icon(Icons.check_circle_rounded,
-              color: MacroSnapTheme.emerald, size: 22),
+              color: MacroSnapTheme.neonGreen, size: 22),
         ],
       ),
     );

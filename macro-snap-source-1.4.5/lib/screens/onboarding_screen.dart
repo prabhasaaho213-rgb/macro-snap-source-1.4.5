@@ -61,7 +61,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surface;
+    final bgColor = isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surfaceLight;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -80,7 +80,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: Text(
                         'Skip',
                         style: TextStyle(
-                          color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                          color: MacroSnapTheme.textTertiary(context),
                           fontWeight: FontWeight.w700,
                           fontSize: 15,
                         ),
@@ -243,7 +243,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: isDark ? Colors.white54 : const Color(0xFF64748B),
+              color: MacroSnapTheme.textSecondary(context),
               height: 1.5,
             ),
           ),

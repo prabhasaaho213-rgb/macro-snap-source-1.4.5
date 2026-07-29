@@ -78,7 +78,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(width: 40, height: 4, decoration: BoxDecoration(color: isDark ? Colors.white24 : const Color(0xFFCBD5E1), borderRadius: BorderRadius.circular(2))),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: MacroSnapTheme.textQuaternary(context), borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 20),
             Text('Choose Your Avatar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
             const SizedBox(height: 20),
@@ -94,8 +94,8 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
                   width: 60, height: 60,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _avatar == a ? MacroSnapTheme.emerald.withValues(alpha:  0.15) : (isDark ? Colors.white10 : const Color(0xFFF1F5F9)),
-                    border: _avatar == a ? Border.all(color: MacroSnapTheme.emerald, width: 2) : null,
+                    color: _avatar == a ? MacroSnapTheme.neonGreen.withValues(alpha:  0.15) : (isDark ? Colors.white10 : const Color(0xFFF1F5F9)),
+                    border: _avatar == a ? Border.all(color: MacroSnapTheme.neonGreen, width: 2) : null,
                   ),
                   child: Center(child: Text(a, style: const TextStyle(fontSize: 28))),
                 ),
@@ -113,7 +113,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
     final a = int.tryParse(_ageCtrl.text);
     if (w == null || h == null || a == null || w <= 0 || h <= 0 || a <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: const Text('Enter valid weight, height & age'), backgroundColor: MacroSnapTheme.rose),
+        SnackBar(content: const Text('Enter valid weight, height & age'), backgroundColor: MacroSnapTheme.macroProtein),
       );
       return;
     }
@@ -202,9 +202,9 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
               child: Container(
                 width: 80, height: 80,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [MacroSnapTheme.emerald, MacroSnapTheme.emeraldLight], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                  gradient: const LinearGradient(colors: [MacroSnapTheme.neonGreen, MacroSnapTheme.neonGreen], begin: Alignment.topLeft, end: Alignment.bottomRight),
                   shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: MacroSnapTheme.emerald.withValues(alpha:  0.3), blurRadius: 12, offset: const Offset(0, 4))],
+                  boxShadow: [BoxShadow(color: MacroSnapTheme.neonGreen.withValues(alpha:  0.3), blurRadius: 12, offset: const Offset(0, 4))],
                 ),
                 child: Center(child: Text(_avatar, style: const TextStyle(fontSize: 36))),
               ),
@@ -212,7 +212,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
           ),
           const SizedBox(height: 8),
           Center(
-            child: Text('Tap to change avatar', style: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+            child: Text('Tap to change avatar', style: TextStyle(fontSize: 12, color: MacroSnapTheme.textTertiary(context))),
           ),
           const SizedBox(height: 16),
           Text('Your Details', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
@@ -229,21 +229,21 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
           const SizedBox(height: 16),
           DropdownButtonFormField<Gender>(
             initialValue: _gender,
-            decoration: InputDecoration(labelText: 'Gender', filled: true, fillColor: isDark ? MacroSnapTheme.cardDark : Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0))), contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18)),
+            decoration: InputDecoration(labelText: 'Gender', filled: true, fillColor: isDark ? MacroSnapTheme.cardDark : Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: MacroSnapTheme.borderSubtle(context))), contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18)),
             items: const [DropdownMenuItem(value: Gender.male, child: Text('Male')), DropdownMenuItem(value: Gender.female, child: Text('Female'))],
             onChanged: (v) => setState(() => _gender = v!),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<Goal>(
             initialValue: _goal,
-            decoration: InputDecoration(labelText: 'Goal', filled: true, fillColor: isDark ? MacroSnapTheme.cardDark : Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0))), contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18)),
+            decoration: InputDecoration(labelText: 'Goal', filled: true, fillColor: isDark ? MacroSnapTheme.cardDark : Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: MacroSnapTheme.borderSubtle(context))), contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18)),
             items: Goal.values.map((g) => DropdownMenuItem(value: g, child: Text(DietPlanService.goalLabel(g)))).toList(),
             onChanged: (v) => setState(() => _goal = v!),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<ActivityLevel>(
             initialValue: _activity,
-            decoration: InputDecoration(labelText: 'Activity Level', filled: true, fillColor: isDark ? MacroSnapTheme.cardDark : Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0))), contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18)),
+            decoration: InputDecoration(labelText: 'Activity Level', filled: true, fillColor: isDark ? MacroSnapTheme.cardDark : Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: MacroSnapTheme.borderSubtle(context))), contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18)),
             items: ActivityLevel.values.map((a) => DropdownMenuItem(value: a, child: Text(DietPlanService.activityLabel(a)))).toList(),
             onChanged: (v) => setState(() => _activity = v!),
           ),
@@ -264,8 +264,8 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
           Row(children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: MacroSnapTheme.emerald.withValues(alpha:  0.1), borderRadius: BorderRadius.circular(20)),
-              child: Text(DietPlanService.goalLabel(p.goal), style: const TextStyle(color: MacroSnapTheme.emerald, fontSize: 13, fontWeight: FontWeight.w700)),
+              decoration: BoxDecoration(color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1), borderRadius: BorderRadius.circular(20)),
+              child: Text(DietPlanService.goalLabel(p.goal), style: const TextStyle(color: MacroSnapTheme.neonGreen, fontSize: 13, fontWeight: FontWeight.w700)),
             ),
             const Spacer(),
             Text('${p.targetCalories} kcal', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
@@ -273,14 +273,14 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
           const SizedBox(height: 8),
           Text('BMI ${bmi.toStringAsFixed(1)} | BMR ${p.bmr.round()} kcal | TDEE ${p.tdee.round()} kcal',
               overflow: TextOverflow.ellipsis, maxLines: 1,
-              style: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+              style: TextStyle(fontSize: 12, color: MacroSnapTheme.textTertiary(context))),
           const Divider(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _targetItem('Protein', p.targetProtein.toInt(), 'g', MacroSnapTheme.rose, isDark),
-              _targetItem('Carbs', p.targetCarbs.toInt(), 'g', MacroSnapTheme.amber, isDark),
-              _targetItem('Fats', p.targetFats.toInt(), 'g', MacroSnapTheme.blue, isDark),
+              _targetItem('Protein', p.targetProtein.toInt(), 'g', MacroSnapTheme.macroProtein, isDark),
+              _targetItem('Carbs', p.targetCarbs.toInt(), 'g', MacroSnapTheme.macroCalories, isDark),
+              _targetItem('Fats', p.targetFats.toInt(), 'g', MacroSnapTheme.macroFats, isDark),
             ],
           ),
         ],
@@ -309,7 +309,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [MacroSnapTheme.emerald, MacroSnapTheme.emeraldLight]),
+                gradient: const LinearGradient(colors: [MacroSnapTheme.neonGreen, MacroSnapTheme.neonGreen]),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Text('AI', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
@@ -333,7 +333,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
             if (_aiPlan!['plan'] is Map && (_aiPlan!['plan'] as Map)['water'] != null) ...[
               const SizedBox(height: 8),
               Row(children: [
-                Icon(Icons.water_drop, size: 16, color: MacroSnapTheme.blue),
+                Icon(Icons.water_drop, size: 16, color: MacroSnapTheme.macroFats),
                 const SizedBox(width: 6),
                 Text('${_aiPlan!['plan']['water']}', style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : const Color(0xFF94A3B8))),
               ]),
@@ -343,10 +343,10 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
               Container(
                 width: double.infinity, padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark ? MacroSnapTheme.rose.withValues(alpha:  0.15) : const Color(0xFFFEF2F2),
+                  color: isDark ? MacroSnapTheme.macroProtein.withValues(alpha:  0.15) : const Color(0xFFFEF2F2),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(_aiError, style: TextStyle(color: isDark ? MacroSnapTheme.rose : const Color(0xFFDC2626), fontSize: 12)),
+                child: Text(_aiError, style: TextStyle(color: isDark ? MacroSnapTheme.macroProtein : const Color(0xFFDC2626), fontSize: 12)),
               ),
             GradientButton(
               label: _generating ? 'Generating...' : _subscribed ? 'Generate AI Meal Plan' : 'Subscribe to Unlock AI Plan',
@@ -377,21 +377,21 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Text(meal['time'] ?? '', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: MacroSnapTheme.emerald)),
+              Text(meal['time'] ?? '', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: MacroSnapTheme.neonGreen)),
               const Spacer(),
               Text('${meal['calories'] ?? 0} kcal', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
             ]),
             const SizedBox(height: 4),
             Text(meal['name'] ?? '', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
             const SizedBox(height: 4),
-            Text(meal['description'] ?? '', style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : const Color(0xFF64748B))),
+            Text(meal['description'] ?? '', style: TextStyle(fontSize: 12, color: MacroSnapTheme.textSecondary(context))),
             const SizedBox(height: 4),
             Row(children: [
-              _macroChip('P ${meal['protein_g'] ?? 0}g', MacroSnapTheme.rose),
+              _macroChip('P ${meal['protein_g'] ?? 0}g', MacroSnapTheme.macroProtein),
               const SizedBox(width: 6),
-              _macroChip('C ${meal['carbs_g'] ?? 0}g', MacroSnapTheme.amber),
+              _macroChip('C ${meal['carbs_g'] ?? 0}g', MacroSnapTheme.macroCalories),
               const SizedBox(width: 6),
-              _macroChip('F ${meal['fats_g'] ?? 0}g', MacroSnapTheme.blue),
+              _macroChip('F ${meal['fats_g'] ?? 0}g', MacroSnapTheme.macroFats),
             ]),
           ]),
         ),
@@ -419,9 +419,9 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
         children: [
           Text("Today's Progress", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
           const SizedBox(height: 16),
-          _progressRow('Calories', cal, p.targetCalories, ratio, MacroSnapTheme.amber, isDark),
+          _progressRow('Calories', cal, p.targetCalories, ratio, MacroSnapTheme.macroCalories, isDark),
           const SizedBox(height: 12),
-          _progressRow('Protein', protein.toInt(), p.targetProtein.toInt(), protRatio, MacroSnapTheme.rose, isDark),
+          _progressRow('Protein', protein.toInt(), p.targetProtein.toInt(), protRatio, MacroSnapTheme.macroProtein, isDark),
         ],
       ),
     );
@@ -430,7 +430,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
   Widget _progressRow(String label, int current, int target, double ratio, Color color, bool isDark) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Text(label, style: TextStyle(fontSize: 13, color: isDark ? Colors.white54 : const Color(0xFF64748B))),
+        Text(label, style: TextStyle(fontSize: 13, color: MacroSnapTheme.textSecondary(context))),
         Text('$current / $target', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
       ]),
       const SizedBox(height: 6),
@@ -449,11 +449,11 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
         children: [
           Text('Suggested Meal Plan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
           const SizedBox(height: 16),
-          _mealItem(Icons.wb_sunny_rounded, 'Breakfast (~${(p.targetCalories * 0.25).round()} kcal)', _breakfastSuggestion(p), MacroSnapTheme.amber, isDark),
-          _mealItem(Icons.free_breakfast_rounded, 'Morning Snack (~${(p.targetCalories * 0.1).round()} kcal)', _snackSuggestion(p), MacroSnapTheme.emerald, isDark),
-          _mealItem(Icons.wb_cloudy_rounded, 'Lunch (~${(p.targetCalories * 0.3).round()} kcal)', _lunchSuggestion(p), MacroSnapTheme.blue, isDark),
-          _mealItem(Icons.nightlight_round, 'Evening Snack (~${(p.targetCalories * 0.1).round()} kcal)', _snackSuggestion(p), MacroSnapTheme.emerald, isDark),
-          _mealItem(Icons.nights_stay_rounded, 'Dinner (~${(p.targetCalories * 0.25).round()} kcal)', _dinnerSuggestion(p), MacroSnapTheme.rose, isDark),
+          _mealItem(Icons.wb_sunny_rounded, 'Breakfast (~${(p.targetCalories * 0.25).round()} kcal)', _breakfastSuggestion(p), MacroSnapTheme.macroCalories, isDark),
+          _mealItem(Icons.free_breakfast_rounded, 'Morning Snack (~${(p.targetCalories * 0.1).round()} kcal)', _snackSuggestion(p), MacroSnapTheme.neonGreen, isDark),
+          _mealItem(Icons.wb_cloudy_rounded, 'Lunch (~${(p.targetCalories * 0.3).round()} kcal)', _lunchSuggestion(p), MacroSnapTheme.macroFats, isDark),
+          _mealItem(Icons.nightlight_round, 'Evening Snack (~${(p.targetCalories * 0.1).round()} kcal)', _snackSuggestion(p), MacroSnapTheme.neonGreen, isDark),
+          _mealItem(Icons.nights_stay_rounded, 'Dinner (~${(p.targetCalories * 0.25).round()} kcal)', _dinnerSuggestion(p), MacroSnapTheme.macroProtein, isDark),
           const SizedBox(height: 16),
           Text('Portion sizes are approximate. Adjust based on your appetite and progress.', style: TextStyle(fontSize: 12, color: isDark ? Colors.white30 : const Color(0xFFCBD5E1))),
         ],

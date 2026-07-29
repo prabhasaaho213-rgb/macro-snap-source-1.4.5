@@ -58,8 +58,7 @@ class _HabitsTabState extends State<HabitsTab> {
         : 0.0;
 
     return Scaffold(
-      backgroundColor: isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surface,
-      floatingActionButton: _fabButton(context),
+      backgroundColor: isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surfaceLight,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(18, 10, 18, 120),
@@ -92,7 +91,7 @@ class _HabitsTabState extends State<HabitsTab> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(Icons.settings_rounded,
-                            color: isDark ? Colors.white38 : const Color(0xFF94A3B8), size: 20),
+                            color: MacroSnapTheme.textTertiary(context), size: 20),
                       ),
                     ),
                   ],
@@ -103,7 +102,7 @@ class _HabitsTabState extends State<HabitsTab> {
             Text(
               '${weekdayLabel(DateTime.now().weekday)}, ${_monthDay(today)}',
               style: TextStyle(
-                color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                color: MacroSnapTheme.textSecondary(context),
                 fontSize: 14,
               ),
             ),
@@ -119,23 +118,30 @@ class _HabitsTabState extends State<HabitsTab> {
             // ─── ─── HAS HABITS ─── FULL LAYOUT ──────────────
             else ...[const SizedBox(height: 14),
 
-            // ─── Hero Card ──────────────────────────────────
+            // ─── Create Habit Button (always visible at top) ─
             AnimatedEntrance(
               delayMs: 0,
+              child: _createButton(context),
+            ),
+            const SizedBox(height: 16),
+
+            // ─── Hero Card ──────────────────────────────────
+            AnimatedEntrance(
+              delayMs: 50,
               child: _heroCard(progress, completed, active.length, isDark),
             ),
             const SizedBox(height: 18),
 
             // ─── Water Tracker ───────────────────────────────
             AnimatedEntrance(
-              delayMs: 50,
+              delayMs: 100,
               child: _waterCard(waterProgress, isDark),
             ),
             const SizedBox(height: 24),
 
             // ─── Consistency Map ────────────────────────────
             AnimatedEntrance(
-              delayMs: 100,
+              delayMs: 150,
               child: _consistencyMapCard(isDark),
             ),
             const SizedBox(height: 24),
@@ -162,10 +168,27 @@ class _HabitsTabState extends State<HabitsTab> {
             if (active.isEmpty)
               _emptyState(isDark)
             else
-              ...active.map((h) => AnimatedEntrance(
-                delayMs: 50 + active.indexOf(h) * 30,
-                child: _missionCard(h, isDark),
-              )),
+              ReorderableListView(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                buildDefaultDragHandles: false,
+                onReorderItem: (oldI, newI) {
+                  final h = active[oldI];
+                  final target = active[newI];
+                  store.habits.remove(h);
+                  final targetPos = store.habits.indexOf(target);
+                  store.habits.insert(targetPos, h);
+                  store.save();
+                },
+                children: active.asMap().entries.map((entry) {
+                  final i = entry.key;
+                  final h = entry.value;
+                  return AnimatedEntrance(
+                    delayMs: 50 + i * 30,
+                    child: _missionCard(h, isDark, index: i),
+                  );
+                }).toList(),
+              ),
 
             // ─── Habit Limit Indicator ───────────────────────
             if (!_subscribed && store.habits.isNotEmpty) ...[
@@ -176,29 +199,9 @@ class _HabitsTabState extends State<HabitsTab> {
               const SizedBox(height: 16),
             ],
 
-            const SizedBox(height: 24),
-
-            // ─── Create Habit Button ─────────────────────────
-            _createButton(context),
             ],
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _fabButton(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: () => _onCreateTap(context),
-      backgroundColor: store.habitLimitReached && !_subscribed
-          ? MacroSnapTheme.neonPurple
-          : MacroSnapTheme.neonGreen,
-      foregroundColor: Colors.black,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Icon(
-        store.habitLimitReached && !_subscribed
-            ? Icons.lock_rounded
-            : Icons.add_rounded,
       ),
     );
   }
@@ -401,7 +404,7 @@ class _HabitsTabState extends State<HabitsTab> {
                   ),
                   child: Icon(
                     filled ? Icons.water_drop_rounded : Icons.water_drop_outlined,
-                    color: filled ? MacroSnapTheme.neonCyan : (isDark ? Colors.white24 : const Color(0xFFCBD5E1)),
+                    color: filled ? MacroSnapTheme.neonCyan : (MacroSnapTheme.textQuaternary(context)),
                     size: 18,
                   ),
                 ),
@@ -426,78 +429,132 @@ class _HabitsTabState extends State<HabitsTab> {
   }
 
   // ─── MISSION CARD ──────────────────────────────────────────
-  Widget _missionCard(Habit h, bool isDark) {
+  Widget _missionCard(Habit h, bool isDark, {required int index}) {
     final done = h.isCompleted(DateTime.now());
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Dismissible(
-        key: ValueKey('habit_${h.id}'),
-        direction: DismissDirection.horizontal,
-        resizeDuration: null,
-        confirmDismiss: (direction) async {
-          if (direction == DismissDirection.startToEnd && !done) {
-            // Swipe right → complete
-            h.toggle(DateTime.now());
-            store.update(h);
-          } else if (direction == DismissDirection.endToStart && done) {
-            // Swipe left → reset
-            h.toggle(DateTime.now());
-            store.update(h);
-          }
-          return false; // snap back, don't remove
+      key: ValueKey('habit_${h.id}'),
+      child: GestureDetector(
+        onTap: () {
+          h.toggle(DateTime.now());
+          store.update(h);
         },
-        background: Container(
-          decoration: BoxDecoration(
-            color: MacroSnapTheme.neonGreen.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(28),
-          ),
-          alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.only(left: 24),
+        onLongPress: () => _showHabitActions(context, h, isDark),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: MacroSnapTheme.habitlyCard(context),
           child: Row(
             children: [
-              const Icon(Icons.check_circle_rounded,
-                  color: MacroSnapTheme.neonGreen, size: 28),
-              const SizedBox(width: 8),
-              Text('COMPLETE',
-                  style: TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w900,
-                    color: MacroSnapTheme.neonGreen,
-                  )),
+              // Drag handle — emoji container (long-hold to reorder)
+              ReorderableDragStartListener(
+                index: index,
+                child: Container(
+                  width: 52, height: 52,
+                  decoration: MacroSnapTheme.emojiContainer(h.color),
+                  child: Center(
+                    child: Text(h.emoji, style: const TextStyle(fontSize: 25)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      h.name,
+                      style: TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w800,
+                        decoration: done ? TextDecoration.lineThrough : null,
+                        color: done
+                            ? (MacroSnapTheme.textTertiary(context))
+                            : (isDark ? Colors.white : const Color(0xFF1A1A1A)),
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Row(
+                      children: [
+                        const Icon(Icons.local_fire_department_rounded,
+                            color: MacroSnapTheme.neonPink, size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${h.currentStreak()} day streak · ${h.frequency}',
+                          style: TextStyle(
+                            color: MacroSnapTheme.textSecondary(context),
+                            fontSize: 12, fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 4),
+              // Check/Bolt status indicator
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                width: 46, height: 46,
+                decoration: BoxDecoration(
+                  color: done
+                      ? MacroSnapTheme.neonGreen
+                      : MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  done ? Icons.check_rounded : Icons.bolt_rounded,
+                  color: done ? Colors.black : MacroSnapTheme.neonGreen,
+                  size: 27,
+                ),
+              ),
+              // Drag grip icon
+              ReorderableDragStartListener(
+                index: index,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: Icon(
+                    Icons.drag_handle_rounded,
+                    color: MacroSnapTheme.textQuaternary(context),
+                    size: 28,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
-        secondaryBackground: Container(
-          decoration: BoxDecoration(
-            color: MacroSnapTheme.neonPink.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(28),
-          ),
-          alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: 24),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('RESET',
-                  style: TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w900,
-                    color: MacroSnapTheme.neonPink,
-                  )),
-              const SizedBox(width: 8),
-              const Icon(Icons.undo_rounded,
-                  color: MacroSnapTheme.neonPink, size: 24),
-            ],
-          ),
+      ),
+    );
+  }
+
+  // ─── HABIT ACTIONS (Reset Streak or Delete) ─────────────────
+  void _showHabitActions(BuildContext context, Habit h, bool isDark) {
+    final streak = h.currentStreak();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(22, 22, 22, 36),
+        decoration: BoxDecoration(
+          color: isDark ? MacroSnapTheme.cardDark : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         ),
-        child: GestureDetector(
-          onTap: () {
-            h.toggle(DateTime.now());
-            store.update(h);
-          },
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: MacroSnapTheme.habitlyCard(context),
-            child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: MacroSnapTheme.borderSubtle(context),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Habit info header
+            Row(
               children: [
-                // Emoji container
                 Container(
                   width: 52, height: 52,
                   decoration: MacroSnapTheme.emojiContainer(h.color),
@@ -505,58 +562,113 @@ class _HabitsTabState extends State<HabitsTab> {
                     child: Text(h.emoji, style: const TextStyle(fontSize: 25)),
                   ),
                 ),
-                const SizedBox(width: 13),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        h.name,
-                        style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w800,
-                          decoration: done ? TextDecoration.lineThrough : null,
-                          color: done
-                              ? (isDark ? Colors.white38 : const Color(0xFF94A3B8))
-                              : (isDark ? Colors.white : const Color(0xFF1A1A1A)),
-                        ),
-                      ),
-                      const SizedBox(height: 5),
+                      Text(h.name,
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800,
+                              color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+                      const SizedBox(height: 3),
                       Row(
                         children: [
                           const Icon(Icons.local_fire_department_rounded,
                               color: MacroSnapTheme.neonPink, size: 16),
                           const SizedBox(width: 4),
-                          Text(
-                            '${h.currentStreak()} day streak · ${h.frequency}',
-                            style: TextStyle(
-                              color: isDark ? Colors.white54 : const Color(0xFF64748B),
-                              fontSize: 12, fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          Text('$streak day streak · ${h.frequency}',
+                              style: TextStyle(fontSize: 13,
+                                  color: MacroSnapTheme.textSecondary(context))),
                         ],
                       ),
                     ],
                   ),
                 ),
-                // Check/Bolt button
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  width: 46, height: 46,
-                  decoration: BoxDecoration(
-                    color: done
-                        ? MacroSnapTheme.neonGreen
-                        : MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    done ? Icons.check_rounded : Icons.bolt_rounded,
-                    color: done ? Colors.black : MacroSnapTheme.neonGreen,
-                    size: 27,
-                  ),
-                ),
               ],
             ),
-          ),
+            const SizedBox(height: 24),
+
+            // Reset Streak
+            _actionTile(
+              icon: Icons.refresh_rounded,
+              iconColor: MacroSnapTheme.neonOrange,
+              title: 'Reset Streak',
+              subtitle: 'Clear all progress, keep the habit',
+              isDark: isDark,
+              onTap: () {
+                Navigator.pop(ctx);
+                h.completedDates.clear();
+                h.skippedDates.clear();
+                store.update(h);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Streak reset for ${h.name}'),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+
+            // Delete
+            _actionTile(
+              icon: Icons.delete_rounded,
+              iconColor: MacroSnapTheme.neonPink,
+              title: 'Delete Habit',
+              subtitle: 'Remove this habit permanently',
+              isDark: isDark,
+              onTap: () async {
+                Navigator.pop(ctx);
+                await store.remove(h);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _actionTile({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 44, height: 44,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: iconColor, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: TextStyle(fontSize: 13,
+                          color: MacroSnapTheme.textTertiary(context))),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -594,7 +706,7 @@ class _HabitsTabState extends State<HabitsTab> {
               Text('${active.length} habits',
                   style: TextStyle(
                     fontSize: 12, fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                    color: MacroSnapTheme.textTertiary(context),
                   )),
             ],
           ),
@@ -672,7 +784,7 @@ class _HabitsTabState extends State<HabitsTab> {
                 : '${limit - used} habit${limit - used == 1 ? '' : 's'} remaining on Free',
             style: TextStyle(
               fontSize: 12, fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white54 : const Color(0xFF64748B),
+              color: MacroSnapTheme.textSecondary(context),
             ),
           ),
         ],
@@ -723,7 +835,7 @@ class _HabitsTabState extends State<HabitsTab> {
               child: Container(
                 width: 40, height: 4,
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+                  color: MacroSnapTheme.borderSubtle(context),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -752,7 +864,7 @@ class _HabitsTabState extends State<HabitsTab> {
                     Text('$count/${habitNames.length} habits completed',
                         style: TextStyle(
                           fontSize: 13, fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                          color: MacroSnapTheme.textTertiary(context),
                         )),
                   ],
                 ),
@@ -770,7 +882,7 @@ class _HabitsTabState extends State<HabitsTab> {
                       Text('Nothing logged this day',
                           style: TextStyle(
                             fontSize: 15, fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                            color: MacroSnapTheme.textTertiary(context),
                           )),
                     ],
                   ),
@@ -833,7 +945,7 @@ class _HabitsTabState extends State<HabitsTab> {
             Text('Free users get ${HabitStore.freeHabitLimit} habits.\nGo Pro for unlimited habits, AI scans & more.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14,
-                    color: isDark ? Colors.white54 : const Color(0xFF64748B), height: 1.4)),
+                    color: MacroSnapTheme.textSecondary(context), height: 1.4)),
             const SizedBox(height: 24),
             GradientButton(
               label: 'Go Pro - ₹29/mo',
@@ -849,7 +961,7 @@ class _HabitsTabState extends State<HabitsTab> {
               onPressed: () => Navigator.of(ctx).pop(),
               child: Text('Maybe later',
                   style: TextStyle(fontSize: 14,
-                      color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                      color: MacroSnapTheme.textTertiary(context))),
             ),
           ]),
         ),

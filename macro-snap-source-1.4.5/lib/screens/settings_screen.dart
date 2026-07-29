@@ -89,6 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   bool get _isGuest => _phone.isEmpty || _phone.startsWith('guest_');
   String _phone = '';
+  String get _packageVersion => '1.4.19';
 
   Future<void> _upgradeFromGuest() async {
     final phone = await Navigator.push<String>(
@@ -121,7 +122,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: MacroSnapTheme.rose),
+            style: FilledButton.styleFrom(backgroundColor: MacroSnapTheme.neonPink),
             child: const Text('Log Out'),
           ),
         ],
@@ -132,7 +133,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await FirebaseAuth.instance.signOut();
     } catch (_) {}
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    // Only clear auth/session keys — preserve subscription, habits, meals, settings
+    await prefs.remove('phone');
+    await prefs.remove('email');
+    await prefs.remove('photo_url');
+    await prefs.remove('last_sync');
+    await prefs.remove('subscription_offered');
     if (context.mounted) {
       Navigator.pushAndRemoveUntil(
         context,
@@ -238,7 +244,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surface,
+      backgroundColor: isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surfaceLight,
       appBar: AppBar(
         title: Text('Settings', style: TextStyle(fontWeight: FontWeight.w800, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
         backgroundColor: Colors.transparent,
@@ -275,10 +281,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
                           ),
                           const SizedBox(width: 6),
-                          const Icon(Icons.edit_rounded, color: Colors.white38, size: 16),
+                          const Icon(Icons.edit_rounded, color: Colors.white, size: 16),
                         ],
                       ),
-                      if (_email.isNotEmpty) Text(_email, style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                      if (_email.isNotEmpty) Text(_email, style: const TextStyle(color: Colors.white, fontSize: 13)),
                     ]),
                   )),
                 ]),
@@ -309,7 +315,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const Divider(height: 24),
                 AnimatedEntrance(delayMs: 200, child: _settingTile(Icons.cloud_upload_rounded, 'Cloud Backup', _syncing ? 'Syncing...' : (_lastSync.isNotEmpty ? 'Last sync: $_lastSync' : 'Never backed up'), () => _showBackupDialog(isDark), isDark)),
                 const Divider(height: 24),
-                AnimatedEntrance(delayMs: 220, child: _settingTile(Icons.info_outline_rounded, 'App Version', '1.4.18', null, isDark)),
+                AnimatedEntrance(delayMs: 220, child: _settingTile(Icons.info_outline_rounded, 'App Version', _packageVersion, null, isDark)),
                 const Divider(height: 24),
                 AnimatedEntrance(delayMs: 250, child: _settingTile(Icons.mail_outline_rounded, 'Contact Support', 'macrosnap7@gmail.com', () async {
                   final uri = Uri.parse('mailto:macrosnap7@gmail.com');
@@ -335,7 +341,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ]),
             ),
             const SizedBox(height: 20),
-            Text('Made with â¤ï¸ in India', style: TextStyle(fontSize: 12, color: isDark ? Colors.white24 : const Color(0xFFCBD5E1))),
+            Text('Made with ❤️ in India', style: TextStyle(fontSize: 12, color: MacroSnapTheme.textQuaternary(context))),
           ],
         ),
       ),
@@ -366,7 +372,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: Text(_themeModeLabel(mode),
                         style: TextStyle(color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                     subtitle: Text(_themeModeSubtitle(mode),
-                        style: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                        style: TextStyle(fontSize: 12, color: MacroSnapTheme.textTertiary(context))),
                     activeColor: MacroSnapTheme.neonGreen,
                   ),
               ]),
@@ -452,7 +458,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       : 'Sign in to enable cloud backup.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, height: 1.4,
-                  color: isDark ? Colors.white54 : const Color(0xFF64748B)),
+                  color: MacroSnapTheme.textSecondary(context)),
             ),
 
             if (_syncing) ...[const SizedBox(height: 16),
@@ -580,7 +586,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                 Text(detail,
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                        color: MacroSnapTheme.textTertiary(context))),
               ],
             ),
           ),
@@ -651,9 +657,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(width: 14),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
-          Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+          Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: MacroSnapTheme.textTertiary(context))),
         ])),
-        if (onTap != null) Icon(Icons.chevron_right_rounded, color: isDark ? Colors.white24 : const Color(0xFFCBD5E1), size: 20),
+        if (onTap != null) Icon(Icons.chevron_right_rounded, color: MacroSnapTheme.textQuaternary(context), size: 20),
       ]),
     );
   }

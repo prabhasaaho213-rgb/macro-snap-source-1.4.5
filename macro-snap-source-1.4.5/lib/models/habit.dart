@@ -25,6 +25,7 @@ class Habit {
   int reminderHour;
   int reminderMinute;
   int weeklyDay;
+  int order;
   DateTime createdAt;
 
   Habit({
@@ -42,6 +43,7 @@ class Habit {
     this.reminderMinute = 0,
     int? weeklyDay,
     DateTime? createdAt,
+    this.order = 0,
   })  : completedDates = completedDates ?? [],
         skippedDates = skippedDates ?? [],
         weeklyDay = weeklyDay ?? (createdAt ?? DateTime.now()).weekday,
@@ -161,6 +163,7 @@ class Habit {
         'reminderHour': reminderHour,
         'reminderMinute': reminderMinute,
         'weeklyDay': weeklyDay,
+        'order': order,
         'createdAt': createdAt.toIso8601String(),
       };
 
@@ -179,6 +182,7 @@ class Habit {
         reminderMinute: j['reminderMinute'] as int? ?? 0,
         weeklyDay: j['weeklyDay'] as int? ??
             (DateTime.tryParse(j['createdAt'] as String? ?? '')?.weekday ?? 1),
+        order: j['order'] as int? ?? 0,
         createdAt: DateTime.tryParse(j['createdAt'] as String? ?? '') ?? DateTime.now(),
       );
 }

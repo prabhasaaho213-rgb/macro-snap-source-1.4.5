@@ -5,7 +5,7 @@ import '../core/theme.dart';
 import '../services/meal_store.dart';
 import '../models/meal_record.dart';
 import '../services/scan_gate.dart';
-import '../services/streak_service.dart';
+import '../services/meal_streak_service.dart';
 import '../models/diet_profile.dart';
 import '../services/share_service.dart';
 
@@ -58,13 +58,13 @@ class _HomeScreenState extends State<HomeScreen>
     await DietPlanService.instance.load();
     final prefs = await SharedPreferences.getInstance();
     final name = prefs.getString('name') ?? '';
-    await StreakService.checkAndUpdate();
-    final streak = await StreakService.getCurrent();
-    final best = await StreakService.getBest();
+    await MealStreakService.checkAndUpdate();
+    final streak = await MealStreakService.getCurrent();
+    final best = await MealStreakService.getBest();
     final scans = await ScanGate.getScansRemaining();
 
     // Check if all targets are hit for confetti
-    final allHit = StreakService.checkAllTargetsHit();
+    final allHit = MealStreakService.checkAllTargetsHit();
     final alreadyPlayed = prefs.getBool('confetti_${DateTime.now().day}_${DateTime.now().month}') ?? false;
 
     if (mounted) {
@@ -104,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surface,
+      backgroundColor: isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surfaceLight,
       body: SafeArea(
         child: ConfettiOverlay(
           show: _showConfetti,
@@ -150,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen>
               children: [
                 Text(greeting,
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.white70 : const Color(0xFF64748B))),
+                        color: MacroSnapTheme.textSecondary(context))),
                 const SizedBox(height: 4),
                 Text(_name.isNotEmpty ? _name : 'MacroSnap',
                     maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -191,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen>
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(Icons.settings_rounded, size: 20,
-                      color: isDark ? Colors.white54 : const Color(0xFF64748B)),
+                      color: MacroSnapTheme.textSecondary(context)),
                 ),
               ),
             ],
@@ -203,15 +203,14 @@ class _HomeScreenState extends State<HomeScreen>
 
   // ─── STREAK CARD (Habitly style) ────────────────────────────
   Widget _buildStreakCard(BuildContext context, bool isDark) {
-    final isBest = StreakService.isLongestStreak(_streak, _bestStreak);
+    final isBest = MealStreakService.isLongestStreak(_streak, _bestStreak);
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: MacroSnapTheme.habitlyCard(context),
         child: Row(
-          children: [
-            Container(
+          children: [              Container(
               width: 52, height: 52,
               decoration: MacroSnapTheme.emojiContainer(MacroSnapTheme.neonPink),
               child: const Icon(Icons.local_fire_department_rounded,
@@ -222,6 +221,10 @@ class _HomeScreenState extends State<HomeScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text('Meal Streak',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
+                          color: MacroSnapTheme.textTertiary(context), letterSpacing: 0.5)),
+                  const SizedBox(height: 2),
                   Row(
                     children: [
                       Text('$_streak',
@@ -230,13 +233,13 @@ class _HomeScreenState extends State<HomeScreen>
                       const SizedBox(width: 4),
                       Text('day${_streak == 1 ? '' : 's'}',
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700,
-                              color: isDark ? Colors.white70 : const Color(0xFF64748B))),
+                              color: MacroSnapTheme.textSecondary(context))),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(isBest ? 'New personal best!' : 'Keep the streak going!',
+                  Text(isBest ? 'New personal best!' : 'All targets hit today!',
                       style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
-                          color: isBest ? MacroSnapTheme.neonGreen : (isDark ? Colors.white38 : const Color(0xFF94A3B8)))),
+                          color: isBest ? MacroSnapTheme.neonGreen : MacroSnapTheme.textTertiary(context))),
                 ],
               ),
             ),
@@ -384,7 +387,7 @@ class _HomeScreenState extends State<HomeScreen>
                       '${(p / max(p + c + f, 1) * 100).round()}% P · ${(c / max(p + c + f, 1) * 100).round()}% C · ${(f / max(p + c + f, 1) * 100).round()}% F',
                       maxLines: 1, overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                          color: MacroSnapTheme.textTertiary(context)),
                     ),
                   ),
               ],
@@ -415,12 +418,12 @@ class _HomeScreenState extends State<HomeScreen>
                 const SizedBox(width: 8),
                 Text(label,
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white70 : const Color(0xFF64748B))),
+                        color: MacroSnapTheme.textSecondary(context))),
               ],
             ),
             Text('${value.toStringAsFixed(0)} / ${target.toStringAsFixed(0)}$unit',
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                    color: MacroSnapTheme.textTertiary(context))),
           ],
         ),
         const SizedBox(height: 8),
@@ -496,7 +499,7 @@ class _HomeScreenState extends State<HomeScreen>
                         style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
                             color: isToday
                                 ? MacroSnapTheme.neonGreen
-                                : (isDark ? Colors.white38 : const Color(0xFF94A3B8)))),
+                                : (MacroSnapTheme.textTertiary(context)))),
                     const SizedBox(height: 8),
                     Container(
                       width: 32, height: 32,
@@ -514,7 +517,7 @@ class _HomeScreenState extends State<HomeScreen>
                             ? Icon(Icons.check_rounded, size: 16, color: MacroSnapTheme.neonGreen)
                             : Text('${d.day}',
                                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
-                                    color: isDark ? Colors.white24 : const Color(0xFFCBD5E1))),
+                                    color: MacroSnapTheme.textQuaternary(context))),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -589,7 +592,7 @@ class _HomeScreenState extends State<HomeScreen>
             const SizedBox(height: 6),
             Text(label,
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white70 : const Color(0xFF475569))),
+                    color: MacroSnapTheme.textPrimaryMuted(context))),
           ],
         ),
       ),
@@ -668,7 +671,7 @@ class _HomeScreenState extends State<HomeScreen>
                       Text(
                         '${m.calories} kcal',
                         style: TextStyle(
-                          color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                          color: MacroSnapTheme.textSecondary(context),
                           fontSize: 12, fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -734,10 +737,10 @@ class _HomeScreenState extends State<HomeScreen>
 
   Color _mealIcon(MealRecord m) {
     final h = m.date.hour;
-    if (h >= 5 && h < 11) return MacroSnapTheme.amber;
-    if (h >= 11 && h < 15) return MacroSnapTheme.emerald;
-    if (h >= 17 && h < 22) return MacroSnapTheme.blue;
-    return MacroSnapTheme.rose;
+    if (h >= 5 && h < 11) return MacroSnapTheme.macroCalories;
+    if (h >= 11 && h < 15) return MacroSnapTheme.neonGreen;
+    if (h >= 17 && h < 22) return MacroSnapTheme.macroFats;
+    return MacroSnapTheme.macroProtein;
   }
 
   IconData _mealIconData(MealRecord m) {

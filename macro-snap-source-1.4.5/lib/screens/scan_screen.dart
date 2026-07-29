@@ -118,7 +118,7 @@ class _ScanScreenState extends State<ScanScreen>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Capture failed: $e'), backgroundColor: MacroSnapTheme.rose),
+          SnackBar(content: Text('Capture failed: $e'), backgroundColor: MacroSnapTheme.neonPink),
         );
       }
     }
@@ -164,10 +164,10 @@ class _ScanScreenState extends State<ScanScreen>
               width: 64, height: 64,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: MacroSnapTheme.amber.withValues(alpha:  0.1),
+                color: MacroSnapTheme.neonOrange.withValues(alpha:  0.1),
               ),
               child: const Icon(Icons.flash_on_rounded,
-                  color: MacroSnapTheme.amber, size: 32),
+                  color: MacroSnapTheme.neonOrange, size: 32),
             ),
             const SizedBox(height: 16),
             Text('Free scans used up',
@@ -177,7 +177,7 @@ class _ScanScreenState extends State<ScanScreen>
             Text('You get 3 free AI scans per month.\nGo Pro for unlimited scans.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14,
-                    color: isDark ? Colors.white54 : const Color(0xFF64748B), height: 1.4)),
+                    color: MacroSnapTheme.textSecondary(context), height: 1.4)),
             const SizedBox(height: 24),
             GradientButton(
               label: 'Go Pro - \u20B929/mo',
@@ -193,7 +193,7 @@ class _ScanScreenState extends State<ScanScreen>
               onPressed: () => Navigator.of(ctx).pop(),
               child: Text('Maybe later',
                   style: TextStyle(fontSize: 14,
-                      color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                      color: MacroSnapTheme.textTertiary(context))),
             ),
           ]),
         ),

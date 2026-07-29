@@ -56,9 +56,9 @@ class _SearchScreenState extends State<SearchScreen> {
                 decoration: InputDecoration(
                   hintText: 'Search dal, roti, biryani...',
                   hintStyle: TextStyle(
-                    color: isDark ? Colors.white24 : const Color(0xFFCBD5E1),
+                    color: MacroSnapTheme.textQuaternary(context),
                   ),
-                  prefixIcon: const Icon(Icons.search_rounded, color: MacroSnapTheme.emerald),
+                  prefixIcon: const Icon(Icons.search_rounded, color: MacroSnapTheme.neonGreen),
                   suffixIcon: _controller.text.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.clear_rounded),
@@ -77,12 +77,12 @@ class _SearchScreenState extends State<SearchScreen> {
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide(
-                      color: isDark ? Colors.white10 : const Color(0xFFE2E8F0),
+                      color: MacroSnapTheme.borderSubtle(context),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: MacroSnapTheme.emerald, width: 2),
+                    borderSide: const BorderSide(color: MacroSnapTheme.neonGreen, width: 2),
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                 ),
@@ -125,14 +125,14 @@ class _SearchScreenState extends State<SearchScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.search_off_rounded,
-                            size: 48, color: isDark ? Colors.white12 : const Color(0xFFE2E8F0)),
+                            size: 48, color: MacroSnapTheme.borderSubtle(context)),
                         const SizedBox(height: 12),
                         Text(
                           'No foods found',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                            color: MacroSnapTheme.textTertiary(context),
                           ),
                         ),
                       ],
@@ -172,14 +172,14 @@ class _SearchScreenState extends State<SearchScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
+                color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
                 child: Text(
                   category[0],
                   style: const TextStyle(
-                    color: MacroSnapTheme.emerald,
+                    color: MacroSnapTheme.neonGreen,
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                   ),
@@ -212,7 +212,7 @@ class _SearchScreenState extends State<SearchScreen> {
         decoration: BoxDecoration(
           color: isDark ? MacroSnapTheme.cardDark : Colors.white,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+          border: Border.all(color: MacroSnapTheme.borderSubtle(context)),
         ),
         child: Row(
           children: [
@@ -234,7 +234,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
-                      color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                      color: MacroSnapTheme.textTertiary(context),
                     ),
                   ),
                 ],
@@ -257,14 +257,14 @@ class _SearchScreenState extends State<SearchScreen> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                    color: MacroSnapTheme.textTertiary(context),
                   ),
                 ),
               ],
             ),
             const SizedBox(width: 4),
             Icon(Icons.chevron_right_rounded,
-                color: isDark ? Colors.white24 : const Color(0xFFCBD5E1)),
+                color: MacroSnapTheme.textQuaternary(context)),
           ],
         ),
       ),

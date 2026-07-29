@@ -91,7 +91,7 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
             context, MaterialPageRoute(builder: (_) => const RecipeEditorScreen()));
           if (result == true) _onChanged();
         },
-        backgroundColor: MacroSnapTheme.emerald,
+        backgroundColor: MacroSnapTheme.neonGreen,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
         label: const Text('New Recipe', style: TextStyle(color: Colors.white)),
       ),
@@ -101,16 +101,16 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.menu_book_rounded, size: 64,
-                      color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                      color: MacroSnapTheme.borderSubtle(context)),
                   const SizedBox(height: 16),
                   Text('No recipes yet',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                          color: MacroSnapTheme.textTertiary(context))),
                   const SizedBox(height: 8),
                   Text('Add your family recipes\nand log them anytime',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 14,
-                          color: isDark ? Colors.white24 : const Color(0xFFCBD5E1))),
+                          color: MacroSnapTheme.textQuaternary(context))),
                 ],
               ),
             )
@@ -144,12 +144,12 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
+                        color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(recipe.ingredients.length == 1 ? '1 Ingredient' : '${recipe.ingredients.length} Ingredients',
                           style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
-                              color: MacroSnapTheme.emerald)),
+                              color: MacroSnapTheme.neonGreen)),
                     ),
                     const Spacer(),
                     PopupMenuButton<String>(
@@ -163,7 +163,7 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                         const PopupMenuItem(value: 'delete', child: Text('Delete')),
                       ],
                       icon: Icon(Icons.more_vert_rounded, size: 20,
-                          color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                          color: MacroSnapTheme.textTertiary(context)),
                     ),
                   ],
                 ),
@@ -175,15 +175,15 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                 Text('${recipe.servings} servings Â· ${recipe.perServingCalories.toStringAsFixed(0)} cal/serving',
                     overflow: TextOverflow.ellipsis, maxLines: 1,
                     style: TextStyle(fontSize: 13,
-                        color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                        color: MacroSnapTheme.textTertiary(context))),
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    _miniMacro('P', recipe.perServingProtein, MacroSnapTheme.rose),
+                    _miniMacro('P', recipe.perServingProtein, MacroSnapTheme.macroProtein),
                     const SizedBox(width: 12),
-                    _miniMacro('C', recipe.perServingCarbs, MacroSnapTheme.amber),
+                    _miniMacro('C', recipe.perServingCarbs, MacroSnapTheme.macroCalories),
                     const SizedBox(width: 12),
-                    _miniMacro('F', recipe.perServingFats, MacroSnapTheme.blue),
+                    _miniMacro('F', recipe.perServingFats, MacroSnapTheme.macroFats),
                   ],
                 ),
                 const SizedBox(height: 12),

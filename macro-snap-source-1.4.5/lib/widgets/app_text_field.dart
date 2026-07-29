@@ -29,7 +29,7 @@ class AppTextField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        hintStyle: TextStyle(color: isDark ? Colors.white24 : const Color(0xFFCBD5E1)),
+        hintStyle: TextStyle(color: MacroSnapTheme.textQuaternary(context)),
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
         filled: true,
@@ -40,7 +40,7 @@ class AppTextField extends StatelessWidget {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+          borderSide: BorderSide(color: MacroSnapTheme.borderSubtle(context)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),

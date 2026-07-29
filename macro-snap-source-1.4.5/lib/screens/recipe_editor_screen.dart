@@ -144,7 +144,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Add Ingredient', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white70 : const Color(0xFF475569))),
+                      color: MacroSnapTheme.textPrimaryMuted(context))),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _ingredientNameCtrl,
@@ -160,7 +160,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                   ),
                   const SizedBox(height: 10),
                   Text('Macros per 100g', style: TextStyle(fontSize: 12,
-                      color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                      color: MacroSnapTheme.textTertiary(context))),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -239,7 +239,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
-          color: MacroSnapTheme.rose,
+          color: MacroSnapTheme.neonPink,
           borderRadius: BorderRadius.circular(16),
         ),
         child: const Icon(Icons.delete_rounded, color: Colors.white),
@@ -256,12 +256,12 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                       color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                   Text('${ing.grams.toInt()}g · ${ing.caloriesPer100g.toInt()} cal/100g',
                       style: TextStyle(fontSize: 12,
-                          color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                          color: MacroSnapTheme.textTertiary(context))),
                 ],
               ),
             ),
             Text('${ing.calories.toStringAsFixed(0)} kcal',
-                style: TextStyle(fontWeight: FontWeight.w700, color: MacroSnapTheme.emerald)),
+                style: TextStyle(fontWeight: FontWeight.w700, color: MacroSnapTheme.neonGreen)),
           ],
         ),
       ),
@@ -279,7 +279,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
               style: TextStyle(fontWeight: FontWeight.w600,
                   color: isDark ? Colors.white : const Color(0xFF1A1A1A), fontSize: 13))),
           Expanded(child: Text(perServing, textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.w700, color: MacroSnapTheme.emerald, fontSize: 13))),
+              style: TextStyle(fontWeight: FontWeight.w700, color: MacroSnapTheme.neonGreen, fontSize: 13))),
         ],
       ),
     );
@@ -291,7 +291,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
     fillColor: isDark ? MacroSnapTheme.cardDark : const Color(0xFFF8FAFC),
     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-    labelStyle: TextStyle(fontSize: 13, color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+    labelStyle: TextStyle(fontSize: 13, color: MacroSnapTheme.textTertiary(context)),
   );
 
   TextStyle _textStyle(bool isDark) => TextStyle(

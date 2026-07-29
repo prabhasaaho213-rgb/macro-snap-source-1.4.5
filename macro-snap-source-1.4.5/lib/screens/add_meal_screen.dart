@@ -38,14 +38,14 @@ class AddMealScreen extends StatelessWidget {
                           width: 56,
                           height: 56,
                           decoration: BoxDecoration(
-                            color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
+                            color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Center(
                             child: Text(
                               food.category[0],
                               style: const TextStyle(
-                                color: MacroSnapTheme.emerald,
+                                color: MacroSnapTheme.neonGreen,
                                 fontSize: 24,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -71,7 +71,7 @@ class AddMealScreen extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w400,
-                                  color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                                  color: MacroSnapTheme.textTertiary(context),
                                 ),
                               ),
                             ],
@@ -80,9 +80,9 @@ class AddMealScreen extends StatelessWidget {
                       ],
                     ),
                     const Divider(height: 32),
-                    _buildTotalCalories(isDark),
+                    _buildTotalCalories(context, isDark),
                     const SizedBox(height: 24),
-                    _buildMacroRow(isDark),
+                    _buildMacroRow(context, isDark),
                   ],
                 ),
               ),
@@ -100,11 +100,11 @@ class AddMealScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _buildRow('Calories', '${food.calories} kcal', MacroSnapTheme.amber, isDark),
-                    _buildRow('Protein', '${food.protein}g', MacroSnapTheme.rose, isDark),
-                    _buildRow('Carbs', '${food.carbs}g', MacroSnapTheme.amber, isDark),
-                    _buildRow('Fats', '${food.fats}g', MacroSnapTheme.blue, isDark),
-                    _buildRow('Fiber', '${food.fiber}g', MacroSnapTheme.emerald, isDark),
+                    _buildRow(context, 'Calories', '${food.calories} kcal', MacroSnapTheme.macroCalories, isDark),
+                    _buildRow(context, 'Protein', '${food.protein}g', MacroSnapTheme.macroProtein, isDark),
+                    _buildRow(context, 'Carbs', '${food.carbs}g', MacroSnapTheme.macroCalories, isDark),
+                    _buildRow(context, 'Fats', '${food.fats}g', MacroSnapTheme.macroFats, isDark),
+                    _buildRow(context, 'Fiber', '${food.fiber}g', MacroSnapTheme.neonGreen, isDark),
                   ],
                 ),
               ),
@@ -141,7 +141,7 @@ class AddMealScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTotalCalories(bool isDark) {
+  Widget _buildTotalCalories(BuildContext context, bool isDark) {
     return Column(
       children: [
         Text(
@@ -160,7 +160,7 @@ class AddMealScreen extends StatelessWidget {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+            color: MacroSnapTheme.textTertiary(context),
             letterSpacing: 1,
           ),
         ),
@@ -168,13 +168,13 @@ class AddMealScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMacroRow(bool isDark) {
+  Widget _buildMacroRow(BuildContext context, bool isDark) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _buildMacroItem('Protein', '${food.protein.toInt()}g', MacroSnapTheme.rose, isDark),
-        _buildMacroItem('Carbs', '${food.carbs.toInt()}g', MacroSnapTheme.amber, isDark),
-        _buildMacroItem('Fats', '${food.fats.toInt()}g', MacroSnapTheme.blue, isDark),
+        _buildMacroItem('Protein', '${food.protein.toInt()}g', MacroSnapTheme.macroProtein, isDark),
+        _buildMacroItem('Carbs', '${food.carbs.toInt()}g', MacroSnapTheme.macroCalories, isDark),
+        _buildMacroItem('Fats', '${food.fats.toInt()}g', MacroSnapTheme.macroFats, isDark),
       ],
     );
   }
@@ -208,14 +208,14 @@ class AddMealScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(String label, String value, Color color, bool isDark) {
+  Widget _buildRow(BuildContext context, String label, String value, Color color, bool isDark) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
         children: [
           Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
           const SizedBox(width: 12),
-          Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: isDark ? Colors.white70 : const Color(0xFF475569))),
+          Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: MacroSnapTheme.textPrimaryMuted(context))),
           const Spacer(),
           Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
         ],

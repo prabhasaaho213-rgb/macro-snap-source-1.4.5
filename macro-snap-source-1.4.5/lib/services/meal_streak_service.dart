@@ -1,8 +1,14 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:macro_snap/services/meal_store.dart';
-import 'package:macro_snap/models/diet_profile.dart';
+import '../services/meal_store.dart';
+import '../models/diet_profile.dart';
 
-class StreakService {
+/// Tracks the user's meal-logging streak — consecutive days where ALL
+/// macro targets are hit (>= 90% of protein, carbs, and fats).
+///
+/// This is **separate from Habit.currentStreak** which tracks individual
+/// habit completion streaks. MealStreakService = "macro target streak",
+/// while Habit.currentStreak = "habit completion streak".
+class MealStreakService {
   static const _keyStreak = 'current_streak';
   static const _keyBest = 'best_streak';
   static const _keyDate = 'last_streak_date';
@@ -17,21 +23,9 @@ class StreakService {
     return prefs.getInt(_keyBest) ?? 0;
   }
 
-  /// Check if today's macro targets have been met (all 3 macros >= 90% target)
-  static bool _allMacrosHit() {
-    final profile = DietPlanService.instance.profile;
-    final p = MealStore.instance.todayProtein;
-    final c = MealStore.instance.todayCarbs;
-    final f = MealStore.instance.todayFats;
-    final targetP = profile?.targetProtein ?? 150;
-    final targetC = profile?.targetCarbs ?? 300;
-    final targetF = profile?.targetFats ?? 67;
-    return p >= targetP * 0.9 && c >= targetC * 0.9 && f >= targetF * 0.9;
-  }
-
   static Future<void> checkAndUpdate() async {
     // Streak = consecutive days where ALL macro targets are hit (>= 90% each)
-    if (!_allMacrosHit()) return;
+    if (!checkAllTargetsHit()) return;
 
     final prefs = await SharedPreferences.getInstance();
     final today = DateTime.now();

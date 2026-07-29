@@ -77,11 +77,11 @@ class _ReferralScreenState extends State<ReferralScreen> {
                 Container(
                   width: 64, height: 64,
                   decoration: BoxDecoration(
-                    color: MacroSnapTheme.emerald.withValues(alpha:  0.1),
+                    color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Icon(Icons.emoji_events_rounded,
-                      color: MacroSnapTheme.emerald, size: 32),
+                      color: MacroSnapTheme.neonGreen, size: 32),
                 ),
                 const SizedBox(height: 16),
                 Text('Give a Free Month',
@@ -91,10 +91,10 @@ class _ReferralScreenState extends State<ReferralScreen> {
                 Text('Share your code and both get Pro free for a month',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 14,
-                        color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                        color: MacroSnapTheme.textTertiary(context))),
                 const SizedBox(height: 24),
                 if (_loading)
-                  const CircularProgressIndicator(strokeWidth: 3, color: MacroSnapTheme.emerald)
+                  const CircularProgressIndicator(strokeWidth: 3, color: MacroSnapTheme.neonGreen)
                 else if (_myCode != null)
                   Column(
                     children: [
@@ -104,7 +104,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                           color: (isDark ? MacroSnapTheme.cardDark : const Color(0xFFF1F5F9)),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: MacroSnapTheme.emerald.withValues(alpha:  0.3),
+                            color: MacroSnapTheme.neonGreen.withValues(alpha:  0.3),
                           ),
                         ),
                         child: SelectableText(
@@ -112,14 +112,14 @@ class _ReferralScreenState extends State<ReferralScreen> {
                           style: TextStyle(
                             fontSize: 32, fontWeight: FontWeight.w800,
                             letterSpacing: 6,
-                            color: MacroSnapTheme.emerald,
+                            color: MacroSnapTheme.neonGreen,
                           ),
                         ),
                       ),
                       const SizedBox(height: 12),
                       Text('Tap code to copy, then share',
                           style: TextStyle(fontSize: 12,
-                              color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                              color: MacroSnapTheme.textTertiary(context))),
                       const SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,
@@ -132,7 +132,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                   )
                 else
                   Text('Sign in to get your referral code',
-                      style: TextStyle(color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                      style: TextStyle(color: MacroSnapTheme.textTertiary(context))),
               ],
             ),
           ),
@@ -174,7 +174,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
           if (_applying)
             const Padding(
               padding: EdgeInsets.only(top: 12),
-              child: LinearProgressIndicator(color: MacroSnapTheme.emerald),
+              child: LinearProgressIndicator(color: MacroSnapTheme.neonGreen),
             ),
           if (_applyResult == 'success')
             Padding(
@@ -182,7 +182,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
               child: GlassCard(
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_rounded, color: MacroSnapTheme.emerald, size: 20),
+                    const Icon(Icons.check_circle_rounded, color: MacroSnapTheme.neonGreen, size: 20),
                     const SizedBox(width: 10),
                     Text('Free month activated!',
                         style: TextStyle(fontWeight: FontWeight.w600,
@@ -197,7 +197,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
               child: GlassCard(
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline_rounded, color: MacroSnapTheme.rose, size: 20),
+                    const Icon(Icons.error_outline_rounded, color: MacroSnapTheme.neonPink, size: 20),
                     const SizedBox(width: 10),
                     Expanded(child: Text(_applyResult!,
                         style: TextStyle(fontSize: 13,

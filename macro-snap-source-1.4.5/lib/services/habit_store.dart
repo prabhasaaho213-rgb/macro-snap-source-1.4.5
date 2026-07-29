@@ -117,6 +117,8 @@ class HabitStore extends ChangeNotifier {
     _syncToCloud();
   }
 
+
+
   /// Water tracking
   void addWater() {
     final key = dateKey(DateTime.now());
@@ -176,11 +178,5 @@ class HabitStore extends ChangeNotifier {
   int get totalStreakPower {
     if (habits.isEmpty) return 0;
     return habits.map((h) => h.currentStreak()).reduce(max);
-  }
-
-  /// Best streak across all habits (all-time)
-  int get bestStreakOverall {
-    if (habits.isEmpty) return 0;
-    return habits.map((h) => h.bestStreak()).reduce(max);
   }
 }

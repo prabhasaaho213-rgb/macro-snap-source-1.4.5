@@ -124,7 +124,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
         child: Row(
           children: [
             Icon(Icons.scale_rounded, size: 18,
-                color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                color: MacroSnapTheme.textTertiary(context)),
             const SizedBox(width: 8),
             Flexible(
               child: Text('Total Serving', maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -150,7 +150,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
             const SizedBox(width: 4),
             Text('g',
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                    color: MacroSnapTheme.textTertiary(context))),
             const SizedBox(width: 12),
             GestureDetector(
               onTap: () => setState(() => _grams = _grams <= 975 ? _grams + 25 : 1000),
@@ -338,7 +338,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                color: MacroSnapTheme.textTertiary(context),
                 height: 1.5,
               ),
             ),
@@ -360,12 +360,12 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: (isNoUrl ? MacroSnapTheme.amber : MacroSnapTheme.rose).withValues(alpha:  0.1),
+                color: (isNoUrl ? MacroSnapTheme.macroCalories : MacroSnapTheme.macroProtein).withValues(alpha:  0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Icon(
                 isNoUrl ? Icons.cloud_off_rounded : Icons.error_outline_rounded,
-                color: isNoUrl ? MacroSnapTheme.amber : MacroSnapTheme.rose,
+                color: isNoUrl ? MacroSnapTheme.macroCalories : MacroSnapTheme.macroProtein,
                 size: 32,
               ),
             ),
@@ -390,7 +390,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                    color: MacroSnapTheme.textTertiary(context),
                     height: 1.5,
                   ),
                 ),
@@ -490,11 +490,11 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                           ),
                         ),
                         const SizedBox(height: 16),
-                        _buildNutrientRow('Calories', r.calories, 'kcal', MacroSnapTheme.amber, isDark),
-                        _buildNutrientRow('Protein', r.protein, 'g', MacroSnapTheme.rose, isDark),
-                        _buildNutrientRow('Carbs', r.carbs, 'g', MacroSnapTheme.amber, isDark),
+                        _buildNutrientRow('Calories', r.calories, 'kcal', MacroSnapTheme.macroCalories, isDark),
+                        _buildNutrientRow('Protein', r.protein, 'g', MacroSnapTheme.macroProtein, isDark),
+                        _buildNutrientRow('Carbs', r.carbs, 'g', MacroSnapTheme.macroCalories, isDark),
                         _buildNutrientRow('Sugar', r.sugar, 'g', const Color(0xFFDB2777), isDark),
-                        _buildNutrientRow('Fats', r.fats, 'g', MacroSnapTheme.blue, isDark),
+                        _buildNutrientRow('Fats', r.fats, 'g', MacroSnapTheme.macroFats, isDark),
                         _buildNutrientRow('Fiber', r.fiber, 'g', MacroSnapTheme.neonGreen, isDark),
                       ],
                     ),
@@ -542,7 +542,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w400,
-                                    color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                                    color: MacroSnapTheme.textTertiary(context),
                                   ),
                                 ),
                               ],
@@ -618,7 +618,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     final ratio = totalGrams / 100;
     final isBulk = dish.suitableFor == 'bulk';
     final isDiet = dish.suitableFor == 'diet';
-    final badgeColor = isBulk ? MacroSnapTheme.blue : isDiet ? MacroSnapTheme.rose : MacroSnapTheme.neonGreen;
+    final badgeColor = isBulk ? MacroSnapTheme.macroFats : isDiet ? MacroSnapTheme.macroProtein : MacroSnapTheme.neonGreen;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: GlassCard(
@@ -650,7 +650,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                     Flexible(
                       child: Text(dish.portionDescription,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 12, color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                          style: TextStyle(fontSize: 12, color: MacroSnapTheme.textTertiary(context))),
                     ),
                   ],
                   const Spacer(),
@@ -671,9 +671,9 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildDishMacro('P', (dish.proteinPer100g * ratio), MacroSnapTheme.rose, isDark),
-                  _buildDishMacro('C', (dish.carbsPer100g * ratio), MacroSnapTheme.amber, isDark),
-                  _buildDishMacro('F', (dish.fatsPer100g * ratio), MacroSnapTheme.blue, isDark),
+                  _buildDishMacro('P', (dish.proteinPer100g * ratio), MacroSnapTheme.macroProtein, isDark),
+                  _buildDishMacro('C', (dish.carbsPer100g * ratio), MacroSnapTheme.macroCalories, isDark),
+                  _buildDishMacro('F', (dish.fatsPer100g * ratio), MacroSnapTheme.macroFats, isDark),
                   _buildDishMacro('Fib', (dish.fiberPer100g * ratio), MacroSnapTheme.neonGreen, isDark),
                 ],
               ),
@@ -693,7 +693,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
         ),
         Text(label,
             style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500,
-                color: isDark ? Colors.white38 : const Color(0xFF94A3B8))),
+                color: MacroSnapTheme.textTertiary(context))),
       ],
     );
   }
@@ -725,7 +725,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
   Widget _buildSuitabilityBadge(bool isDark, NutritionResult r) {
     final isBulk = r.suitableFor == 'bulk';
     final isDiet = r.suitableFor == 'diet';
-    final color = isBulk ? MacroSnapTheme.blue : isDiet ? MacroSnapTheme.rose : MacroSnapTheme.neonGreen;
+    final color = isBulk ? MacroSnapTheme.macroFats : isDiet ? MacroSnapTheme.macroProtein : MacroSnapTheme.neonGreen;
     final icon = isBulk ? Icons.fitness_center_rounded : isDiet ? Icons.eco_rounded : Icons.check_circle_rounded;
     final label = isBulk ? 'Best for Bulk' : isDiet ? 'Best for Diet' : 'Balanced';
     return Container(
@@ -771,7 +771,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+            color: MacroSnapTheme.textTertiary(context),
             letterSpacing: 1,
           ),
         ),
@@ -783,9 +783,9 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _buildMacroItem('Protein', '${r.protein.toInt()}g', MacroSnapTheme.rose, isDark),
-        _buildMacroItem('Carbs', '${r.carbs.toInt()}g', MacroSnapTheme.amber, isDark),
-        _buildMacroItem('Fats', '${r.fats.toInt()}g', MacroSnapTheme.blue, isDark),
+        _buildMacroItem('Protein', '${r.protein.toInt()}g', MacroSnapTheme.macroProtein, isDark),
+        _buildMacroItem('Carbs', '${r.carbs.toInt()}g', MacroSnapTheme.macroCalories, isDark),
+        _buildMacroItem('Fats', '${r.fats.toInt()}g', MacroSnapTheme.macroFats, isDark),
       ],
     );
   }
@@ -843,7 +843,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: isDark ? Colors.white70 : const Color(0xFF475569),
+              color: MacroSnapTheme.textPrimaryMuted(context),
             ),
           ),
           const Spacer(),

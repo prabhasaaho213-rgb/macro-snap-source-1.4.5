@@ -23,13 +23,13 @@ class LogoWidget extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(size * 0.28),
             gradient: const LinearGradient(
-              colors: [MacroSnapTheme.emerald, MacroSnapTheme.emeraldLight],
+              colors: [MacroSnapTheme.neonGreen, MacroSnapTheme.neonGreen],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             boxShadow: [
               BoxShadow(
-                color: MacroSnapTheme.emerald.withValues(alpha: 0.35),
+                color: MacroSnapTheme.neonGreen.withValues(alpha: 0.35),
                 blurRadius: size * 0.33,
                 offset: const Offset(0, 8),
               ),
@@ -45,7 +45,7 @@ class LogoWidget extends StatelessWidget {
                   height: size * 0.75,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: MacroSnapTheme.emeraldLight.withValues(alpha: 0.2),
+                    color: MacroSnapTheme.neonGreen.withValues(alpha: 0.2),
                   ),
                 ),
               ),

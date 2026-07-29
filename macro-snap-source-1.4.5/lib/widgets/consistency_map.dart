@@ -85,7 +85,7 @@ class ConsistencyMap extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                      color: MacroSnapTheme.textTertiary(context),
                     ),
                   ),
                 );

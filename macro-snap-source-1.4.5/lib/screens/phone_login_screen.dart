@@ -218,12 +218,16 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
       if (!mounted) return;
 
       final googleAuth = await googleUser.authentication;
+      if (!mounted) return;
+
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
       await FirebaseAuth.instance.signInWithCredential(credential);
+      if (!mounted) return;
+
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception('No user after sign in');
 
@@ -355,7 +359,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                 const SizedBox(height: 6),
                 Text('Snap a photo, get your macros',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
+                    color: MacroSnapTheme.textTertiary(context),
                   ),
                 ),
                 SizedBox(height: screenHeight * 0.05),
@@ -411,12 +415,12 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Row(
                     children: [
-                      Expanded(child: Divider(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0))),
+                      Expanded(child: Divider(color: MacroSnapTheme.borderSubtle(context))),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text('or', style: TextStyle(fontSize: 13, color: isDark ? Colors.white30 : const Color(0xFF94A3B8))),
                       ),
-                      Expanded(child: Divider(color: isDark ? Colors.white12 : const Color(0xFFE2E8F0))),
+                      Expanded(child: Divider(color: MacroSnapTheme.borderSubtle(context))),
                     ],
                   ),
                 ),
@@ -447,7 +451,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                                 fontSize: 14, fontWeight: FontWeight.w600,
                                 color: _authTab == 0
                                     ? (isDark ? Colors.white : const Color(0xFF1A1A1A))
-                                    : (isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                                    : (MacroSnapTheme.textTertiary(context)),
                               ),
                             ),
                           ),
@@ -470,7 +474,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                                 fontSize: 14, fontWeight: FontWeight.w600,
                                 color: _authTab == 1
                                     ? (isDark ? Colors.white : const Color(0xFF1A1A1A))
-                                    : (isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                                    : (MacroSnapTheme.textTertiary(context)),
                               ),
                             ),
                           ),
@@ -498,14 +502,14 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                       decoration: BoxDecoration(
-                        color: isDark ? MacroSnapTheme.rose.withValues(alpha:  0.15) : const Color(0xFFFEF2F2),
+                        color: isDark ? MacroSnapTheme.neonPink.withValues(alpha:  0.15) : const Color(0xFFFEF2F2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline, size: 18, color: isDark ? MacroSnapTheme.rose : const Color(0xFFDC2626)),
+                          Icon(Icons.error_outline, size: 18, color: isDark ? MacroSnapTheme.neonPink : const Color(0xFFDC2626)),
                           const SizedBox(width: 8),
-                          Expanded(child: Text(_error, style: TextStyle(fontSize: 13, color: isDark ? MacroSnapTheme.rose : const Color(0xFFDC2626)))),
+                          Expanded(child: Text(_error, style: TextStyle(fontSize: 13, color: isDark ? MacroSnapTheme.neonPink : const Color(0xFFDC2626)))),
                         ],
                       ),
                     ),
@@ -518,7 +522,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                     label: 'Phone Number',
                     hint: '+91 98765 43210',
                     keyboardType: TextInputType.phone,
-                    prefixIcon: Icon(Icons.phone_outlined, size: 20, color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                    prefixIcon: Icon(Icons.phone_outlined, size: 20, color: MacroSnapTheme.textTertiary(context)),
                   ),
                 if (_authTab == 0 && _otpSent) ...[
                   Row(
@@ -538,15 +542,15 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                           fillColor: isDark ? MacroSnapTheme.cardDark : const Color(0xFFF8FAFC),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                            borderSide: BorderSide(color: MacroSnapTheme.borderSubtle(context)),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: isDark ? Colors.white10 : const Color(0xFFE2E8F0)),
+                            borderSide: BorderSide(color: MacroSnapTheme.borderSubtle(context)),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: MacroSnapTheme.emerald, width: 2),
+                            borderSide: const BorderSide(color: MacroSnapTheme.neonGreen, width: 2),
                           ),
                         ),
                         onChanged: (v) => _onOtpChange(i, v),
@@ -555,11 +559,11 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                   ),
                   const SizedBox(height: 18),
                   if (_resendTimer > 0)
-                    Text('Resend in ${_resendTimer}s', style: TextStyle(color: isDark ? Colors.white38 : const Color(0xFF94A3B8), fontSize: 13))
+                    Text('Resend in ${_resendTimer}s', style: TextStyle(color: MacroSnapTheme.textTertiary(context), fontSize: 13))
                   else
                     InkWell(
                       onTap: _sendOtp,
-                      child: Text('Resend OTP', style: TextStyle(color: MacroSnapTheme.emerald, fontSize: 13, fontWeight: FontWeight.w600)),
+                      child: Text('Resend OTP', style: TextStyle(color: MacroSnapTheme.neonGreen, fontSize: 13, fontWeight: FontWeight.w600)),
                     ),
                 ],
 
@@ -570,14 +574,14 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                     label: 'Email',
                     hint: 'you@example.com',
                     keyboardType: TextInputType.emailAddress,
-                    prefixIcon: Icon(Icons.email_outlined, size: 20, color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                    prefixIcon: Icon(Icons.email_outlined, size: 20, color: MacroSnapTheme.textTertiary(context)),
                   ),
                   const SizedBox(height: 14),
                   AppTextField(
                     controller: _passController,
                     label: 'Password',
                     hint: 'Enter your password',
-                    prefixIcon: Icon(Icons.lock_outlined, size: 20, color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                    prefixIcon: Icon(Icons.lock_outlined, size: 20, color: MacroSnapTheme.textTertiary(context)),
                   ),
                 ],
 
@@ -601,20 +605,20 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
                 InkWell(
                   onTap: _continueAsGuest,
                   child: Text('Continue as Guest',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isDark ? Colors.white38 : const Color(0xFF94A3B8)),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: MacroSnapTheme.textTertiary(context)),
                   ),
                 ),
                 const SizedBox(height: 32),
                 RichText(
                   textAlign: TextAlign.center,
                   text: TextSpan(
-                    style: TextStyle(fontSize: 11, color: isDark ? Colors.white24 : const Color(0xFFCBD5E1)),
+                    style: TextStyle(fontSize: 11, color: MacroSnapTheme.textQuaternary(context)),
                     children: [
                       const TextSpan(text: 'By continuing, you agree to our '),
                       TextSpan(
                         text: 'Privacy Policy',
                         style: TextStyle(
-                          color: MacroSnapTheme.emerald,
+                          color: MacroSnapTheme.neonGreen,
                           decoration: TextDecoration.underline,
                         ),
                         recognizer: TapGestureRecognizer()

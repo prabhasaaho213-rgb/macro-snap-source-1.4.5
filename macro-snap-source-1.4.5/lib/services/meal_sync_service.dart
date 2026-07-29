@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/meal_record.dart';
@@ -28,7 +29,8 @@ class MealSyncService {
         body: jsonEncode({'phone': phone, 'meal': meal.toJson()}),
       ).timeout(const Duration(seconds: 10));
       return resp.statusCode == 200;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('MealSyncService.syncMeal failed: $e');
       return false;
     }
   }
@@ -44,7 +46,8 @@ class MealSyncService {
         body: jsonEncode({'phone': phone, 'meal_id': mealId}),
       ).timeout(const Duration(seconds: 10));
       return resp.statusCode == 200;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('MealSyncService.removeMeal failed: $e');
       return false;
     }
   }
@@ -66,7 +69,9 @@ class MealSyncService {
               .toList();
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('MealSyncService.fetchMeals failed: $e');
+    }
     return [];
   }
 
@@ -107,7 +112,8 @@ class MealSyncService {
         }),
       ).timeout(const Duration(seconds: 10));
       return resp.statusCode == 200;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('MealSyncService.syncHabits failed: $e');
       return false;
     }
   }
@@ -131,7 +137,9 @@ class MealSyncService {
           };
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('MealSyncService.fetchHabits failed: $e');
+    }
     return null;
   }
 
