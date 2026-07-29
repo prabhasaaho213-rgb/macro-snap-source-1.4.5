@@ -575,33 +575,36 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                       child: GradientButton(
                         label: 'Log This Meal',
                         onPressed: () {
-                    final combinedName = hasMultiDish
-                        ? r.dishes.map((d) => d.name).join(', ')
-                        : r.dishes.first.name;
-                    MealStore.instance.add(MealRecord(
-                      id: const Uuid().v4(),
-                      date: DateTime.now(),
-                      name: combinedName,
-                      category: '',
-                      calories: r.calories,
-                      protein: r.protein,
-                      carbs: r.carbs,
-                      fats: r.fats,
-                      fiber: r.fiber,
-                      serving: r.description,
-                    ));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(hasMultiDish
-                            ? '${r.dishes.length} dishes logged!'
-                            : 'Meal logged!'),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        duration: const Duration(seconds: 2),
+                          final combinedName = hasMultiDish
+                              ? r.dishes.map((d) => d.name).join(', ')
+                              : r.dishes.first.name;
+                          MealStore.instance.add(MealRecord(
+                            id: const Uuid().v4(),
+                            date: DateTime.now(),
+                            name: combinedName,
+                            category: '',
+                            calories: r.calories,
+                            protein: r.protein,
+                            carbs: r.carbs,
+                            fats: r.fats,
+                            fiber: r.fiber,
+                            serving: r.description,
+                          ));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(hasMultiDish
+                                  ? '${r.dishes.length} dishes logged!'
+                                  : 'Meal logged!'),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                          Navigator.of(context).popUntil((route) => route.isFirst);
+                        },
                       ),
-                    );
-                    Navigator.of(context).popUntil((route) => route.isFirst);
-                  },
+                    ),
+                  ],
                 ),
               ],
             ),

@@ -64,13 +64,7 @@ class _HomeScreenState extends State<HomeScreen>
     final scans = await ScanGate.getScansRemaining();
 
     // Check if all targets are hit for confetti
-    final profile = DietPlanService.instance.profile;
-    final p = MealStore.instance.todayProtein;
-    final c = MealStore.instance.todayCarbs;
-    final f = MealStore.instance.todayFats;
-    final targetP = profile?.targetProtein ?? 150;
-    final targetC = profile?.targetCarbs ?? 300;
-    final targetF = profile?.targetFats ?? 67;                      final allHit = StreakService.checkAllTargetsHit();
+    final allHit = StreakService.checkAllTargetsHit();
     final alreadyPlayed = prefs.getBool('confetti_${DateTime.now().day}_${DateTime.now().month}') ?? false;
 
     if (mounted) {
@@ -236,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen>
                       const SizedBox(width: 4),
                       Text('day${_streak == 1 ? '' : 's'}',
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700,
-                              color: isDark ? Colors.white60 : const Color(0xFF64748B))),
+                              color: isDark ? Colors.white70 : const Color(0xFF64748B))),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -421,7 +415,7 @@ class _HomeScreenState extends State<HomeScreen>
                 const SizedBox(width: 8),
                 Text(label,
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white60 : const Color(0xFF64748B))),
+                        color: isDark ? Colors.white70 : const Color(0xFF64748B))),
               ],
             ),
             Text('${value.toStringAsFixed(0)} / ${target.toStringAsFixed(0)}$unit',
@@ -595,7 +589,7 @@ class _HomeScreenState extends State<HomeScreen>
             const SizedBox(height: 6),
             Text(label,
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white60 : const Color(0xFF475569))),
+                    color: isDark ? Colors.white70 : const Color(0xFF475569))),
           ],
         ),
       ),
