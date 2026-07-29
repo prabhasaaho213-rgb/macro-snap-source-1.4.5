@@ -184,11 +184,10 @@ class _HabitsTabState extends State<HabitsTab> {
                 physics: const NeverScrollableScrollPhysics(),
                 buildDefaultDragHandles: false,
                 onReorderItem: (oldI, newI) {
-                  final h = active[oldI];
-                  final target = active[newI];
+                  // newI is already adjusted for the removal at oldI
+                  final h = store.habits[oldI];
                   store.habits.remove(h);
-                  final targetPos = store.habits.indexOf(target);
-                  store.habits.insert(targetPos, h);
+                  store.habits.insert(newI, h);
                   store.save();
                 },
                 children: active.asMap().entries.map((entry) {
