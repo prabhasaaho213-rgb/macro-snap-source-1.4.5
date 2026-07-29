@@ -138,11 +138,31 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
+  /// Build the current tab content with AnimatedSwitcher key for smooth transitions
+  Widget _buildTabContent() {
+    switch (_currentIndex) {
+      case 0:
+        return const HomeScreen(key: ValueKey('HomeTab'));
+      case 1:
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) setState(() => _currentIndex = 0);
+          },
+          child: ScanScreen(key: ValueKey('scan_${DateTime.now().millisecondsSinceEpoch}')),
+        );
+      case 2:
+        return const HabitsTab(key: ValueKey('HabitsTab'));
+      default:
+        return const HomeScreen(key: ValueKey('HomeTab'));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 350),
+        duration: const Duration(milliseconds: 400),
         switchInCurve: Curves.easeOutCubic,
         switchOutCurve: Curves.easeInCubic,
         transitionBuilder: (child, animation) {
@@ -150,7 +170,7 @@ class _MainShellState extends State<MainShell> {
             opacity: animation,
             child: SlideTransition(
               position: Tween<Offset>(
-                begin: const Offset(0, 0.03),
+                begin: const Offset(0, 0.05),
                 end: Offset.zero,
               ).animate(CurvedAnimation(
                 parent: animation,
@@ -160,32 +180,10 @@ class _MainShellState extends State<MainShell> {
             ),
           );
         },
-        child: _currentIndex == 1
-            // Scan tab: build fresh each time so camera initializes properly
-            ? PopScope(
-                canPop: false,
-                onPopInvokedWithResult: (didPop, _) {
-                  if (!didPop) setState(() => _currentIndex = 0);
-                },
-                child: ScanScreen(key: ValueKey('scan_${DateTime.now().millisecondsSinceEpoch}')),
-              )
-            // Other tabs: use IndexedStack to preserve state
-            : IndexedStack(
-                index: _nonScanIndex(_currentIndex),
-                children: const [
-                  HomeScreen(),
-                  HabitsTab(),
-                ],
-              ),
+        child: _buildTabContent(),
       ),
       bottomNavigationBar: _buildBottomNav(context),
     );
-  }
-
-  /// Maps bottom nav index to IndexedStack position (excluding Scan tab at index 1).
-  int _nonScanIndex(int current) {
-    if (current == 0) return 0; // Home
-    return 1;                   // Habits (index 2)
   }
 
   Widget _buildBottomNav(BuildContext context) {

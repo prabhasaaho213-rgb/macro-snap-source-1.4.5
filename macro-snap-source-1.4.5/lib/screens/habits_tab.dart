@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme.dart';
 import '../models/habit.dart';
@@ -60,8 +61,17 @@ class _HabitsTabState extends State<HabitsTab> {
     return Scaffold(
       backgroundColor: isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surfaceLight,
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 10, 18, 120),
+        child: RefreshIndicator(
+          color: MacroSnapTheme.neonGreen,
+          backgroundColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
+          onRefresh: () async {
+            await store.load();
+            await _checkSub();
+            if (mounted) setState(() {});
+          },
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(18, 10, 18, 120),
           children: [
             // Title row
             Row(
@@ -203,6 +213,7 @@ class _HabitsTabState extends State<HabitsTab> {
             ],
           ],
         ),
+      ),
       ),
     );
   }
@@ -391,7 +402,10 @@ class _HabitsTabState extends State<HabitsTab> {
             children: List.generate(goal, (i) {
               final filled = i < glasses;
               return GestureDetector(
-                onTap: filled ? store.removeWater : store.addWater,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  if (filled) store.removeWater(); else store.addWater();
+                },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   width: 34, height: 34,
@@ -438,10 +452,14 @@ class _HabitsTabState extends State<HabitsTab> {
       key: ValueKey('habit_${h.id}'),
       child: GestureDetector(
         onTap: () {
+          HapticFeedback.mediumImpact();
           h.toggle(DateTime.now());
           store.update(h);
         },
-        onLongPress: () => _showHabitActions(context, h, isDark),
+        onLongPress: () {
+          HapticFeedback.heavyImpact();
+          _showHabitActions(context, h, isDark);
+        },
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: MacroSnapTheme.habitlyCard(context),
@@ -975,23 +993,40 @@ class _HabitsTabState extends State<HabitsTab> {
   // ─── EMPTY STATE ───────────────────────────────────────────
   Widget _emptyState(bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(30),
-      decoration: MacroSnapTheme.habitlyCard(context),
-    child: Column(
-      children: [
-        const Text('✨', style: TextStyle(fontSize: 42)),
-        const SizedBox(height: 10),
-        Text('Start your rhythm',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900,
-                color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
-        const SizedBox(height: 6),
-        Text(
-          'Add a habit and turn small wins into momentum.',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: MacroSnapTheme.textSecondary(context)),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1A1A24) : const Color(0xFFF8F6FF),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark ? const Color(0xFF303045) : const Color(0xFFD4C9FF),
+          width: 1.5,
         ),
-      ],
-    ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('✨',
+              style: TextStyle(fontSize: 40,
+                  color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+          const SizedBox(height: 12),
+          Text('Start your rhythm',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900,
+                  color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              'No missions scheduled for today. Tap above to create one!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w500,
+                color: isDark ? Colors.white54 : const Color(0xFF64748B),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -6,6 +6,7 @@ import '../models/meal_record.dart';
 import '../services/gemini_service.dart';
 import '../services/local_analyzer.dart';
 import '../services/meal_store.dart';
+import '../widgets/animations.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_button.dart';
 
@@ -308,42 +309,113 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
   }
 
   Widget _buildLoadingState(bool isDark) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [            SizedBox(
-            width: 80,
-            height: 80,
-            child: CircularProgressIndicator(
-              strokeWidth: 4,
-              color: MacroSnapTheme.neonGreen,
-              backgroundColor: isDark ? const Color(0xFF303030) : const Color(0xFFE8DEFF),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            _analysisStage,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Text(
-              _analysisSub,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: MacroSnapTheme.textTertiary(context),
-                height: 1.5,
+    return ShimmerLoading(
+      isLoading: true,
+      child: SingleChildScrollView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            // Image skeleton
+            const SkeletonPlaceholder(height: 220),
+            const SizedBox(height: 12),
+
+            // Gram adjuster skeleton
+            const SkeletonPlaceholder(height: 40),
+            const SizedBox(height: 16),
+
+            // Nutrition card skeleton
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1A1A22) : Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Column(
+                children: [
+                  // Header badge skeleton
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const SkeletonPlaceholder(width: 100, height: 28, borderRadius: 14),
+                      const SkeletonPlaceholder(width: 100, height: 28, borderRadius: 14),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  // Calories skeleton
+                  const SkeletonPlaceholder(width: 100, height: 60, borderRadius: 8),
+                  const SizedBox(height: 16),
+                  // Macro circles row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: List.generate(3, (_) =>
+                      const SkeletonPlaceholder(width: 56, height: 56, isCircle: true),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+
+            // Nutrition details skeleton
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1A1A22) : Colors.white,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: const Column(
+                children: [
+                  SkeletonPlaceholder(width: 150, height: 20, borderRadius: 4),
+                  SizedBox(height: 20),
+                  SkeletonPlaceholder(height: 16, borderRadius: 4),
+                  SizedBox(height: 16),
+                  SkeletonPlaceholder(height: 16, borderRadius: 4),
+                  SizedBox(height: 16),
+                  SkeletonPlaceholder(height: 16, borderRadius: 4),
+                  SizedBox(height: 16),
+                  SkeletonPlaceholder(height: 16, borderRadius: 4),
+                  SizedBox(height: 16),
+                  SkeletonPlaceholder(height: 16, borderRadius: 4),
+                  SizedBox(height: 16),
+                  SkeletonPlaceholder(height: 16, borderRadius: 4),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Analysis stage text below skeletons
+            Center(
+              child: Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Text(
+                    _analysisStage,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Text(
+                      _analysisSub,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: MacroSnapTheme.textTertiary(context),
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -404,6 +404,120 @@ class _ShakeWidgetState extends State<ShakeWidget> {
 
 // ─── ANIMATED PROGRESS BAR ────────────────────────────────────
 
+// ─── SKELETON SHIMMER LOADING ──────────────────────────────
+
+/// Animated shimmer skeleton with a sweeping gradient.
+/// Shows card-shaped placeholders while content is loading.
+class ShimmerLoading extends StatefulWidget {
+  final bool isLoading;
+  final Widget child;
+  final Duration duration;
+
+  const ShimmerLoading({
+    super.key,
+    required this.isLoading,
+    required this.child,
+    this.duration = const Duration(milliseconds: 1500),
+  });
+
+  @override
+  State<ShimmerLoading> createState() => _ShimmerLoadingState();
+}
+
+class _ShimmerLoadingState extends State<ShimmerLoading>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: widget.duration)
+      ..repeat();
+    _anim = Tween<double>(begin: -1.5, end: 2.5).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.isLoading) return widget.child;
+
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (context, _) {
+        return ShaderMask(
+          blendMode: BlendMode.srcATop,
+          shaderCallback: (bounds) => LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: const [
+              Colors.transparent,
+              Colors.transparent,
+              Color(0x44FFFFFF),
+              Color(0x88FFFFFF),
+              Color(0x44FFFFFF),
+              Colors.transparent,
+              Colors.transparent,
+            ],
+            stops: [
+              0.0,
+              (_anim.value - 0.4).clamp(0.0, 1.0),
+              (_anim.value - 0.2).clamp(0.0, 1.0),
+              _anim.value.clamp(0.0, 1.0),
+              (_anim.value + 0.2).clamp(0.0, 1.0),
+              (_anim.value + 0.4).clamp(0.0, 1.0),
+              1.0,
+            ],
+          ).createShader(bounds),
+          child: widget.child,
+        );
+      },
+    );
+  }
+}
+
+/// A single skeleton placeholder rectangle/circle.
+/// Used inside [ShimmerLoading] to create structured placeholders.
+class SkeletonPlaceholder extends StatelessWidget {
+  final double width;
+  final double height;
+  final double borderRadius;
+  final bool isCircle;
+
+  const SkeletonPlaceholder({
+    super.key,
+    this.width = double.infinity,
+    required this.height,
+    this.borderRadius = 12,
+    this.isCircle = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.06)
+            : Colors.black.withValues(alpha: 0.06),
+        borderRadius: isCircle ? null : BorderRadius.circular(borderRadius),
+        shape: isCircle ? BoxShape.circle : BoxShape.rectangle,
+      ),
+    );
+  }
+}
+
+// ─── ANIMATED PROGRESS BAR ────────────────────────────────────
+
 class AnimatedProgressBar extends StatefulWidget {
   final double value;
   final Color color;
