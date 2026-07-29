@@ -250,9 +250,9 @@ class _HabitsTabState extends State<HabitsTab> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.bolt_rounded, color: MacroSnapTheme.neonGreen, size: 18),
+          const Icon(Icons.local_fire_department_rounded, color: MacroSnapTheme.neonPink, size: 18),
           const SizedBox(width: 4),
-          Text('$coins HC',
+          Text('${coins}d streak',
               style: const TextStyle(fontWeight: FontWeight.w800)),
         ],
       ),
@@ -314,7 +314,7 @@ class _HabitsTabState extends State<HabitsTab> {
                       color: MacroSnapTheme.neonPink, size: 18),
                   const SizedBox(width: 4),
                   Text(
-                    '${store.totalStreakPower} streak power',
+                    '${store.totalStreakPower}d best streak',
                     style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w700),
                   ),
                 ],

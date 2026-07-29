@@ -27,6 +27,8 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
   NutritionResult? _result;
   int _grams = 100;
   bool _showPerDish = false;
+  String _analysisStage = 'Analyzing your meal...';
+  String _analysisSub = 'Our AI is identifying each dish\nand calculating nutrition';
 
   @override
   void initState() {
@@ -42,6 +44,26 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic));
 
     _analyze();
+    _animateStages();
+  }
+
+  void _animateStages() {
+    Future.delayed(const Duration(seconds: 4), () {
+      if (mounted && _isAnalyzing) {
+        setState(() {
+          _analysisStage = 'Still working...';
+          _analysisSub = 'Food identification may take a moment\nfor complex dishes';
+        });
+      }
+    });
+    Future.delayed(const Duration(seconds: 10), () {
+      if (mounted && _isAnalyzing) {
+        setState(() {
+          _analysisStage = 'Taking longer than expected';
+          _analysisSub = 'The server may be busy. You can retry or use local analysis.';
+        });
+      }
+    });
   }
 
   Future<void> _analyze() async {
@@ -147,6 +169,102 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     );
   }
 
+  Future<void> _showEditDialog(bool isDark, NutritionResult r) async {
+    final calCtrl = TextEditingController(text: r.calories.toString());
+    final proCtrl = TextEditingController(text: r.protein.toStringAsFixed(1));
+    final carbCtrl = TextEditingController(text: r.carbs.toStringAsFixed(1));
+    final fatCtrl = TextEditingController(text: r.fats.toStringAsFixed(1));
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('Edit Nutrition'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: calCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Calories (kcal)', border: OutlineInputBorder(), isDense: true),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(child: TextField(
+                  controller: proCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Protein (g)', border: OutlineInputBorder(), isDense: true),
+                )),
+                const SizedBox(width: 8),
+                Expanded(child: TextField(
+                  controller: carbCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Carbs (g)', border: OutlineInputBorder(), isDense: true),
+                )),
+                const SizedBox(width: 8),
+                Expanded(child: TextField(
+                  controller: fatCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Fats (g)', border: OutlineInputBorder(), isDense: true),
+                )),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () {
+              final cal = int.tryParse(calCtrl.text) ?? r.calories;
+              final pro = double.tryParse(proCtrl.text) ?? r.protein;
+              final carb = double.tryParse(carbCtrl.text) ?? r.carbs;
+              final fat = double.tryParse(fatCtrl.text) ?? r.fats;
+              setState(() {
+                _result = NutritionResult(
+                  dishes: r.dishes,
+                  description: r.description,
+                  confidence: r.confidence,
+                  grams: r.grams,
+                );
+                // Override the computed values by modifying dishes
+                if (r.dishes.isNotEmpty) {
+                  final ratio = (r.grams > 0 ? r.grams : 100) / 100.0;
+                  final d = r.dishes.first;
+                  final adjustedDish = DishItem(
+                    name: d.name,
+                    portionDescription: d.portionDescription,
+                    caloriesPer100g: ((cal / ratio) / r.dishes.length).round(),
+                    proteinPer100g: (pro / ratio) / r.dishes.length,
+                    carbsPer100g: (carb / ratio) / r.dishes.length,
+                    fatsPer100g: (fat / ratio) / r.dishes.length,
+                    fiberPer100g: d.fiberPer100g,
+                    sugarPer100g: d.sugarPer100g,
+                    suitableFor: d.suitableFor,
+                  );
+                  final adjustedDishes = [adjustedDish, ...r.dishes.sublist(1)];
+                  _result = NutritionResult(
+                    dishes: adjustedDishes,
+                    description: r.description + ' (edited)',
+                    confidence: r.confidence,
+                    grams: r.grams,
+                  );
+                }
+              });
+              Navigator.pop(ctx);
+            },
+            child: const Text('Apply'),
+          ),
+        ],
+      ),
+    );
+    calCtrl.dispose();
+    proCtrl.dispose();
+    carbCtrl.dispose();
+    fatCtrl.dispose();
+  }
+
   @override
   void dispose() {
     _animController.stop();
@@ -204,7 +322,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
           ),
           const SizedBox(height: 24),
           Text(
-            'Analyzing your meal...',
+            _analysisStage,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -215,7 +333,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              'Our AI is identifying each dish\nand calculating nutrition',
+              _analysisSub,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -435,10 +553,28 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                     ),
                   ),
                 ],
-                const SizedBox(height: 24),
-                GradientButton(
-                  label: 'Log This Meal',
-                  onPressed: () {
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showEditDialog(isDark, r),
+                        icon: const Icon(Icons.edit_rounded, size: 18),
+                        label: const Text('Edit', style: TextStyle(fontWeight: FontWeight.w700)),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: MacroSnapTheme.neonGreen,
+                          side: BorderSide(color: MacroSnapTheme.neonGreen.withValues(alpha: 0.4)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: GradientButton(
+                        label: 'Log This Meal',
+                        onPressed: () {
                     final combinedName = hasMultiDish
                         ? r.dishes.map((d) => d.name).join(', ')
                         : r.dishes.first.name;

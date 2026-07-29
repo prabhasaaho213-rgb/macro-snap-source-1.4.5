@@ -142,6 +142,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _sendFeedback(bool isDark) async {
+    final ctrl = TextEditingController();
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('Send Feedback'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Your feedback helps us improve MacroSnap!',
+                style: TextStyle(fontSize: 13)),
+            const SizedBox(height: 14),
+            TextField(
+              controller: ctrl,
+              maxLines: 4,
+              maxLength: 500,
+              decoration: const InputDecoration(
+                hintText: 'Tell us what you think...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () async {
+              final msg = ctrl.text.trim();
+              if (msg.isEmpty) return;
+              final uri = Uri.parse(
+                'mailto:macrosnap7@gmail.com?subject=MacroSnap Feedback&body=${Uri.encodeComponent(msg)}'
+              );
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri);
+              }
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Thank you for your feedback!'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+              Navigator.pop(ctx);
+            },
+            child: const Text('Send'),
+          ),
+        ],
+      ),
+    );
+    ctrl.dispose();
+  }
+
   Future<void> _editName() async {
     final ctrl = TextEditingController(text: _name);
     final newName = await showDialog<String>(
@@ -273,6 +328,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   final uri = Uri.parse('https://prabhasaaho213-rgb.github.io/macro-snap-source-1.4.5/delete-account.html');
                   if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
                 }, isDark)),
+                const Divider(height: 24),
+                AnimatedEntrance(delayMs: 300, child: _settingTile(Icons.feedback_rounded, 'Send Feedback', 'Help us improve MacroSnap', () => _sendFeedback(isDark), isDark)),
                 const Divider(height: 24),
                 AnimatedEntrance(delayMs: 320, child: _settingTile(Icons.logout_rounded, 'Log Out', 'Sign out and return to login', () => _logout(context, isDark), isDark)),
               ]),

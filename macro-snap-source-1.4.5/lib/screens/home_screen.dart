@@ -70,8 +70,7 @@ class _HomeScreenState extends State<HomeScreen>
     final f = MealStore.instance.todayFats;
     final targetP = profile?.targetProtein ?? 150;
     final targetC = profile?.targetCarbs ?? 300;
-    final targetF = profile?.targetFats ?? 67;
-    final allHit = p >= targetP * 0.9 && c >= targetC * 0.9 && f >= targetF * 0.9;
+    final targetF = profile?.targetFats ?? 67;                      final allHit = StreakService.checkAllTargetsHit();
     final alreadyPlayed = prefs.getBool('confetti_${DateTime.now().day}_${DateTime.now().month}') ?? false;
 
     if (mounted) {
@@ -157,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen>
               children: [
                 Text(greeting,
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.white60 : const Color(0xFF64748B))),
+                        color: isDark ? Colors.white70 : const Color(0xFF64748B))),
                 const SizedBox(height: 4),
                 Text(_name.isNotEmpty ? _name : 'MacroSnap',
                     maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -347,7 +346,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 Row(
                   children: [
-                    const Icon(Icons.arrow_downward_rounded, size: 14, color: MacroSnapTheme.neonGreen),
+                    Icon(Icons.arrow_downward_rounded, size: 14, color: MacroSnapTheme.neonGreen),
                     const SizedBox(width: 4),
                     Text('$remaining remaining',
                         style: const TextStyle(color: MacroSnapTheme.neonGreen, fontSize: 12, fontWeight: FontWeight.w700)),
@@ -462,9 +461,17 @@ class _HomeScreenState extends State<HomeScreen>
                         color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                 ScaleOnPress(
                   onTap: () async {
-                    try {
-                      await ShareService.shareWeekSummary();
-                    } catch (_) {}
+                    final shared = await ShareService.shareWeekSummary();
+                    if (!shared && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('No meals logged this week yet. Log a meal to share your progress!'),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.all(8),

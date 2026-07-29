@@ -19,12 +19,16 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
   bool _scanning = true;
 
   void _onDetect(BarcodeCapture capture) {
-    if (!_scanning || _found != null) return;
+    if (!_scanning) return;
     final barcode = capture.barcodes.firstOrNull?.rawValue;
     if (barcode == null) return;
     final food = BarcodeDb.lookup(barcode);
     if (food != null && mounted) {
       setState(() { _found = food; _scanning = false; });
+    } else if (mounted) {
+      // Barcode not in DB — show manual entry
+      setState(() { _found = null; _scanning = false; });
+      _showManualEntry(barcode);
     }
   }
 
@@ -48,6 +52,120 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
       );
       Navigator.pop(context);
     }
+  }
+
+  Future<void> _showManualEntry(String barcode) async {
+    final nameCtrl = TextEditingController();
+    final calCtrl = TextEditingController();
+    final proCtrl = TextEditingController();
+    final carbCtrl = TextEditingController();
+    final fatCtrl = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return AlertDialog(
+          backgroundColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Text('Product Not Found'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Barcode not in our database. Enter nutrition manually:',
+                    style: TextStyle(fontSize: 13)),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Food name',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: calCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Calories (per 100g)',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(child: TextField(
+                      controller: proCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Protein (g)',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    )),
+                    const SizedBox(width: 8),
+                    Expanded(child: TextField(
+                      controller: carbCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Carbs (g)',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    )),
+                    const SizedBox(width: 8),
+                    Expanded(child: TextField(
+                      controller: fatCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Fats (g)',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    )),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                setState(() => _scanning = true);
+              },
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (nameCtrl.text.trim().isEmpty) return;
+                final food = BarcodeFood(
+                  barcode: barcode,
+                  name: nameCtrl.text.trim(),
+                  brand: 'Manual Entry',
+                  caloriesPer100g: int.tryParse(calCtrl.text) ?? 0,
+                  proteinPer100g: double.tryParse(proCtrl.text) ?? 0,
+                  carbsPer100g: double.tryParse(carbCtrl.text) ?? 0,
+                  fatsPer100g: double.tryParse(fatCtrl.text) ?? 0,
+                );
+                setState(() => _found = food);
+                Navigator.pop(ctx);
+              },
+              child: const Text('Log It'),
+            ),
+          ],
+        );
+      },
+    );
+    nameCtrl.dispose();
+    calCtrl.dispose();
+    proCtrl.dispose();
+    carbCtrl.dispose();
+    fatCtrl.dispose();
   }
 
   @override

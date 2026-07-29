@@ -84,7 +84,14 @@ class Habit {
   }
 
   int currentStreak([DateTime? reference]) {
-    var d = dayOnly(reference ?? DateTime.now());
+    final ref = dayOnly(reference ?? DateTime.now());
+    var d = ref;
+
+    // If today is due but NOT completed (still pending), count from yesterday
+    if (isDueOn(ref) && !isCompleted(ref) && !(streakProtection && isSkipped(ref))) {
+      d = ref.subtract(const Duration(days: 1));
+    }
+
     var count = 0;
     while (true) {
       if (!isDueOn(d)) {

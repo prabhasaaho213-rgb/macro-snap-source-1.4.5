@@ -40,11 +40,13 @@ ${daysLogged.length >= 6 ? '⭐ Great consistency!' : daysLogged.length >= 4 ? '
 Track every meal with MacroSnap 🍽️''';
   }
 
-  static Future<void> shareWeekSummary() async {
+  /// Returns true if share was initiated, false if there's nothing to share.
+  static Future<bool> shareWeekSummary() async {
     final text = _weekSummary();
     if (text.isEmpty) {
-      throw Exception('No meals logged this week to share.');
+      return false;
     }
     await Share.share(text);
+    return true;
   }
 }

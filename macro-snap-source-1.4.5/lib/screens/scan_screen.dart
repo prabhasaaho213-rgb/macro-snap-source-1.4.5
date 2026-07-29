@@ -102,10 +102,11 @@ class _ScanScreenState extends State<ScanScreen>
     if (_controller == null || !_controller!.value.isInitialized) return;
     try {
       final xfile = await _controller!.takePicture();
-      await ScanGate.incrementScan();
       final tempDir = Directory.systemTemp;
       final tempFile = File('${tempDir.path}/food_${DateTime.now().millisecondsSinceEpoch}.jpg');
       await xfile.saveTo(tempFile.path);
+      // Only increment scan AFTER successful capture + save
+      await ScanGate.incrementScan();
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -131,11 +132,12 @@ class _ScanScreenState extends State<ScanScreen>
     final picker = ImagePicker();
     final image = await picker.pickImage(source: ImageSource.gallery, maxWidth: 512, imageQuality: 70);
     if (image != null && mounted) {
-      await ScanGate.incrementScan();
       final bytes = await image.readAsBytes();
       final tempDir = Directory.systemTemp;
       final tempFile = File('${tempDir.path}/food_${DateTime.now().millisecondsSinceEpoch}.jpg');
       await tempFile.writeAsBytes(bytes);
+      // Only increment scan AFTER successful read + save
+      await ScanGate.incrementScan();
       if (mounted) {
         Navigator.pushReplacement(
           context,

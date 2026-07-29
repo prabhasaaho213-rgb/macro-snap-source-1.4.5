@@ -172,10 +172,13 @@ class HabitStore extends ChangeNotifier {
   /// Today's completed habits count
   int get todayCompleted => todayHabits.where((h) => h.isCompleted(DateTime.now())).length;
 
-  /// Total streak power (sum of all habits)
-  int get totalStreakPower => habits.fold<int>(0, (sum, h) => sum + h.currentStreak());
+  /// Best current streak across all habits (most consecutive days)
+  int get totalStreakPower {
+    if (habits.isEmpty) return 0;
+    return habits.map((h) => h.currentStreak()).reduce(max);
+  }
 
-  /// Best streak across all habits
+  /// Best streak across all habits (all-time)
   int get bestStreakOverall {
     if (habits.isEmpty) return 0;
     return habits.map((h) => h.bestStreak()).reduce(max);

@@ -26,6 +26,7 @@ android {
     packaging {
         jniLibs {
             useLegacyPackaging = true
+            keepDebugSymbols += listOf("**/*.so")
         }
     }
 
