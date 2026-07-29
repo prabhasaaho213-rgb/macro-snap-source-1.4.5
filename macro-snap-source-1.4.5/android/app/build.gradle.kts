@@ -26,7 +26,6 @@ android {
     packaging {
         jniLibs {
             useLegacyPackaging = true
-            keepDebugSymbols += listOf("**/*.so")
         }
     }
 
@@ -41,6 +40,7 @@ android {
         multiDexEnabled = true
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
+            debugSymbolLevel = "none"
         }
     }
 
