@@ -34,6 +34,61 @@ void main() {
     expect(find.byType(ReorderableListView), findsNothing);
   });
 
+  // ─── WIDGET TEST: sections render in the correct order ──
+  testWidgets('sections render in correct order: Hero → Missions → Create → Water → Consistency',
+      (tester) async {
+    // Pre-populate with test habits so the full layout is shown
+    final store = HabitStore.instance;
+    store.habits.addAll([
+      Habit(id: 'v1', name: 'Morning Run', emoji: '🏃', colorValue: 0xFFFF007F, frequency: 'Daily'),
+      Habit(id: 'v2', name: 'Read Books', emoji: '📚', colorValue: 0xFF00FF66, frequency: 'Daily'),
+    ]);
+
+    await pumpHabitsTab(tester);
+
+    // 1. Hero card at the top — should be visible without scrolling
+    expect(find.text('Make it count.'), findsOneWidget,
+        reason: 'Hero card "Make it count." must render');
+
+    // 2. Today's Missions — also near the top
+    expect(find.text("Today's Missions"), findsOneWidget,
+        reason: 'Missions section header must render');
+
+    // Sections 3-5 may be below viewport fold. Scroll to each.
+    // 3. CREATE HABIT button
+    await tester.scrollUntilVisible(
+      find.text('CREATE HABIT'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('CREATE HABIT'), findsOneWidget,
+        reason: 'Create Habit button must render');
+
+    // 4. Water Intake
+    await tester.scrollUntilVisible(
+      find.text('Water Intake'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Water Intake'), findsOneWidget,
+        reason: 'Water Intake section must render');
+
+    // 5. Consistency Map
+    await tester.scrollUntilVisible(
+      find.text('Consistency'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Consistency'), findsOneWidget,
+        reason: 'Consistency Map section must render');
+
+    // Clean up
+    store.habits.clear();
+  });
+
   // ─── UNIT TESTS: reorder logic ─────────────────────────────
   test('HabitStore reorder - move first habit down', () {
     final store = HabitStore.instance;

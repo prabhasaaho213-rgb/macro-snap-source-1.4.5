@@ -128,14 +128,14 @@ class _HabitsTabState extends State<HabitsTab> {
             // ─── ─── HAS HABITS ─── FULL LAYOUT ──────────────
             else ...[const SizedBox(height: 14),
 
-            // ─── Create Habit Button (always visible at top) ─
+            // ─── 1. Make It Count (Hero Card) ──────────────
             AnimatedEntrance(
               delayMs: 0,
-              child: _createButton(context),
+              child: _heroCard(progress, completed, active.length, isDark),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
 
-            // ─── Today's Missions ────────────────────────────
+            // ─── 2. Today's Missions ────────────────────────
             AnimatedEntrance(
               delayMs: 50,
               child: Column(
@@ -194,21 +194,21 @@ class _HabitsTabState extends State<HabitsTab> {
             ),
             const SizedBox(height: 18),
 
-            // ─── Hero Card ──────────────────────────────────
+            // ─── 3. Create Habit Button ─────────────────────
             AnimatedEntrance(
               delayMs: 100,
-              child: _heroCard(progress, completed, active.length, isDark),
+              child: _createButton(context),
             ),
             const SizedBox(height: 18),
 
-            // ─── Water Tracker ───────────────────────────────
+            // ─── 4. Water Intake ────────────────────────────
             AnimatedEntrance(
               delayMs: 150,
               child: _waterCard(waterProgress, isDark),
             ),
             const SizedBox(height: 24),
 
-            // ─── Consistency Map ────────────────────────────
+            // ─── 5. Consistency Map ─────────────────────────
             AnimatedEntrance(
               delayMs: 200,
               child: _consistencyMapCard(isDark),
