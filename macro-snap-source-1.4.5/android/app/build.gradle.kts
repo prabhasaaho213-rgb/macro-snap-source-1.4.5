@@ -26,6 +26,10 @@ android {
     packaging {
         jniLibs {
             useLegacyPackaging = true
+            keepDebugSymbols += listOf("**/*.so")
+        }
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
 
@@ -40,7 +44,6 @@ android {
         multiDexEnabled = true
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
-            debugSymbolLevel = "none"
         }
     }
 
@@ -56,6 +59,9 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
+            ndk {
+                debugSymbolLevel = "none"
+            }
         }
     }
 }
