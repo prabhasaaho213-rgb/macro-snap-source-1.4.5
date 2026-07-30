@@ -105,8 +105,8 @@ class _ScanScreenState extends State<ScanScreen>
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 500),
         reverseTransitionDuration: const Duration(milliseconds: 300),
-        pageBuilder: (_, __, ___) => ResultScreen(imagePath: path),
-        transitionsBuilder: (_, animation, __, child) {
+        pageBuilder: (_, _, _) => ResultScreen(imagePath: path),
+        transitionsBuilder: (_, animation, _, child) {
           return FadeTransition(
             opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
             child: child,
@@ -320,7 +320,7 @@ class _ScanScreenState extends State<ScanScreen>
                   fit: StackFit.expand,
                   children: [
                     Hero(
-                      tag: 'food_image_${_capturedImagePath}',
+                      tag: 'food_image_$_capturedImagePath',
                       child: Image.file(
                         File(_capturedImagePath!),
                         fit: BoxFit.cover,

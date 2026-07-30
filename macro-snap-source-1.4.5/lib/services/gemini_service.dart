@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -129,6 +130,11 @@ class GeminiService {
   static const _prefsKey = 'server_url';
   static String _serverUrl = 'https://macro-snap-backend-production.up.railway.app';
 
+  /// Test-only mock result. When non-null, [analyzeFoodImage] returns this
+  /// immediately instead of making a network request.
+  @visibleForTesting
+  static NutritionResult? mockResult;
+
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     final savedUrl = prefs.getString(_prefsKey);
@@ -147,6 +153,9 @@ class GeminiService {
   static bool get hasServerUrl => _serverUrl.isNotEmpty;
 
   static Future<NutritionResult> analyzeFoodImage(String imagePath) async {
+    // If a mock result is set (testing), return it immediately
+    if (mockResult != null) return mockResult!;
+
     if (!hasServerUrl) {
       throw Exception('Server URL not set. Enter your server URL in Settings.');
     }

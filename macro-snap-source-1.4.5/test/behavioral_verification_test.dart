@@ -22,18 +22,6 @@ void main() {
   //   Confirms deleted files have zero imports and don't exist
   // ──────────────────────────────────────────────────────────
   group('Dead-code removal', () {
-    test('[home_screen] is not imported anywhere', () {
-      final libDir = Directory('lib');
-      if (!libDir.existsSync()) return;
-      final issues = <String>[];
-      for (final f in libDir.listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart'))) {
-        if (f.readAsStringSync().contains("home_screen")) {
-          issues.add(f.path);
-        }
-      }
-      expect(issues, isEmpty, reason: 'Files still importing home_screen: $issues');
-    });
-
     test('[update_checker] is not imported anywhere', () {
       final libDir = Directory('lib');
       if (!libDir.existsSync()) return;
@@ -59,7 +47,8 @@ void main() {
     });
 
     test('Deleted files no longer exist on disk', () {
-      expect(File('lib/screens/home_screen.dart').existsSync(), false);
+      // home_screen.dart was restored from git after user reverted the DashboardScreen.
+      expect(File('lib/screens/home_screen.dart').existsSync(), true);
       expect(File('lib/services/update_checker.dart').existsSync(), false);
       expect(File('lib/widgets/macro_ring.dart').existsSync(), false);
       expect(File('test_driver/app_test.dart').existsSync(), false);

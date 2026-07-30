@@ -247,7 +247,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                   final adjustedDishes = [adjustedDish, ...r.dishes.sublist(1)];
                   _result = NutritionResult(
                     dishes: adjustedDishes,
-                    description: r.description + ' (edited)',
+                    description: '${r.description} (edited)',
                     confidence: r.confidence,
                     grams: r.grams,
                   );

@@ -44,6 +44,11 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Keystore & signing (DO NOT COMMIT)
+*.jks
+*.keystore
+key.properties
+
 # Backend is its own repo
 /backend/
 
