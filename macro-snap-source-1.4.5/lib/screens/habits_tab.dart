@@ -194,6 +194,7 @@ class _HabitsTabState extends State<HabitsTab> {
                   final i = entry.key;
                   final h = entry.value;
                   return AnimatedEntrance(
+                    key: ValueKey('habit_${h.id}'),
                     delayMs: 50 + i * 30,
                     child: _missionCard(h, isDark, index: i),
                   );
@@ -403,7 +404,7 @@ class _HabitsTabState extends State<HabitsTab> {
               return GestureDetector(
                 onTap: () {
                   HapticFeedback.lightImpact();
-                  if (filled) store.removeWater(); else store.addWater();
+                  if (filled) { store.removeWater(); } else { store.addWater(); }
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
@@ -448,7 +449,6 @@ class _HabitsTabState extends State<HabitsTab> {
     final done = h.isCompleted(DateTime.now());
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      key: ValueKey('habit_${h.id}'),
       child: GestureDetector(
         onTap: () {
           HapticFeedback.mediumImpact();
