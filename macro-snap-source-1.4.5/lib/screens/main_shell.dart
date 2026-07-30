@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme.dart';
-import 'home_screen.dart';
+import 'dashboard_screen.dart';
 import 'habits_tab.dart';
 import 'scan_screen.dart';
 import 'subscription_screen.dart';
@@ -142,7 +142,7 @@ class _MainShellState extends State<MainShell> {
   Widget _buildTabContent() {
     switch (_currentIndex) {
       case 0:
-        return const HomeScreen(key: ValueKey('HomeTab'));
+        return const DashboardScreen(key: ValueKey('DashboardTab'));
       case 1:
         return PopScope(
           canPop: false,
@@ -154,7 +154,7 @@ class _MainShellState extends State<MainShell> {
       case 2:
         return const HabitsTab(key: ValueKey('HabitsTab'));
       default:
-        return const HomeScreen(key: ValueKey('HomeTab'));
+        return const DashboardScreen(key: ValueKey('DashboardTab'));
     }
   }
 
@@ -205,8 +205,8 @@ class _MainShellState extends State<MainShell> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _NavItem(
-                icon: Icons.home_rounded,
-                label: 'Home',
+                icon: Icons.dashboard_rounded,
+                label: 'Dashboard',
                 isSelected: _currentIndex == 0,
                 onTap: () => setState(() => _currentIndex = 0),
               ),

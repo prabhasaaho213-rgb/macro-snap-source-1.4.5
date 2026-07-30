@@ -135,80 +135,85 @@ class _HabitsTabState extends State<HabitsTab> {
             ),
             const SizedBox(height: 16),
 
-            // ─── Hero Card ──────────────────────────────────
+            // ─── Today's Missions ────────────────────────────
             AnimatedEntrance(
               delayMs: 50,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Today's Missions",
+                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900,
+                            color: isDark ? Colors.white : const Color(0xFF1A1A1A)),
+                      ),
+                      Text(
+                        '$completed/${active.length}',
+                        style: const TextStyle(
+                          color: MacroSnapTheme.neonGreen,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  if (active.isEmpty)
+                    _emptyState(isDark)
+                  else
+                    ReorderableListView(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      buildDefaultDragHandles: false,
+                      onReorderItem: (oldI, newI) {
+                        // newI is already adjusted for the removal at oldI
+                        final h = store.habits[oldI];
+                        store.habits.remove(h);
+                        store.habits.insert(newI, h);
+                        store.save();
+                      },
+                      children: active.asMap().entries.map((entry) {
+                        final i = entry.key;
+                        final h = entry.value;
+                        return AnimatedEntrance(
+                          key: ValueKey('habit_${h.id}'),
+                          delayMs: 50 + i * 30,
+                          child: _missionCard(h, isDark, index: i),
+                        );
+                      }).toList(),
+                    ),
+
+                  // ─── Habit Limit Indicator ───────────────────────
+                  if (!_subscribed && store.habits.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _habitLimitCard(isDark),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+
+            // ─── Hero Card ──────────────────────────────────
+            AnimatedEntrance(
+              delayMs: 100,
               child: _heroCard(progress, completed, active.length, isDark),
             ),
             const SizedBox(height: 18),
 
             // ─── Water Tracker ───────────────────────────────
             AnimatedEntrance(
-              delayMs: 100,
+              delayMs: 150,
               child: _waterCard(waterProgress, isDark),
             ),
             const SizedBox(height: 24),
 
             // ─── Consistency Map ────────────────────────────
             AnimatedEntrance(
-              delayMs: 150,
+              delayMs: 200,
               child: _consistencyMapCard(isDark),
             ),
             const SizedBox(height: 24),
-
-            // ─── Today's Missions ────────────────────────────
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Today's Missions",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900,
-                      color: isDark ? Colors.white : const Color(0xFF1A1A1A)),
-                ),
-                Text(
-                  '$completed/${active.length}',
-                  style: const TextStyle(
-                    color: MacroSnapTheme.neonGreen,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            if (active.isEmpty)
-              _emptyState(isDark)
-            else
-              ReorderableListView(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                buildDefaultDragHandles: false,
-                onReorderItem: (oldI, newI) {
-                  // newI is already adjusted for the removal at oldI
-                  final h = store.habits[oldI];
-                  store.habits.remove(h);
-                  store.habits.insert(newI, h);
-                  store.save();
-                },
-                children: active.asMap().entries.map((entry) {
-                  final i = entry.key;
-                  final h = entry.value;
-                  return AnimatedEntrance(
-                    key: ValueKey('habit_${h.id}'),
-                    delayMs: 50 + i * 30,
-                    child: _missionCard(h, isDark, index: i),
-                  );
-                }).toList(),
-              ),
-
-            // ─── Habit Limit Indicator ───────────────────────
-            if (!_subscribed && store.habits.isNotEmpty) ...[
-              AnimatedEntrance(
-                delayMs: 50 + store.habits.length * 30,
-                child: _habitLimitCard(isDark),
-              ),
-              const SizedBox(height: 16),
-            ],
 
             ],
           ],
@@ -444,100 +449,169 @@ class _HabitsTabState extends State<HabitsTab> {
     );
   }
 
+  // ─── SWIPE BACKGROUND ──────────────────────────────────────
+  Widget _swipeActionBackground({required bool rightSwipe}) {
+    final color = rightSwipe ? MacroSnapTheme.neonGreen : MacroSnapTheme.neonOrange;
+    final icon = rightSwipe ? Icons.check_circle_rounded : Icons.refresh_rounded;
+    final label = rightSwipe ? 'Complete' : 'Reset';
+    return Container(
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      alignment: rightSwipe ? Alignment.centerRight : Alignment.centerLeft,
+      padding: EdgeInsets.symmetric(
+        horizontal: 28,
+        vertical: 0,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: rightSwipe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (!rightSwipe) ...[
+            Icon(icon, color: Colors.white, size: 28),
+            const SizedBox(width: 10),
+            Text(label,
+                style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.w900, fontSize: 17,
+                )),
+          ] else ...[
+            Text(label,
+                style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.w900, fontSize: 17,
+                )),
+            const SizedBox(width: 10),
+            Icon(icon, color: Colors.white, size: 28),
+          ],
+        ],
+      ),
+    );
+  }
+
   // ─── MISSION CARD ──────────────────────────────────────────
   Widget _missionCard(Habit h, bool isDark, {required int index}) {
     final done = h.isCompleted(DateTime.now());
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: GestureDetector(
-        onTap: () {
+      child: Dismissible(
+        key: ValueKey('dismiss_${h.id}'),
+        direction: DismissDirection.horizontal,
+        background: _swipeActionBackground(rightSwipe: true),
+        secondaryBackground: _swipeActionBackground(rightSwipe: false),
+        confirmDismiss: (direction) async {
           HapticFeedback.mediumImpact();
-          h.toggle(DateTime.now());
-          store.update(h);
+          if (direction == DismissDirection.startToEnd) {
+            // Swipe right → complete (toggle)
+            h.toggle(DateTime.now());
+            store.update(h);
+          } else {
+            // Swipe left → reset streak
+            h.completedDates.clear();
+            h.skippedDates.clear();
+            store.update(h);
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${h.name} streak reset'),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            }
+          }
+          return false; // Snap back — don't dismiss
         },
-        onLongPress: () {
-          HapticFeedback.heavyImpact();
-          _showHabitActions(context, h, isDark);
-        },
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: MacroSnapTheme.habitlyCard(context),
-          child: Row(
-            children: [
-              // Drag handle — emoji container (long-hold to reorder)
-              ReorderableDragStartListener(
-                index: index,
-                child: Container(
-                  width: 52, height: 52,
-                  decoration: MacroSnapTheme.emojiContainer(h.color),
-                  child: Center(
-                    child: Text(h.emoji, style: const TextStyle(fontSize: 25)),
+        child: GestureDetector(
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            h.toggle(DateTime.now());
+            store.update(h);
+          },
+          onLongPress: () {
+            HapticFeedback.heavyImpact();
+            _showHabitActions(context, h, isDark);
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: MacroSnapTheme.habitlyCard(context),
+            child: Row(
+              children: [
+                // Drag handle — emoji container (long-hold to reorder)
+                ReorderableDragStartListener(
+                  index: index,
+                  child: Container(
+                    width: 52, height: 52,
+                    decoration: MacroSnapTheme.emojiContainer(h.color),
+                    child: Center(
+                      child: Text(h.emoji, style: const TextStyle(fontSize: 25)),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 13),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      h.name,
-                      style: TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w800,
-                        decoration: done ? TextDecoration.lineThrough : null,
-                        color: done
-                            ? (MacroSnapTheme.textTertiary(context))
-                            : (isDark ? Colors.white : const Color(0xFF1A1A1A)),
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Row(
-                      children: [
-                        const Icon(Icons.local_fire_department_rounded,
-                            color: MacroSnapTheme.neonPink, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${h.currentStreak()} day streak · ${h.frequency}',
-                          style: TextStyle(
-                            color: MacroSnapTheme.textSecondary(context),
-                            fontSize: 12, fontWeight: FontWeight.w600,
-                          ),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        h.name,
+                        style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w800,
+                          decoration: done ? TextDecoration.lineThrough : null,
+                          color: done
+                              ? (MacroSnapTheme.textTertiary(context))
+                              : (isDark ? Colors.white : const Color(0xFF1A1A1A)),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 4),
-              // Check/Bolt status indicator
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                width: 46, height: 46,
-                decoration: BoxDecoration(
-                  color: done
-                      ? MacroSnapTheme.neonGreen
-                      : MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  done ? Icons.check_rounded : Icons.bolt_rounded,
-                  color: done ? Colors.black : MacroSnapTheme.neonGreen,
-                  size: 27,
-                ),
-              ),
-              // Drag grip icon
-              ReorderableDragStartListener(
-                index: index,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 6),
-                  child: Icon(
-                    Icons.drag_handle_rounded,
-                    color: MacroSnapTheme.textQuaternary(context),
-                    size: 28,
+                      ),
+                      const SizedBox(height: 5),
+                      Row(
+                        children: [
+                          const Icon(Icons.local_fire_department_rounded,
+                              color: MacroSnapTheme.neonPink, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${h.currentStreak()} day streak · ${h.frequency}',
+                            style: TextStyle(
+                              color: MacroSnapTheme.textSecondary(context),
+                              fontSize: 12, fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 4),
+                // Check/Bolt status indicator
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  width: 46, height: 46,
+                  decoration: BoxDecoration(
+                    color: done
+                        ? MacroSnapTheme.neonGreen
+                        : MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    done ? Icons.check_rounded : Icons.bolt_rounded,
+                    color: done ? Colors.black : MacroSnapTheme.neonGreen,
+                    size: 27,
+                  ),
+                ),
+                // Drag grip icon
+                ReorderableDragStartListener(
+                  index: index,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: Icon(
+                      Icons.drag_handle_rounded,
+                      color: MacroSnapTheme.textQuaternary(context),
+                      size: 28,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -962,7 +1036,7 @@ class _HabitsTabState extends State<HabitsTab> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
                     color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
             const SizedBox(height: 8),
-            Text('Free users get ${HabitStore.freeHabitLimit} habits.\nGo Pro for unlimited habits, AI scans & more.',
+            Text('Free users get ${HabitStore.freeHabitLimit} habits.\\nGo Pro for unlimited habits, AI scans & more.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14,
                     color: MacroSnapTheme.textSecondary(context), height: 1.4)),

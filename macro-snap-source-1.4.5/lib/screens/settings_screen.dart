@@ -185,15 +185,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               if (await canLaunchUrl(uri)) {
                 await launchUrl(uri);
               }
-              if (context.mounted) {
+              if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Thank you for your feedback!'),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
+                if (ctx.mounted) Navigator.pop(ctx);
               }
-              Navigator.pop(ctx);
             },
             child: const Text('Send'),
           ),
