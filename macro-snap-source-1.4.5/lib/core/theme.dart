@@ -94,11 +94,47 @@ class MacroSnapTheme {
     );
   }
 
-  /// Mission-style emoji icon container
+  /// Mission-style emoji icon container — a vivid tinted tile with a
+  /// colored border so emoji glyphs pop instead of looking washed out.
   static BoxDecoration emojiContainer(Color color) {
     return BoxDecoration(
-      color: color.withValues(alpha: 0.16),
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          color.withValues(alpha: 0.32),
+          color.withValues(alpha: 0.14),
+        ],
+      ),
       borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: color.withValues(alpha: 0.4), width: 1.2),
+      boxShadow: [
+        BoxShadow(
+          color: color.withValues(alpha: 0.18),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    );
+  }
+
+  /// Style for emoji glyphs inside an [emojiContainer] tile — adds a soft
+  /// glow/drop-shadow that lifts the emoji off its tinted background.
+  static TextStyle emojiStyle({double fontSize = 25}) {
+    return TextStyle(
+      fontSize: fontSize,
+      shadows: const [
+        Shadow(
+          color: Color(0x55000000),
+          blurRadius: 6,
+          offset: Offset(0, 2),
+        ),
+        Shadow(
+          color: Color(0x22FFFFFF),
+          blurRadius: 3,
+          offset: Offset(0, 0),
+        ),
+      ],
     );
   }
 

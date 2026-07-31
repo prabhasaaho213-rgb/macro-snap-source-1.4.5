@@ -9,6 +9,7 @@ import '../services/gemini_service.dart';
 import '../services/meal_store.dart';
 import '../services/meal_sync_service.dart';
 import '../services/habit_store.dart';
+import '../services/rate_us_service.dart';
 import 'subscription_screen.dart';
 import 'phone_login_screen.dart';
 
@@ -101,6 +102,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await prefs.setString('phone', phone);
       // Trigger cloud re-sync with new phone identifier
       await MealStore.instance.reload();
+      await HabitStore.instance.reload();
       setState(() => _phone = phone);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -321,6 +323,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   final uri = Uri.parse('mailto:macrosnap7@gmail.com');
                   if (await canLaunchUrl(uri)) await launchUrl(uri);
                 }, isDark)),
+                const Divider(height: 24),
+                AnimatedEntrance(delayMs: 260, child: _settingTile(Icons.star_rounded, 'Rate Us', 'Love MacroSnap? Leave a 5-star review', () => RateUsService.rateNowFromSettings(), isDark)),
                 const Divider(height: 24),
                 if (_isGuest)
                   AnimatedEntrance(delayMs: 270, child: _settingTile(Icons.person_add_rounded, 'Save Your Account', 'Link phone to keep your data permanently', _upgradeFromGuest, isDark)),

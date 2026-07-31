@@ -139,8 +139,8 @@ class _ScanScreenState extends State<ScanScreen>
       final tempDir = Directory.systemTemp;
       final tempFile = File('${tempDir.path}/food_${DateTime.now().millisecondsSinceEpoch}.jpg');
       await xfile.saveTo(tempFile.path);
-      // Only increment scan AFTER successful capture + save
-      await ScanGate.incrementScan();
+      // Scan is only counted AFTER successful AI analysis (in ResultScreen),
+      // so failed analyses don't consume the free limit.
       if (mounted) {
         _showPreview(tempFile.path);
       }
@@ -165,8 +165,8 @@ class _ScanScreenState extends State<ScanScreen>
       final tempDir = Directory.systemTemp;
       final tempFile = File('${tempDir.path}/food_${DateTime.now().millisecondsSinceEpoch}.jpg');
       await tempFile.writeAsBytes(bytes);
-      // Only increment scan AFTER successful read + save
-      await ScanGate.incrementScan();
+      // Scan is only counted AFTER successful AI analysis (in ResultScreen),
+      // so failed analyses don't consume the free limit.
       if (mounted) {
         _showPreview(tempFile.path);
       }
@@ -228,10 +228,11 @@ class _ScanScreenState extends State<ScanScreen>
   @override
   Widget build(BuildContext context) {
     final canUse = _scansLeft > 0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (_cameraError) {
       return Scaffold(
-        backgroundColor: MacroSnapTheme.surfaceDark,
+        backgroundColor: isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surfaceLight,
         appBar: AppBar(
           backgroundColor: Colors.transparent, elevation: 0,
           leading: IconButton(
@@ -243,10 +244,15 @@ class _ScanScreenState extends State<ScanScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.videocam_off_rounded, color: Colors.white38, size: 64),
+              Icon(Icons.videocam_off_rounded,
+                  color: isDark ? Colors.white38 : const Color(0xFF94A3B8), size: 64),
               const SizedBox(height: 16),
               Text('Camera unavailable',
-                  style: TextStyle(color: Colors.white.withValues(alpha:  0.6), fontSize: 18)),
+                  style: TextStyle(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.6)
+                          : const Color(0xFF475569),
+                      fontSize: 18)),
               const SizedBox(height: 24),
               FilledButton.icon(
                 onPressed: _pickFromGallery,
@@ -262,14 +268,16 @@ class _ScanScreenState extends State<ScanScreen>
 
     if (!_initialized) {
       return Scaffold(
-        backgroundColor: MacroSnapTheme.surfaceDark,
-        body: const Center(
+        backgroundColor: isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surfaceLight,
+        body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(color: MacroSnapTheme.neonGreen),
-              SizedBox(height: 16),
-              Text('Starting camera...', style: TextStyle(color: Colors.white38)),
+              const CircularProgressIndicator(color: MacroSnapTheme.neonGreen),
+              const SizedBox(height: 16),
+              Text('Starting camera...',
+                  style: TextStyle(
+                      color: isDark ? Colors.white38 : const Color(0xFF64748B))),
             ],
           ),
         ),

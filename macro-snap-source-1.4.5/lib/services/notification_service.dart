@@ -2,6 +2,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:permission_handler/permission_handler.dart';
+import '../models/habit.dart';
+import 'habit_reminder_service.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._();
@@ -215,5 +217,26 @@ class NotificationService {
 
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
+  }
+
+  /// Schedule a reminder for a single habit (daily at the habit's set time).
+  Future<void> scheduleHabitReminder(Habit h) async {
+    try {
+      await HabitReminderService.schedule(h, _plugin);
+    } catch (_) {}
+  }
+
+  /// Cancel the reminder for a single habit.
+  Future<void> cancelHabitReminder(Habit h) async {
+    try {
+      await HabitReminderService.cancel(h, _plugin);
+    } catch (_) {}
+  }
+
+  /// Re-schedule reminders for all habits with reminders enabled.
+  Future<void> scheduleAllHabitReminders(List<Habit> habits) async {
+    for (final h in habits) {
+      await scheduleHabitReminder(h);
+    }
   }
 }

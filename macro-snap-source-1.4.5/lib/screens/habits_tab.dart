@@ -5,8 +5,10 @@ import '../core/theme.dart';
 import '../models/habit.dart';
 import '../services/habit_store.dart';
 import '../widgets/animations.dart';
+import '../widgets/celebration_burst.dart';
 import '../widgets/consistency_map.dart';
 import '../widgets/gradient_button.dart';
+import '../widgets/streak_flame.dart';
 import 'settings_screen.dart';
 import 'subscription_screen.dart';
 
@@ -20,6 +22,12 @@ class HabitsTab extends StatefulWidget {
 class _HabitsTabState extends State<HabitsTab> {
   HabitStore get store => HabitStore.instance;
   bool _subscribed = false;
+  bool _celebrationQueued = false;
+
+  /// Date (YYYY-M-D) the water celebration was last claimed for. Date-scoped
+  /// so the claim auto-expires at midnight — a fresh day can always celebrate
+  /// even if this tab stays alive in an IndexedStack.
+  String _waterCelebrationClaimedOn = '';
 
   @override
   void initState() {
@@ -43,7 +51,62 @@ class _HabitsTabState extends State<HabitsTab> {
     if (mounted) {
       _checkSub();
       setState(() {});
+      _maybeCelebrate();
     }
+  }
+
+  /// Fires a one-per-day celebration when ALL of today's missions are done.
+  Future<void> _maybeCelebrate() async {
+    final active = store.todayHabits;
+    final completed = store.todayCompleted;
+    if (active.isEmpty || completed < active.length) {
+      _celebrationQueued = false;
+      return;
+    }
+    if (_celebrationQueued) return;
+    // Claim the celebration synchronously BEFORE the await so a second
+    // store event can't race in and stack a duplicate dialog.
+    _celebrationQueued = true;
+
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now();
+    final key = 'habits_celebrated_${today.year}-${today.month}-${today.day}';
+    if (prefs.getBool(key) ?? false) return;
+    await prefs.setBool(key, true);
+    if (!mounted) return;
+
+    final best = store.totalStreakPower;
+    showCelebration(
+      context,
+      title: 'All Missions Done!',
+      subtitle: '$completed of $active.length completed today',
+      streakText: best > 0 ? '$best day streak' : null,
+    );
+  }
+
+  /// Fires a one-per-day mini celebration when the water goal is reached
+  /// (the final glass is filled). Claimed synchronously BEFORE the await so
+  /// rapid taps can't stack duplicate dialogs.
+  Future<void> _celebrateWaterGoal() async {
+    final today = DateTime.now();
+    final todayKey = '${today.year}-${today.month}-${today.day}';
+    // Date-scoped claim: re-arms itself automatically at midnight, so a
+    // fresh day can always celebrate even if the tab never left memory.
+    if (_waterCelebrationClaimedOn == todayKey) return;
+    _waterCelebrationClaimedOn = todayKey;
+
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'water_celebrated_$todayKey';
+    if (prefs.getBool(key) ?? false) return;
+    await prefs.setBool(key, true);
+    if (!mounted) return;
+
+    showCelebration(
+      context,
+      title: 'Hydration Goal Hit!',
+      subtitle: '${store.waterToday}/${store.waterGoal} glasses today',
+      duration: const Duration(milliseconds: 2400),
+    );
   }
 
   @override
@@ -273,6 +336,8 @@ class _HabitsTabState extends State<HabitsTab> {
           const Icon(Icons.local_fire_department_rounded, color: MacroSnapTheme.neonPink, size: 18),
           const SizedBox(width: 4),
           Text('${coins}d streak',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontWeight: FontWeight.w800)),
         ],
       ),
@@ -322,22 +387,34 @@ class _HabitsTabState extends State<HabitsTab> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                total == 0
-                    ? 'Create your first habit'
-                    : '$completed of $total missions complete',
-                style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+              Flexible(
+                child: Text(
+                  total == 0
+                      ? 'Create your first habit'
+                      : '$completed of $total missions complete',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+                ),
               ),
-              Row(
-                children: [
-                  const Icon(Icons.local_fire_department_rounded,
-                      color: MacroSnapTheme.neonPink, size: 18),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${store.totalStreakPower}d best streak',
-                    style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w700),
-                  ),
-                ],
+              const SizedBox(width: 8),
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Animated growing streak flames + 7-day level badge
+                    StreakFlame(streak: store.totalStreakPower, fontSize: 15),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        '${store.totalStreakPower}d best streak',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -409,7 +486,12 @@ class _HabitsTabState extends State<HabitsTab> {
               return GestureDetector(
                 onTap: () {
                   HapticFeedback.lightImpact();
+                  final wasAtGoal = store.waterToday >= store.waterGoal;
                   if (filled) { store.removeWater(); } else { store.addWater(); }
+                  // Celebrate only on the tap that actually crosses 100%.
+                  if (!filled && !wasAtGoal && store.waterToday >= store.waterGoal) {
+                    _celebrateWaterGoal();
+                  }
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
@@ -544,7 +626,7 @@ class _HabitsTabState extends State<HabitsTab> {
                     width: 52, height: 52,
                     decoration: MacroSnapTheme.emojiContainer(h.color),
                     child: Center(
-                      child: Text(h.emoji, style: const TextStyle(fontSize: 25)),
+                      child: Text(h.emoji, style: MacroSnapTheme.emojiStyle()),
                     ),
                   ),
                 ),
@@ -618,7 +700,7 @@ class _HabitsTabState extends State<HabitsTab> {
     );
   }
 
-  // ─── HABIT ACTIONS (Reset Streak or Delete) ─────────────────
+  // ─── HABIT ACTIONS (Edit, Reset Streak, or Delete) ─────────
   void _showHabitActions(BuildContext context, Habit h, bool isDark) {
     final streak = h.currentStreak();
     showModalBottomSheet(
@@ -652,7 +734,7 @@ class _HabitsTabState extends State<HabitsTab> {
                   width: 52, height: 52,
                   decoration: MacroSnapTheme.emojiContainer(h.color),
                   child: Center(
-                    child: Text(h.emoji, style: const TextStyle(fontSize: 25)),
+                    child: Text(h.emoji, style: MacroSnapTheme.emojiStyle()),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -680,6 +762,20 @@ class _HabitsTabState extends State<HabitsTab> {
               ],
             ),
             const SizedBox(height: 24),
+
+            // Edit Habit
+            _actionTile(
+              icon: Icons.edit_rounded,
+              iconColor: MacroSnapTheme.neonCyan,
+              title: 'Edit Habit',
+              subtitle: 'Change name, icon, schedule or reminder',
+              isDark: isDark,
+              onTap: () {
+                Navigator.pop(ctx);
+                _showCreateHabitSheet(context, existing: h);
+              },
+            ),
+            const SizedBox(height: 8),
 
             // Reset Streak
             _actionTile(
@@ -1036,7 +1132,7 @@ class _HabitsTabState extends State<HabitsTab> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
                     color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
             const SizedBox(height: 8),
-            Text('Free users get ${HabitStore.freeHabitLimit} habits.\\nGo Pro for unlimited habits, AI scans & more.',
+            Text('Free users get ${HabitStore.freeHabitLimit} habits.\nGo Pro for unlimited habits, AI scans & more.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14,
                     color: MacroSnapTheme.textSecondary(context), height: 1.4)),
@@ -1103,13 +1199,21 @@ class _HabitsTabState extends State<HabitsTab> {
     );
   }
 
-  // ─── CREATE HABIT SHEET ────────────────────────────────────
-  Future<void> _showCreateHabitSheet(BuildContext context) async {
-    final nameCtrl = TextEditingController();
-    var emoji = '✨';
-    var frequency = 'Daily';
-    var color = 0xFF00FF66;
-    var weeklyDay = DateTime.now().weekday;
+  // ─── CREATE / EDIT HABIT SHEET ─────────────────────────────
+  /// Opens the habit form. Pass [existing] to edit an existing habit.
+  Future<void> _showCreateHabitSheet(BuildContext context, {Habit? existing}) async {
+    // Capture the tab's context — the sheet's builder context is disposed
+    // as soon as we pop it, so the celebration must use this one.
+    final tabContext = context;
+    final isEdit = existing != null;
+    final nameCtrl = TextEditingController(text: existing?.name ?? '');
+    var emoji = existing?.emoji ?? '✨';
+    var frequency = existing?.frequency ?? 'Daily';
+    var color = existing?.colorValue ?? 0xFF00FF66;
+    var weeklyDay = existing?.weeklyDay ?? DateTime.now().weekday;
+    var reminderEnabled = existing?.reminderEnabled ?? false;
+    var reminderHour = existing?.reminderHour ?? 20;
+    var reminderMinute = existing?.reminderMinute ?? 0;
 
     await showModalBottomSheet(
       context: context,
@@ -1125,12 +1229,12 @@ class _HabitsTabState extends State<HabitsTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Create a mission',
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900)),
+                Text(isEdit ? 'Edit mission' : 'Create a mission',
+                    style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900)),
                 const SizedBox(height: 18),
                 TextField(
                   controller: nameCtrl,
-                  autofocus: true,
+                  autofocus: !isEdit,
                   decoration: InputDecoration(
                     hintText: 'What do you want to build?',
                     filled: true,
@@ -1142,18 +1246,47 @@ class _HabitsTabState extends State<HabitsTab> {
                   ),
                 ),
                 const SizedBox(height: 18),
-                const Text('Choose an icon',
-                    style: TextStyle(fontWeight: FontWeight.w800)),
+                Row(
+                  children: [
+                    const Text('Choose an icon',
+                        style: TextStyle(fontWeight: FontWeight.w800)),
+                    const Spacer(),
+                    // Live preview of the currently selected emoji
+                    Container(
+                      width: 36, height: 36,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(emoji, style: MacroSnapTheme.emojiStyle(fontSize: 20)),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
-                  children: ['✨', '💧', '📚', '🏃', '🧘', '🎸', '🍎', '💻', '🎯', '😴', '🧠', '☕']
-                      .map((e) => ChoiceChip(
-                            label: Text(e, style: const TextStyle(fontSize: 20)),
-                            selected: emoji == e,
-                            onSelected: (_) => setModalState(() => emoji = e),
-                          ))
-                      .toList(),
+                  runSpacing: 8,
+                  children: [
+                    ...['✨', '💧', '📚', '🏃', '🧘', '🎸', '🍎', '💻', '🎯', '😴', '🧠', '☕']
+                        .map((e) => ChoiceChip(
+                              label: Text(e, style: MacroSnapTheme.emojiStyle(fontSize: 20)),
+                              selected: emoji == e,
+                              onSelected: (_) => setModalState(() => emoji = e),
+                            )),
+                    // Paste an emoji copied from anywhere (messages, web, etc.)
+                    ActionChip(
+                      avatar: const Icon(Icons.content_paste_rounded,
+                          size: 16, color: MacroSnapTheme.neonCyan),
+                      label: const Text('Paste',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                      backgroundColor: MacroSnapTheme.neonCyan.withValues(alpha: 0.1),
+                      side: BorderSide(
+                          color: MacroSnapTheme.neonCyan.withValues(alpha: 0.4)),
+                      onPressed: () =>
+                          _pasteEmojiFromClipboard(context, setModalState, (v) => emoji = v),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 18),
                 const Text('Frequency',
@@ -1212,6 +1345,79 @@ class _HabitsTabState extends State<HabitsTab> {
                         ),
                       )).toList(),
                 ),
+                const SizedBox(height: 18),
+
+                // ─── Reminder toggle + time picker ───────────
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: MacroSnapTheme.neonGreen.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                        color: MacroSnapTheme.neonGreen.withValues(alpha: 0.15)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40, height: 40,
+                        decoration: BoxDecoration(
+                          color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.notifications_active_rounded,
+                            color: MacroSnapTheme.neonGreen, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Daily reminder',
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+                            Text(
+                              reminderEnabled
+                                  ? 'Every day at ${_formatTime(reminderHour, reminderMinute)}'
+                                  : 'Get a nudge to complete this habit',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: MacroSnapTheme.textTertiary(context)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch(
+                        value: reminderEnabled,
+                        activeTrackColor: MacroSnapTheme.neonGreen,
+                        onChanged: (v) => setModalState(() => reminderEnabled = v),
+                      ),
+                    ],
+                  ),
+                ),
+                if (reminderEnabled) ...[
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.tonalIcon(
+                      onPressed: () async {
+                        final picked = await showTimePicker(
+                          context: context,
+                          initialTime: TimeOfDay(
+                              hour: reminderHour, minute: reminderMinute),
+                        );
+                        if (picked != null) {
+                          setModalState(() {
+                            reminderHour = picked.hour;
+                            reminderMinute = picked.minute;
+                          });
+                        }
+                      },
+                      icon: const Icon(Icons.access_time_rounded, size: 18),
+                      label: Text(
+                          'Remind me at ${_formatTime(reminderHour, reminderMinute)}'),
+                    ),
+                  ),
+                ],
+
                 const SizedBox(height: 22),
                 SizedBox(
                   width: double.infinity, height: 54,
@@ -1222,19 +1428,47 @@ class _HabitsTabState extends State<HabitsTab> {
                     ),
                     onPressed: () async {
                       if (nameCtrl.text.trim().isEmpty) return;
-                      final habit = Habit(
-                        id: DateTime.now().microsecondsSinceEpoch.toString(),
-                        name: nameCtrl.text.trim(),
-                        emoji: emoji,
-                        colorValue: color,
-                        frequency: frequency,
-                        weeklyDay: weeklyDay,
-                      );
-                      await store.add(habit);
+                      if (isEdit) {
+                        existing
+                          ..name = nameCtrl.text.trim()
+                          ..emoji = emoji
+                          ..colorValue = color
+                          ..frequency = frequency
+                          ..weeklyDay = weeklyDay
+                          ..reminderEnabled = reminderEnabled
+                          ..reminderHour = reminderHour
+                          ..reminderMinute = reminderMinute;
+                        await store.update(existing);
+                      } else {
+                        final habit = Habit(
+                          id: DateTime.now().microsecondsSinceEpoch.toString(),
+                          name: nameCtrl.text.trim(),
+                          emoji: emoji,
+                          colorValue: color,
+                          frequency: frequency,
+                          weeklyDay: weeklyDay,
+                          reminderEnabled: reminderEnabled,
+                          reminderHour: reminderHour,
+                          reminderMinute: reminderMinute,
+                        );
+                        await store.add(habit);
+                        // Micro-celebration for the new mission (after the
+                        // sheet closes so it pops over the tab, not the form).
+                        if (context.mounted) Navigator.pop(context);
+                        if (tabContext.mounted) {
+                          showMiniCelebration(
+                            tabContext,
+                            title: 'Mission Created!',
+                            subtitle: habit.name,
+                            accent: Color(habit.colorValue),
+                          );
+                        }
+                        return;
+                      }
                       if (context.mounted) Navigator.pop(context);
                     },
-                    child: const Text('CREATE MISSION',
-                        style: TextStyle(fontWeight: FontWeight.w900)),
+                    child: Text(isEdit ? 'SAVE CHANGES' : 'CREATE MISSION',
+                        style: const TextStyle(fontWeight: FontWeight.w900)),
                   ),
                 ),
               ],
@@ -1244,5 +1478,75 @@ class _HabitsTabState extends State<HabitsTab> {
       ),
     );
     nameCtrl.dispose();
+  }
+
+  String _formatTime(int hour, int minute) {
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final h12 = hour % 12 == 0 ? 12 : hour % 12;
+    return '$h12:${minute.toString().padLeft(2, '0')} $period';
+  }
+
+  /// Reads the clipboard and applies the first emoji found to the picker.
+  Future<void> _pasteEmojiFromClipboard(
+    BuildContext sheetContext,
+    StateSetter setModalState,
+    ValueChanged<String> onEmoji,
+  ) async {
+    try {
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      final text = data?.text?.trim() ?? '';
+      final emoji = _extractFirstEmoji(text);
+      if (emoji == null) {
+        if (sheetContext.mounted) {
+          ScaffoldMessenger.of(sheetContext).showSnackBar(
+            SnackBar(
+              content: const Text('No emoji found in clipboard. Copy one first!'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: MacroSnapTheme.neonOrange,
+            ),
+          );
+        }
+        return;
+      }
+      setModalState(() => onEmoji(emoji));
+      HapticFeedback.lightImpact();
+      if (sheetContext.mounted) {
+        ScaffoldMessenger.of(sheetContext).showSnackBar(
+          SnackBar(
+            content: Text('Emoji pasted: $emoji'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: MacroSnapTheme.neonGreen,
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (_) {
+      if (sheetContext.mounted) {
+        ScaffoldMessenger.of(sheetContext).showSnackBar(
+          SnackBar(
+            content: const Text('Could not read clipboard'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: MacroSnapTheme.neonPink,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Extracts the first emoji (including multi-code-point emoji like flags
+  /// or skin-tone sequences) from arbitrary clipboard text.
+  static String? _extractFirstEmoji(String text) {
+    if (text.isEmpty) return null;
+    // The match must START on a real emoji glyph (excludes U+FE0F / U+200D,
+    // which are invisible modifiers) and may then continue through ZWJ
+    // sequences, variation selectors, and skin tones so flags/family emoji
+    // and '👍🏻' style sequences paste as one unit.
+    final re = RegExp(
+      r'[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]'
+      r'[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}\u{1F3FB}-\u{1F3FF}]*',
+      unicode: true,
+    );
+    final match = re.firstMatch(text);
+    return match?.group(0);
   }
 }

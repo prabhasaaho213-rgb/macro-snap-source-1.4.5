@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme.dart';
+import '../services/rate_us_service.dart';
 import 'home_screen.dart';
 import 'habits_tab.dart';
 import 'scan_screen.dart';
@@ -20,6 +21,10 @@ class _MainShellState extends State<MainShell> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowSubscription());
+    // Prompt for a Play Store rating after a few launches (best-effort).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      RateUsService.onAppLaunch(context);
+    });
   }
 
   Future<void> _maybeShowSubscription() async {

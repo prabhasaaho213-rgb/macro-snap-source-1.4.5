@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,7 +10,7 @@ import '../services/meal_streak_service.dart';
 import '../models/diet_profile.dart';
 import '../services/share_service.dart';
 
-import '../widgets/confetti_overlay.dart';
+import '../widgets/celebration_burst.dart';
 import '../widgets/animations.dart';
 import 'diet_plan_screen.dart';
 import 'scan_screen.dart';
@@ -34,6 +35,12 @@ class _HomeScreenState extends State<HomeScreen>
   int _bestStreak = 0;
   int _scansLeft = 3;
   bool _showConfetti = false;
+  /// Today's meal count from the last refresh — used to detect a fresh
+  /// "meal logged" event (any entry path: AI scan, barcode, manual).
+  int _lastTodayMealCount = -1;
+  /// Single pending meal-logged burst — cancelled/rescheduled so rapid adds
+  /// can't stack duplicate dialogs.
+  Timer? _mealCelebrationTimer;
 
   @override
   void initState() {
@@ -51,6 +58,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _onDataChanged() {
     _loadScansOnly();
+    _maybeCelebrateMealLogged();
   }
 
   Future<void> _loadAll() async {
@@ -58,14 +66,20 @@ class _HomeScreenState extends State<HomeScreen>
     await DietPlanService.instance.load();
     final prefs = await SharedPreferences.getInstance();
     final name = prefs.getString('name') ?? '';
+    final prevBest = await MealStreakService.getBest();
     await MealStreakService.checkAndUpdate();
     final streak = await MealStreakService.getCurrent();
     final best = await MealStreakService.getBest();
     final scans = await ScanGate.getScansRemaining();
+    _lastTodayMealCount = MealStore.instance.todayMeals.length;
 
-    // Check if all targets are hit for confetti
+    // Check if all targets are hit for confetti — the streak dialog is
+    // skipped when the full-screen confetti is about to show so the two
+    // celebrations never stack over each other.
     final allHit = MealStreakService.checkAllTargetsHit();
     final alreadyPlayed = prefs.getBool('confetti_${DateTime.now().day}_${DateTime.now().month}') ?? false;
+    await _maybeCelebrateStreak(streak, best, prevBest,
+        skip: allHit && !alreadyPlayed);
 
     if (mounted) {
       setState(() {
@@ -90,8 +104,79 @@ class _HomeScreenState extends State<HomeScreen>
     if (mounted) setState(() => _scansLeft = scans);
   }
 
+  /// Fires a compact "Meal Logged!" burst whenever a meal is added (from AI
+  /// scan, barcode, or manual entry — they all notify this store listener).
+  /// A short delay lets the flow settle back onto Home before showing. A
+  /// single timer is cancelled/rescheduled so rapid adds can't stack dialogs.
+  void _maybeCelebrateMealLogged() {
+    final count = MealStore.instance.todayMeals.length;
+    if (_lastTodayMealCount >= 0 && count > _lastTodayMealCount) {
+      _lastTodayMealCount = count;
+      _mealCelebrationTimer?.cancel();
+      _mealCelebrationTimer = Timer(const Duration(milliseconds: 700), () {
+        if (!mounted) return;
+        showMiniCelebration(
+          context,
+          title: 'Meal Logged!',
+          subtitle: count == 1
+              ? 'First meal today — keep going!'
+              : '$count meals logged today',
+        );
+      });
+    } else {
+      _lastTodayMealCount = count;
+    }
+  }
+
+  /// One-per-milestone celebrations for the meal-logging streak:
+  /// a full burst on a NEW personal best, plus a burst at 7/14/21/30/60/100
+  /// day milestones. Each key fires only once. [skip] suppresses the dialog
+  /// when the "All Targets Hit!" confetti is already about to play.
+  Future<void> _maybeCelebrateStreak(
+      int streak, int best, int prevBest,
+      {bool skip = false}) async {
+    if (streak <= 0 || skip) return;
+    final prefs = await SharedPreferences.getInstance();
+
+    // New personal best (only when best actually increased today)
+    if (best > prevBest && best >= 2) {
+      final key = 'streak_celebrated_best_$best';
+      if (!(prefs.getBool(key) ?? false)) {
+        await prefs.setBool(key, true);
+        if (mounted) {
+          showCelebration(
+            context,
+            title: 'New Best Streak!',
+            subtitle: '$best days hitting every macro goal',
+            streakText: '$best day streak',
+            duration: const Duration(milliseconds: 2400),
+          );
+        }
+        return;
+      }
+    }
+
+    const milestones = [7, 14, 21, 30, 60, 100];
+    if (milestones.contains(streak)) {
+      final key = 'streak_celebrated_milestone_$streak';
+      if (!(prefs.getBool(key) ?? false)) {
+        await prefs.setBool(key, true);
+        if (mounted) {
+          showCelebration(
+            context,
+            title: '$streak-Day Streak!',
+            subtitle: 'Every macro goal hit — consistency unlocked',
+            streakText: '$streak day streak',
+            duration: const Duration(milliseconds: 2400),
+          );
+        }
+      }
+    }
+  }
+
   @override
   void dispose() {
+    _mealCelebrationTimer?.cancel();
     MealStore.instance.changeNotifier.removeListener(_onDataChanged);
     _animController.stop();
     _animController.dispose();
@@ -106,8 +191,11 @@ class _HomeScreenState extends State<HomeScreen>
     return Scaffold(
       backgroundColor: isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surfaceLight,
       body: SafeArea(
-        child: ConfettiOverlay(
+        child: CelebrationBurst(
           show: _showConfetti,
+          title: 'All Targets Hit!',
+          subtitle: 'Every macro goal reached today',
+          streakText: _bestStreak > 0 ? '$_bestStreak day best streak' : null,
           child: SlideTransition(
             position: _slideAnim,
             child: FadeTransition(
@@ -337,15 +425,22 @@ class _HomeScreenState extends State<HomeScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '${consumed.toInt()} of ${targetCal.toInt()} kcal',
-                  style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+                Flexible(
+                  child: Text(
+                    '${consumed.toInt()} of ${targetCal.toInt()} kcal',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
                 ),
+                const SizedBox(width: 8),
                 Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.arrow_downward_rounded, size: 14, color: MacroSnapTheme.neonGreen),
                     const SizedBox(width: 4),
                     Text('$remaining remaining',
+                        maxLines: 1,
                         style: const TextStyle(color: MacroSnapTheme.neonGreen, fontSize: 12, fontWeight: FontWeight.w700)),
                   ],
                 ),

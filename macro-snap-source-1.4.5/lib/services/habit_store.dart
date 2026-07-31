@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/habit.dart';
 import 'meal_sync_service.dart';
+import 'notification_service.dart';
 
 class HabitStore extends ChangeNotifier {
   static final HabitStore _instance = HabitStore._();
@@ -50,6 +51,17 @@ class HabitStore extends ChangeNotifier {
 
     // Restore from cloud backup
     await _restoreFromCloud();
+  }
+
+  /// Force a full reload from local + cloud (used after login/logout so
+  /// the cloud data for the newly active account is pulled in).
+  Future<void> reload() async {
+    _loaded = false;
+    _cloudRestored = false;
+    habits.clear();
+    _waterLog.clear();
+    await load();
+    notifyListeners();
   }
 
   /// Merge habits + water log from cloud backup (only adds missing data).
@@ -104,14 +116,24 @@ class HabitStore extends ChangeNotifier {
     habits.add(h);
     await save();
     _syncToCloud();
+    if (h.reminderEnabled) {
+      await NotificationService().scheduleHabitReminder(h);
+    }
   }
 
   Future<void> update(Habit h) async {
     await save();
     _syncToCloud();
+    // Re-sync reminder when the habit's schedule or toggle changes
+    if (h.reminderEnabled) {
+      await NotificationService().scheduleHabitReminder(h);
+    } else {
+      await NotificationService().cancelHabitReminder(h);
+    }
   }
 
   Future<void> remove(Habit h) async {
+    await NotificationService().cancelHabitReminder(h);
     habits.removeWhere((x) => x.id == h.id);
     await save();
     _syncToCloud();

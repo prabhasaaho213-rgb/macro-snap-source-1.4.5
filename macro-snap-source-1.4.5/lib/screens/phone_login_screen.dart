@@ -1,4 +1,5 @@
-﻿import 'dart:math';
+﻿import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'dart:convert';
@@ -9,6 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/theme.dart';
 import '../services/gemini_service.dart';
+import '../services/meal_store.dart';
+import '../services/habit_store.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/app_text_field.dart';
 import '../widgets/logo_widget.dart';
@@ -165,6 +168,10 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
         }
       }
+      // Pull in cloud backup for the newly active account in the background
+      // (non-blocking so sign-in isn't stalled by the cloud fetch).
+      unawaited(MealStore.instance.reload());
+      unawaited(HabitStore.instance.reload().catchError((_) {}));
     } catch (e) {
       if (mounted) setState(() { _verifying = false; _error = 'Verification failed: ${e.toString()}'; });
     }
@@ -247,7 +254,6 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
           body: jsonEncode({'phone': email, 'email': email, 'name': name}),
         );
       } catch (_) {}
-
       if (mounted) {
         if (Navigator.of(context).canPop()) {
           Navigator.pop(context, email);
@@ -255,6 +261,10 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
         }
       }
+      // Pull in cloud backup for the newly active account in the background
+      // (non-blocking so sign-in isn't stalled by the cloud fetch).
+      unawaited(MealStore.instance.reload());
+      unawaited(HabitStore.instance.reload().catchError((_) {}));
     } catch (e) {
       if (mounted) setState(() { _googleLoading = false; _error = 'Google sign in failed: ${e.toString()}'; });
     }
@@ -298,6 +308,10 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> with SingleTickerPr
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
       }
     }
+    // Pull in cloud backup for the newly active account in the background
+    // (non-blocking so sign-in isn't stalled by the cloud fetch).
+    unawaited(MealStore.instance.reload());
+    unawaited(HabitStore.instance.reload().catchError((_) {}));
   }
 
   Future<void> _continueAsGuest() async {

@@ -305,11 +305,29 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
   }
 
   void _openUpiApp() async {
-    final uri = Uri.parse('upi://pay?pa=7569086885@yespop&pn=MacroSnap&am=29&cu=INR&tn=MacroSnap+Pro+Subscription');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
-      _showError('No UPI app found. Copy the UPI ID and pay manually.');
+    final uri = Uri.parse(
+        'upi://pay?pa=7569086885@yespop&pn=MacroSnap&am=29&cu=INR&tn=MacroSnap+Pro+Subscription&mode=04');
+    bool launched = false;
+    try {
+      // UPI deep links must launch externally; canLaunchUrl is unreliable
+      // for the upi:// scheme on some devices, so attempt launch directly.
+      launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      launched = false;
+    }
+    if (!launched) {
+      // Fallback: try without mode param, then show copy-to-clipboard.
+      try {
+        launched = await launchUrl(
+          Uri.parse('upi://pay?pa=7569086885@yespop&pn=MacroSnap&am=29&cu=INR&tn=MacroSnap+Pro+Subscription'),
+          mode: LaunchMode.externalApplication,
+        );
+      } catch (_) {
+        launched = false;
+      }
+    }
+    if (!launched && mounted) {
+      _showError('No UPI app found. Tap the UPI ID above to copy it and pay manually.');
     }
   }
 
@@ -438,17 +456,23 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               ),
               const SizedBox(height: 16),
               if (_phone != null)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.check_circle,
-                        color: MacroSnapTheme.neonGreen, size: 16),
-                    const SizedBox(width: 6),
-                    Text('Logged in as $_phone',
-                        style: TextStyle(fontSize: 13,
-                            color: isDark ? Colors.white60
-                                : const Color(0xFF64748B))),
-                  ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle,
+                          color: MacroSnapTheme.neonGreen, size: 16),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text('Logged in as $_phone',
+                            maxLines: 1, overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 13,
+                                color: isDark ? Colors.white60
+                                    : const Color(0xFF64748B))),
+                      ),
+                    ],
+                  ),
                 ),
               const SizedBox(height: 24),
               if (!_subscribed && _checking)

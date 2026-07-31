@@ -38,6 +38,22 @@
           }
         },
         {
+          "client_id": "562037381-dapit1ovl1pi51m046b7q0d4kro2pg6e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.macrosnap.macro_snap",
+            "certificate_hash": "07edf911705ac0a896fb669e204da8d6e96ef84d"
+          }
+        },
+        {
+          "client_id": "562037381-t3osrdt63s91eho5nrt0e1ks33dnpgad.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.macrosnap.macro_snap",
+            "certificate_hash": "b662159fbd0e21e4db735bf4437a81ea123d2036"
+          }
+        },
+        {
           "client_id": "562037381-u8bkrnf1mcl7k7ed6njq7ag46fefrera.apps.googleusercontent.com",
           "client_type": 3
         }

@@ -6,6 +6,7 @@ import '../models/meal_record.dart';
 import '../services/gemini_service.dart';
 import '../services/local_analyzer.dart';
 import '../services/meal_store.dart';
+import '../services/scan_gate.dart';
 import '../widgets/animations.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_button.dart';
@@ -72,6 +73,9 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     if (GeminiService.hasServerUrl) {
       try {
         final result = await GeminiService.analyzeFoodImage(widget.imagePath);
+        // Only count a scan after a SUCCESSFUL analysis — failed
+        // analyses must not consume the free scan limit.
+        await ScanGate.incrementScan();
         if (mounted) {
           setState(() { _result = result; _isAnalyzing = false; });
           _animController.forward();
@@ -104,6 +108,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
             description: 'On-device analysis (${localResult.labels.take(2).join(", ")})',
             confidence: 0.5,
           );
+          await ScanGate.incrementScan();
           setState(() { _result = result; _isAnalyzing = false; });
         } else {
           setState(() { _error = 'Could not identify food. Try a clearer photo.'; _isAnalyzing = false; });
