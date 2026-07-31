@@ -12,7 +12,7 @@ import 'phone_login_screen.dart';
 import '../services/notification_service.dart';
 import '../services/gemini_service.dart';
 import '../services/razorpay_service.dart';
-import '../services/meal_store.dart';
+import '../services/subscription_service.dart';
 import 'referral_screen.dart';
 
 class SubscriptionScreen extends StatefulWidget {
@@ -52,10 +52,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
   }
 
   Future<void> _loadState() async {
+    await SubscriptionService.instance.load();
     final prefs = await SharedPreferences.getInstance();
     final phone = prefs.getString('phone');
-    final subscribed = prefs.getBool('subscribed') ?? false;
-    final date = prefs.getString('subscribed_at');
+    final subscribed = SubscriptionService.instance.isSubscribed;
+    final date = SubscriptionService.instance.subscribedAt;
     if (mounted) {
       setState(() {
         _phone = phone;
@@ -85,16 +86,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
   }
 
   Future<void> _activateFromServer() async {
-    final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now().toIso8601String();
-    await prefs.setString('subscribed_at', now);
-    await prefs.setBool('subscribed', true);
-    // Schedule notifications for pro subscribers
-    try {
-      await NotificationService().scheduleAllForSubscriber(now);
-    } catch (_) {}
-    // Trigger refresh of scan count on home/scan screens
-    try { MealStore.instance.changeNotifier.value++; } catch (_) {}
+    // Post-activation side effects (pro reminders + meal-store refresh) live
+    // inside SubscriptionService.activate so they aren't duplicated here and
+    // in RazorpayService.
+    await SubscriptionService.instance.activate();
+    final now = SubscriptionService.instance.subscribedAt ??
+        DateTime.now().toIso8601String();
     if (mounted) {
       setState(() {
         _subscribed = true;
@@ -468,8 +465,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         child: Text('Logged in as $_phone',
                             maxLines: 1, overflow: TextOverflow.ellipsis,
                             style: TextStyle(fontSize: 13,
-                                color: isDark ? Colors.white60
-                                    : const Color(0xFF64748B))),
+                                color: MacroSnapTheme.textSecondary(context))),
                       ),
                     ],
                   ),
@@ -734,9 +730,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 const SizedBox(height: 12),
                 TextButton(
                   onPressed: () async {
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setBool('subscribed', false);
-                    await prefs.remove('subscribed_at');
+                    await SubscriptionService.instance.cancel();
                     await NotificationService().cancelAll();
                     setState(() {
                       _subscribed = false;

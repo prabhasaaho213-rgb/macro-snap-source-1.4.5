@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme.dart';
 import '../services/rate_us_service.dart';
+import '../services/subscription_service.dart';
 import 'home_screen.dart';
 import 'habits_tab.dart';
 import 'scan_screen.dart';
@@ -28,9 +29,10 @@ class _MainShellState extends State<MainShell> {
   }
 
   Future<void> _maybeShowSubscription() async {
+    await SubscriptionService.instance.load();
     final prefs = await SharedPreferences.getInstance();
     final offered = prefs.getBool('subscription_offered') ?? false;
-    final subscribed = prefs.getBool('subscribed') ?? false;
+    final subscribed = SubscriptionService.instance.isSubscribed;
     final phone = prefs.getString('phone');
     if (!offered && !subscribed && phone != null && mounted) {
       await prefs.setBool('subscription_offered', true);

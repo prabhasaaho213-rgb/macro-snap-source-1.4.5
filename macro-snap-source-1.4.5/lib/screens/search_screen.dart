@@ -102,7 +102,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white60 : const Color(0xFF64748B),
+                      color: MacroSnapTheme.textSecondary(context),
                     ),
                   ),
                 ),

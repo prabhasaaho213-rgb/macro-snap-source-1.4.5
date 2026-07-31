@@ -1,11 +1,11 @@
 ﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme.dart';
 import '../models/diet_profile.dart';
 import '../services/gemini_service.dart';
 import '../services/meal_store.dart';
+import '../services/subscription_service.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/app_text_field.dart';
 import '../widgets/gradient_button.dart';
@@ -41,8 +41,8 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
   Future<void> _loadProfile() async {
     await DietPlanService.instance.load();
     final p = DietPlanService.instance.profile;
-    final prefs = await SharedPreferences.getInstance();
-    final subscribed = prefs.getBool('subscribed') ?? false;
+    await SubscriptionService.instance.load();
+    final subscribed = SubscriptionService.instance.isSubscribed;
     if (mounted) {
       setState(() => _subscribed = subscribed);
       if (p != null) {
@@ -455,7 +455,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
           _mealItem(Icons.nightlight_round, 'Evening Snack (~${(p.targetCalories * 0.1).round()} kcal)', _snackSuggestion(p), MacroSnapTheme.neonGreen, isDark),
           _mealItem(Icons.nights_stay_rounded, 'Dinner (~${(p.targetCalories * 0.25).round()} kcal)', _dinnerSuggestion(p), MacroSnapTheme.macroProtein, isDark),
           const SizedBox(height: 16),
-          Text('Portion sizes are approximate. Adjust based on your appetite and progress.', style: TextStyle(fontSize: 12, color: isDark ? Colors.white30 : const Color(0xFFCBD5E1))),
+          Text('Portion sizes are approximate. Adjust based on your appetite and progress.', style: TextStyle(fontSize: 12, color: MacroSnapTheme.textQuaternary(context))),
         ],
       ),
     );

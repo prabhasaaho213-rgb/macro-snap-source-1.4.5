@@ -4,8 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'gemini_service.dart';
-import 'notification_service.dart';
-import 'meal_store.dart';
+import 'subscription_service.dart';
 
 class RazorpayService {
   static final Razorpay _razorpay = Razorpay();
@@ -129,22 +128,12 @@ class RazorpayService {
   }
 
   /// Activate the subscription after successful payment verification.
+  ///
+  /// Post-activation side effects (pro reminders + meal-store refresh) live
+  /// inside [SubscriptionService.activate] so they aren't duplicated here and
+  /// in the subscription screen.
   static Future<void> _activateSubscription() async {
-    final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now().toIso8601String();
-    await prefs.setString('subscribed_at', now);
-    await prefs.setBool('subscribed', true);
-
-    // Schedule notifications for pro subscribers
-    try {
-      await NotificationService().scheduleAllForSubscriber(now);
-    } catch (_) {}
-
-    // Trigger refresh of scan count
-    try {
-      MealStore.instance.changeNotifier.value++;
-    } catch (_) {}
-
+    await SubscriptionService.instance.activate();
     _lastOrderId = null;
   }
 

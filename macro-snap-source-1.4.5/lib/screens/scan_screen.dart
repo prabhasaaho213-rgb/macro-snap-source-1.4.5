@@ -245,7 +245,7 @@ class _ScanScreenState extends State<ScanScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.videocam_off_rounded,
-                  color: isDark ? Colors.white38 : const Color(0xFF94A3B8), size: 64),
+                  color: MacroSnapTheme.textTertiary(context), size: 64),
               const SizedBox(height: 16),
               Text('Camera unavailable',
                   style: TextStyle(
@@ -277,7 +277,7 @@ class _ScanScreenState extends State<ScanScreen>
               const SizedBox(height: 16),
               Text('Starting camera...',
                   style: TextStyle(
-                      color: isDark ? Colors.white38 : const Color(0xFF64748B))),
+                      color: MacroSnapTheme.textSecondary(context))),
             ],
           ),
         ),

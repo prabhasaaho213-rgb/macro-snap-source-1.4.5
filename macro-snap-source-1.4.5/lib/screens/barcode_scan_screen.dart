@@ -4,7 +4,6 @@ import '../core/theme.dart';
 import '../models/meal_record.dart';
 import '../services/barcode_db.dart';
 import '../services/meal_store.dart';
-import '../widgets/celebration_burst.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_button.dart';
 
@@ -26,13 +25,6 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
     final food = BarcodeDb.lookup(barcode);
     if (food != null && mounted) {
       setState(() { _found = food; _scanning = false; });
-      // Micro-celebration when a product is recognized
-      showMiniCelebration(
-        context,
-        title: 'Product Found!',
-        subtitle: food.name,
-        accent: MacroSnapTheme.neonCyan,
-      );
     } else if (mounted) {
       // Barcode not in DB — show manual entry
       setState(() { _found = null; _scanning = false; });

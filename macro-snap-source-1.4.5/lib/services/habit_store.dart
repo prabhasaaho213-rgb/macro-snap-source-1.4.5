@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/habit.dart';
 import 'meal_sync_service.dart';
 import 'notification_service.dart';
+import 'subscription_service.dart';
 
 class HabitStore extends ChangeNotifier {
   static final HabitStore _instance = HabitStore._();
@@ -182,8 +183,8 @@ class HabitStore extends ChangeNotifier {
 
   /// Check if user is subscribed (Pro)
   static Future<bool> isSubscribed() async {
-    final p = await SharedPreferences.getInstance();
-    return p.getBool('subscribed') ?? false;
+    await SubscriptionService.instance.load();
+    return SubscriptionService.instance.isSubscribed;
   }
 
   /// Whether the free habit limit has been reached

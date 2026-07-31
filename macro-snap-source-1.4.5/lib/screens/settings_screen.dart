@@ -10,6 +10,7 @@ import '../services/meal_store.dart';
 import '../services/meal_sync_service.dart';
 import '../services/habit_store.dart';
 import '../services/rate_us_service.dart';
+import '../services/subscription_service.dart';
 import 'subscription_screen.dart';
 import 'phone_login_screen.dart';
 
@@ -42,13 +43,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _load() async {
+    await SubscriptionService.instance.load();
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _name = prefs.getString('name') ?? 'User';
       _email = prefs.getString('email') ?? '';
       _phone = prefs.getString('phone') ?? '';
-      _subscribed = prefs.getBool('subscribed') ?? false;
-      _subscribedDate = prefs.getString('subscribed_at');
+      _subscribed = SubscriptionService.instance.isSubscribed;
+      _subscribedDate = SubscriptionService.instance.subscribedAt;
       _serverUrl = GeminiService.serverUrl;
       _lastSync = prefs.getString('last_sync') ?? '';
     });

@@ -99,9 +99,7 @@ class LogoWidget extends StatelessWidget {
             style: TextStyle(
               fontSize: size * 0.11,
               fontWeight: FontWeight.w500,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white38
-                  : const Color(0xFF94A3B8),
+              color: MacroSnapTheme.textTertiary(context),
             ),
           ),
         ],

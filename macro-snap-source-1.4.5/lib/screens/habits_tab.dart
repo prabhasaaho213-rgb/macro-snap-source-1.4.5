@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme.dart';
 import '../models/habit.dart';
 import '../services/habit_store.dart';
+import '../services/subscription_service.dart';
 import '../widgets/animations.dart';
-import '../widgets/celebration_burst.dart';
 import '../widgets/consistency_map.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/streak_flame.dart';
@@ -22,12 +21,6 @@ class HabitsTab extends StatefulWidget {
 class _HabitsTabState extends State<HabitsTab> {
   HabitStore get store => HabitStore.instance;
   bool _subscribed = false;
-  bool _celebrationQueued = false;
-
-  /// Date (YYYY-M-D) the water celebration was last claimed for. Date-scoped
-  /// so the claim auto-expires at midnight — a fresh day can always celebrate
-  /// even if this tab stays alive in an IndexedStack.
-  String _waterCelebrationClaimedOn = '';
 
   @override
   void initState() {
@@ -37,8 +30,10 @@ class _HabitsTabState extends State<HabitsTab> {
   }
 
   Future<void> _checkSub() async {
-    final p = await SharedPreferences.getInstance();
-    if (mounted) setState(() => _subscribed = p.getBool('subscribed') ?? false);
+    await SubscriptionService.instance.load();
+    if (mounted) {
+      setState(() => _subscribed = SubscriptionService.instance.isSubscribed);
+    }
   }
 
   @override
@@ -51,62 +46,7 @@ class _HabitsTabState extends State<HabitsTab> {
     if (mounted) {
       _checkSub();
       setState(() {});
-      _maybeCelebrate();
     }
-  }
-
-  /// Fires a one-per-day celebration when ALL of today's missions are done.
-  Future<void> _maybeCelebrate() async {
-    final active = store.todayHabits;
-    final completed = store.todayCompleted;
-    if (active.isEmpty || completed < active.length) {
-      _celebrationQueued = false;
-      return;
-    }
-    if (_celebrationQueued) return;
-    // Claim the celebration synchronously BEFORE the await so a second
-    // store event can't race in and stack a duplicate dialog.
-    _celebrationQueued = true;
-
-    final prefs = await SharedPreferences.getInstance();
-    final today = DateTime.now();
-    final key = 'habits_celebrated_${today.year}-${today.month}-${today.day}';
-    if (prefs.getBool(key) ?? false) return;
-    await prefs.setBool(key, true);
-    if (!mounted) return;
-
-    final best = store.totalStreakPower;
-    showCelebration(
-      context,
-      title: 'All Missions Done!',
-      subtitle: '$completed of $active.length completed today',
-      streakText: best > 0 ? '$best day streak' : null,
-    );
-  }
-
-  /// Fires a one-per-day mini celebration when the water goal is reached
-  /// (the final glass is filled). Claimed synchronously BEFORE the await so
-  /// rapid taps can't stack duplicate dialogs.
-  Future<void> _celebrateWaterGoal() async {
-    final today = DateTime.now();
-    final todayKey = '${today.year}-${today.month}-${today.day}';
-    // Date-scoped claim: re-arms itself automatically at midnight, so a
-    // fresh day can always celebrate even if the tab never left memory.
-    if (_waterCelebrationClaimedOn == todayKey) return;
-    _waterCelebrationClaimedOn = todayKey;
-
-    final prefs = await SharedPreferences.getInstance();
-    final key = 'water_celebrated_$todayKey';
-    if (prefs.getBool(key) ?? false) return;
-    await prefs.setBool(key, true);
-    if (!mounted) return;
-
-    showCelebration(
-      context,
-      title: 'Hydration Goal Hit!',
-      subtitle: '${store.waterToday}/${store.waterGoal} glasses today',
-      duration: const Duration(milliseconds: 2400),
-    );
   }
 
   @override
@@ -122,7 +62,9 @@ class _HabitsTabState extends State<HabitsTab> {
         : 0.0;
 
     return Scaffold(
-      backgroundColor: isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surfaceLight,
+      backgroundColor: isDark
+          ? MacroSnapTheme.surfaceDark
+          : MacroSnapTheme.surfaceLight,
       body: SafeArea(
         child: RefreshIndicator(
           color: MacroSnapTheme.neonGreen,
@@ -135,153 +77,187 @@ class _HabitsTabState extends State<HabitsTab> {
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(18, 10, 18, 120),
-          children: [
-            // Title row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Habits',
-                  style: TextStyle(
-                    fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -0.5,
-                  ),
-                ),
-                Row(
-                  children: [
-                    if (hasHabits) ...[_coinPill(isDark), const SizedBox(width: 8)],
-                    IconButton(
-                      onPressed: () => setState(() {}),
-                      icon: const Icon(Icons.refresh_rounded),
-                    ),
-                    const SizedBox(width: 4),
-                    GestureDetector(
-                      onTap: () => Navigator.push(context,
-                          habitFlowRoute(const SettingsScreen())),
-                      child: Container(
-                        width: 38, height: 38,
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.04),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(Icons.settings_rounded,
-                            color: MacroSnapTheme.textTertiary(context), size: 20),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Text(
-              '${weekdayLabel(DateTime.now().weekday)}, ${_monthDay(today)}',
-              style: TextStyle(
-                color: MacroSnapTheme.textSecondary(context),
-                fontSize: 14,
-              ),
-            ),
-
-            // ─── ─── NO HABITS YET ─── SHOW INLINE CREATE ─────
-            if (!hasHabits) ...[
-              const SizedBox(height: 40),
-              _emptyState(isDark),
-              const SizedBox(height: 24),
-              _createButton(context),
-            ]
-
-            // ─── ─── HAS HABITS ─── FULL LAYOUT ──────────────
-            else ...[const SizedBox(height: 14),
-
-            // ─── 1. Make It Count (Hero Card) ──────────────
-            AnimatedEntrance(
-              delayMs: 0,
-              child: _heroCard(progress, completed, active.length, isDark),
-            ),
-            const SizedBox(height: 18),
-
-            // ─── 2. Today's Missions ────────────────────────
-            AnimatedEntrance(
-              delayMs: 50,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  const Text(
+                    'Habits',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        "Today's Missions",
-                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900,
-                            color: isDark ? Colors.white : const Color(0xFF1A1A1A)),
+                      if (hasHabits) ...[
+                        _coinPill(isDark),
+                        const SizedBox(width: 8),
+                      ],
+                      IconButton(
+                        onPressed: () => setState(() {}),
+                        icon: const Icon(Icons.refresh_rounded),
                       ),
-                      Text(
-                        '$completed/${active.length}',
-                        style: const TextStyle(
-                          color: MacroSnapTheme.neonGreen,
-                          fontWeight: FontWeight.w800,
+                      const SizedBox(width: 4),
+                      GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          habitFlowRoute(const SettingsScreen()),
+                        ),
+                        child: Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white10
+                                : Colors.black.withValues(alpha: 0.04),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.settings_rounded,
+                            color: MacroSnapTheme.textTertiary(context),
+                            size: 20,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  if (active.isEmpty)
-                    _emptyState(isDark)
-                  else
-                    ReorderableListView(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      buildDefaultDragHandles: false,
-                      onReorderItem: (oldI, newI) {
-                        // newI is already adjusted for the removal at oldI
-                        final h = store.habits[oldI];
-                        store.habits.remove(h);
-                        store.habits.insert(newI, h);
-                        store.save();
-                      },
-                      children: active.asMap().entries.map((entry) {
-                        final i = entry.key;
-                        final h = entry.value;
-                        return AnimatedEntrance(
-                          key: ValueKey('habit_${h.id}'),
-                          delayMs: 50 + i * 30,
-                          child: _missionCard(h, isDark, index: i),
-                        );
-                      }).toList(),
-                    ),
-
-                  // ─── Habit Limit Indicator ───────────────────────
-                  if (!_subscribed && store.habits.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    _habitLimitCard(isDark),
-                  ],
                 ],
               ),
-            ),
-            const SizedBox(height: 18),
+              const SizedBox(height: 14),
+              Text(
+                '${weekdayLabel(DateTime.now().weekday)}, ${_monthDay(today)}',
+                style: TextStyle(
+                  color: MacroSnapTheme.textSecondary(context),
+                  fontSize: 14,
+                ),
+              ),
 
-            // ─── 3. Create Habit Button ─────────────────────
-            AnimatedEntrance(
-              delayMs: 100,
-              child: _createButton(context),
-            ),
-            const SizedBox(height: 18),
+              // ─── ─── NO HABITS YET ─── SHOW INLINE CREATE ─────
+              if (!hasHabits) ...[
+                const SizedBox(height: 40),
+                _emptyState(isDark),
+                const SizedBox(height: 24),
+                _createButton(context),
+              ]
+              // ─── ─── HAS HABITS ─── FULL LAYOUT ──────────────
+              else ...[
+                const SizedBox(height: 14),
 
-            // ─── 4. Water Intake ────────────────────────────
-            AnimatedEntrance(
-              delayMs: 150,
-              child: _waterCard(waterProgress, isDark),
-            ),
-            const SizedBox(height: 24),
+                // ─── 1. Make It Count (Hero Card) ──────────────
+                AnimatedEntrance(
+                  delayMs: 0,
+                  child: _heroCard(progress, completed, active.length, isDark),
+                ),
+                const SizedBox(height: 18),
 
-            // ─── 5. Consistency Map ─────────────────────────
-            AnimatedEntrance(
-              delayMs: 200,
-              child: _consistencyMapCard(isDark),
-            ),
-            const SizedBox(height: 24),
+                // ─── 2. Today's Missions ────────────────────────
+                AnimatedEntrance(
+                  delayMs: 50,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Today's Missions",
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF1A1A1A),
+                            ),
+                          ),
+                          Text(
+                            '$completed/${active.length}',
+                            style: const TextStyle(
+                              color: MacroSnapTheme.neonGreen,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      if (active.isEmpty)
+                        _emptyState(isDark)
+                      else
+                        ReorderableListView(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          buildDefaultDragHandles: false,
+                          onReorderItem: (oldI, newI) {
+                            // newI is already adjusted for the removal at oldI.
+                            // The visible missions list is a FILTERED subset of
+                            // store.habits (not paused + due today), so reorder
+                            // the visible habits and splice them back into the
+                            // full list, keeping hidden habits in place.
+                            final h = active[oldI];
+                            final reordered = List<Habit>.from(active)
+                              ..removeAt(oldI)
+                              ..insert(newI, h);
+                            final reorderedIds = reordered.map((x) => x.id).toSet();
+                            final merged = <Habit>[];
+                            var vi = 0;
+                            for (final habit in store.habits) {
+                              if (reorderedIds.contains(habit.id)) {
+                                merged.add(reordered[vi++]);
+                              } else {
+                                merged.add(habit);
+                              }
+                            }
+                            store.habits
+                              ..clear()
+                              ..addAll(merged);
+                            store.save();
+                          },
+                          children: active.asMap().entries.map((entry) {
+                            final i = entry.key;
+                            final h = entry.value;
+                            // No entrance animation after creating a habit — the
+                            // KeyedSubtree keeps the unique key ReorderableListView
+                            // requires on its direct children.
+                            return KeyedSubtree(
+                              key: ValueKey('habit_${h.id}'),
+                              child: _missionCard(h, isDark, index: i),
+                            );
+                          }).toList(),
+                        ),
 
+                      // ─── Habit Limit Indicator ───────────────────────
+                      if (!_subscribed && store.habits.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        _habitLimitCard(isDark),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                // ─── 3. Create Habit Button ─────────────────────
+                AnimatedEntrance(delayMs: 100, child: _createButton(context)),
+                const SizedBox(height: 18),
+
+                // ─── 4. Water Intake ────────────────────────────
+                AnimatedEntrance(
+                  delayMs: 150,
+                  child: _waterCard(waterProgress, isDark),
+                ),
+                const SizedBox(height: 24),
+
+                // ─── 5. Consistency Map ─────────────────────────
+                AnimatedEntrance(
+                  delayMs: 200,
+                  child: _consistencyMapCard(isDark),
+                ),
+                const SizedBox(height: 24),
+              ],
             ],
-          ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -292,21 +268,25 @@ class _HabitsTabState extends State<HabitsTab> {
       height: 54,
       child: FilledButton.icon(
         onPressed: () => _onCreateTap(context),
-        icon: Icon(store.habitLimitReached && !_subscribed
-            ? Icons.lock_rounded
-            : Icons.add_rounded),
+        icon: Icon(
+          store.habitLimitReached && !_subscribed
+              ? Icons.lock_rounded
+              : Icons.add_rounded,
+        ),
         label: Text(
           store.habitLimitReached && !_subscribed
               ? 'GO PRO FOR UNLIMITED'
               : 'CREATE HABIT',
-          style: const TextStyle(fontWeight: FontWeight.w900)),
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
         style: FilledButton.styleFrom(
           backgroundColor: store.habitLimitReached && !_subscribed
               ? MacroSnapTheme.neonPurple
               : MacroSnapTheme.neonGreen,
           foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16)),
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
       ),
     );
@@ -314,8 +294,18 @@ class _HabitsTabState extends State<HabitsTab> {
 
   String _monthDay(DateTime d) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[d.month - 1]} ${d.day}';
   }
@@ -328,17 +318,25 @@ class _HabitsTabState extends State<HabitsTab> {
       decoration: BoxDecoration(
         color: isDark ? MacroSnapTheme.cardDark : Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: isDark ? const Color(0xFF303030) : const Color(0xFFE8DEFF)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF303030) : const Color(0xFFE8DEFF),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.local_fire_department_rounded, color: MacroSnapTheme.neonPink, size: 18),
+          const Icon(
+            Icons.local_fire_department_rounded,
+            color: MacroSnapTheme.neonPink,
+            size: 18,
+          ),
           const SizedBox(width: 4),
-          Text('${coins}d streak',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w800)),
+          Text(
+            '${coins}d streak',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
         ],
       ),
     );
@@ -358,16 +356,24 @@ class _HabitsTabState extends State<HabitsTab> {
               const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('TODAY',
-                      style: TextStyle(
-                        color: Colors.white54, fontSize: 12,
-                        letterSpacing: 1.4, fontWeight: FontWeight.w800,
-                      )),
+                  Text(
+                    'TODAY',
+                    style: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 12,
+                      letterSpacing: 1.4,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                   SizedBox(height: 5),
-                  Text('Make it count.',
-                      style: TextStyle(
-                        fontSize: 25, fontWeight: FontWeight.w900, color: Colors.white,
-                      )),
+                  Text(
+                    'Make it count.',
+                    style: TextStyle(
+                      fontSize: 25,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
                 ],
               ),
               _progressRing(progress),
@@ -380,7 +386,9 @@ class _HabitsTabState extends State<HabitsTab> {
               value: progress,
               minHeight: 10,
               backgroundColor: Colors.white10,
-              valueColor: const AlwaysStoppedAnimation<Color>(MacroSnapTheme.neonGreen),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                MacroSnapTheme.neonGreen,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -394,7 +402,11 @@ class _HabitsTabState extends State<HabitsTab> {
                       : '$completed of $total missions complete',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -402,7 +414,7 @@ class _HabitsTabState extends State<HabitsTab> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Animated growing streak flames + 7-day level badge
+                    // Streak display (NOT a celebration) — grows with best streak
                     StreakFlame(streak: store.totalStreakPower, fontSize: 15),
                     const SizedBox(width: 6),
                     Flexible(
@@ -410,7 +422,11 @@ class _HabitsTabState extends State<HabitsTab> {
                         '${store.totalStreakPower}d best streak',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w700),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
@@ -425,7 +441,8 @@ class _HabitsTabState extends State<HabitsTab> {
 
   Widget _progressRing(double progress) {
     return SizedBox(
-      width: 72, height: 72,
+      width: 72,
+      height: 72,
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -433,12 +450,16 @@ class _HabitsTabState extends State<HabitsTab> {
             value: progress,
             strokeWidth: 7,
             backgroundColor: Colors.white10,
-            valueColor: const AlwaysStoppedAnimation<Color>(MacroSnapTheme.neonPink),
+            valueColor: const AlwaysStoppedAnimation<Color>(
+              MacroSnapTheme.neonPink,
+            ),
           ),
           Text(
             '${(progress * 100).round()}%',
             style: const TextStyle(
-              fontWeight: FontWeight.w900, color: Colors.white, fontSize: 16,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              fontSize: 16,
             ),
           ),
         ],
@@ -463,16 +484,24 @@ class _HabitsTabState extends State<HabitsTab> {
                 children: [
                   const Text('💧', style: TextStyle(fontSize: 22)),
                   const SizedBox(width: 10),
-                  Text('Water Intake',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900,
-                          color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+                  Text(
+                    'Water Intake',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                    ),
+                  ),
                 ],
               ),
-              Text('$glasses / $goal',
-                  style: TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w800,
-                    color: MacroSnapTheme.neonCyan,
-                  )),
+              Text(
+                '$glasses / $goal',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: MacroSnapTheme.neonCyan,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -486,28 +515,38 @@ class _HabitsTabState extends State<HabitsTab> {
               return GestureDetector(
                 onTap: () {
                   HapticFeedback.lightImpact();
-                  final wasAtGoal = store.waterToday >= store.waterGoal;
-                  if (filled) { store.removeWater(); } else { store.addWater(); }
-                  // Celebrate only on the tap that actually crosses 100%.
-                  if (!filled && !wasAtGoal && store.waterToday >= store.waterGoal) {
-                    _celebrateWaterGoal();
+                  if (filled) {
+                    store.removeWater();
+                  } else {
+                    store.addWater();
                   }
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  width: 34, height: 34,
+                  width: 34,
+                  height: 34,
                   decoration: BoxDecoration(
                     color: filled
                         ? MacroSnapTheme.neonCyan.withValues(alpha: 0.2)
-                        : (isDark ? const Color(0xFF303030) : const Color(0xFFE8DEFF)),
+                        : (isDark
+                              ? const Color(0xFF303030)
+                              : const Color(0xFFE8DEFF)),
                     borderRadius: BorderRadius.circular(10),
                     border: filled
-                        ? Border.all(color: MacroSnapTheme.neonCyan.withValues(alpha: 0.4))
+                        ? Border.all(
+                            color: MacroSnapTheme.neonCyan.withValues(
+                              alpha: 0.4,
+                            ),
+                          )
                         : null,
                   ),
                   child: Icon(
-                    filled ? Icons.water_drop_rounded : Icons.water_drop_outlined,
-                    color: filled ? MacroSnapTheme.neonCyan : (MacroSnapTheme.textQuaternary(context)),
+                    filled
+                        ? Icons.water_drop_rounded
+                        : Icons.water_drop_outlined,
+                    color: filled
+                        ? MacroSnapTheme.neonCyan
+                        : (MacroSnapTheme.textQuaternary(context)),
                     size: 18,
                   ),
                 ),
@@ -522,8 +561,12 @@ class _HabitsTabState extends State<HabitsTab> {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
-              backgroundColor: isDark ? const Color(0xFF303030) : const Color(0xFFE8DEFF),
-              valueColor: const AlwaysStoppedAnimation<Color>(MacroSnapTheme.neonCyan),
+              backgroundColor: isDark
+                  ? const Color(0xFF303030)
+                  : const Color(0xFFE8DEFF),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                MacroSnapTheme.neonCyan,
+              ),
             ),
           ),
         ],
@@ -533,8 +576,12 @@ class _HabitsTabState extends State<HabitsTab> {
 
   // ─── SWIPE BACKGROUND ──────────────────────────────────────
   Widget _swipeActionBackground({required bool rightSwipe}) {
-    final color = rightSwipe ? MacroSnapTheme.neonGreen : MacroSnapTheme.neonOrange;
-    final icon = rightSwipe ? Icons.check_circle_rounded : Icons.refresh_rounded;
+    final color = rightSwipe
+        ? MacroSnapTheme.neonGreen
+        : MacroSnapTheme.neonOrange;
+    final icon = rightSwipe
+        ? Icons.check_circle_rounded
+        : Icons.refresh_rounded;
     final label = rightSwipe ? 'Complete' : 'Reset';
     return Container(
       decoration: BoxDecoration(
@@ -542,26 +589,33 @@ class _HabitsTabState extends State<HabitsTab> {
         borderRadius: BorderRadius.circular(24),
       ),
       alignment: rightSwipe ? Alignment.centerRight : Alignment.centerLeft,
-      padding: EdgeInsets.symmetric(
-        horizontal: 28,
-        vertical: 0,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 28, vertical: 0),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: rightSwipe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: rightSwipe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: [
           if (!rightSwipe) ...[
             Icon(icon, color: Colors.white, size: 28),
             const SizedBox(width: 10),
-            Text(label,
-                style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w900, fontSize: 17,
-                )),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                fontSize: 17,
+              ),
+            ),
           ] else ...[
-            Text(label,
-                style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w900, fontSize: 17,
-                )),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                fontSize: 17,
+              ),
+            ),
             const SizedBox(width: 10),
             Icon(icon, color: Colors.white, size: 28),
           ],
@@ -596,7 +650,9 @@ class _HabitsTabState extends State<HabitsTab> {
                 SnackBar(
                   content: Text('${h.name} streak reset'),
                   behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   duration: const Duration(seconds: 2),
                 ),
               );
@@ -604,95 +660,115 @@ class _HabitsTabState extends State<HabitsTab> {
           }
           return false; // Snap back — don't dismiss
         },
-        child: GestureDetector(
-          onTap: () {
-            HapticFeedback.mediumImpact();
-            h.toggle(DateTime.now());
-            store.update(h);
-          },
-          onLongPress: () {
-            HapticFeedback.heavyImpact();
-            _showHabitActions(context, h, isDark);
-          },
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: MacroSnapTheme.habitlyCard(context),
-            child: Row(
-              children: [
-                // Drag handle — emoji container (long-hold to reorder)
-                ReorderableDragStartListener(
-                  index: index,
-                  child: Container(
-                    width: 52, height: 52,
-                    decoration: MacroSnapTheme.emojiContainer(h.color),
-                    child: Center(
-                      child: Text(h.emoji, style: MacroSnapTheme.emojiStyle()),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 13),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        h.name,
-                        style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w800,
-                          decoration: done ? TextDecoration.lineThrough : null,
-                          color: done
-                              ? (MacroSnapTheme.textTertiary(context))
-                              : (isDark ? Colors.white : const Color(0xFF1A1A1A)),
+        // RepaintBoundary composites the card (emoji tile's blur shadows +
+        // emoji glow) into one cached layer so the horizontal swipe transform
+        // doesn't smear a ghosted "reflection" of the emoji onto the revealed
+        // green/orange Dismissible background.
+        child: RepaintBoundary(
+          child: GestureDetector(
+            onTap: () {
+              HapticFeedback.mediumImpact();
+              h.toggle(DateTime.now());
+              store.update(h);
+            },
+            onLongPress: () {
+              HapticFeedback.heavyImpact();
+              _showHabitActions(context, h, isDark);
+            },
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: MacroSnapTheme.habitlyCard(context),
+              child: Row(
+                children: [
+                  // Drag handle — emoji container (long-hold to reorder)
+                  ReorderableDragStartListener(
+                    index: index,
+                    child: Container(
+                      width: 52,
+                      height: 52,
+                      decoration: MacroSnapTheme.emojiContainer(h.color),
+                      child: Center(
+                        child: Text(
+                          h.emoji,
+                          style: MacroSnapTheme.emojiStyle(),
                         ),
                       ),
-                      const SizedBox(height: 5),
-                      Row(
-                        children: [
-                          const Icon(Icons.local_fire_department_rounded,
-                              color: MacroSnapTheme.neonPink, size: 16),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${h.currentStreak()} day streak · ${h.frequency}',
-                            style: TextStyle(
-                              color: MacroSnapTheme.textSecondary(context),
-                              fontSize: 12, fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 4),
-                // Check/Bolt status indicator
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  width: 46, height: 46,
-                  decoration: BoxDecoration(
-                    color: done
-                        ? MacroSnapTheme.neonGreen
-                        : MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    done ? Icons.check_rounded : Icons.bolt_rounded,
-                    color: done ? Colors.black : MacroSnapTheme.neonGreen,
-                    size: 27,
-                  ),
-                ),
-                // Drag grip icon
-                ReorderableDragStartListener(
-                  index: index,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 6),
-                    child: Icon(
-                      Icons.drag_handle_rounded,
-                      color: MacroSnapTheme.textQuaternary(context),
-                      size: 28,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 13),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          h.name,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            decoration: done
+                                ? TextDecoration.lineThrough
+                                : null,
+                            color: done
+                                ? (MacroSnapTheme.textTertiary(context))
+                                : (isDark
+                                      ? Colors.white
+                                      : const Color(0xFF1A1A1A)),
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.local_fire_department_rounded,
+                              color: MacroSnapTheme.neonPink,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${h.currentStreak()} day streak · ${h.frequency}',
+                              style: TextStyle(
+                                color: MacroSnapTheme.textSecondary(context),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  // Check/Bolt status indicator
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: done
+                          ? MacroSnapTheme.neonGreen
+                          : MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      done ? Icons.check_rounded : Icons.bolt_rounded,
+                      color: done ? Colors.black : MacroSnapTheme.neonGreen,
+                      size: 27,
+                    ),
+                  ),
+                  // Drag grip icon
+                  ReorderableDragStartListener(
+                    index: index,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 6),
+                      child: Icon(
+                        Icons.drag_handle_rounded,
+                        color: MacroSnapTheme.textQuaternary(context),
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -718,7 +794,8 @@ class _HabitsTabState extends State<HabitsTab> {
             // Handle bar
             Center(
               child: Container(
-                width: 40, height: 4,
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
                   color: MacroSnapTheme.borderSubtle(context),
                   borderRadius: BorderRadius.circular(2),
@@ -731,7 +808,8 @@ class _HabitsTabState extends State<HabitsTab> {
             Row(
               children: [
                 Container(
-                  width: 52, height: 52,
+                  width: 52,
+                  height: 52,
                   decoration: MacroSnapTheme.emojiContainer(h.color),
                   child: Center(
                     child: Text(h.emoji, style: MacroSnapTheme.emojiStyle()),
@@ -742,18 +820,32 @@ class _HabitsTabState extends State<HabitsTab> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(h.name,
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800,
-                              color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+                      Text(
+                        h.name,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF1A1A1A),
+                        ),
+                      ),
                       const SizedBox(height: 3),
                       Row(
                         children: [
-                          const Icon(Icons.local_fire_department_rounded,
-                              color: MacroSnapTheme.neonPink, size: 16),
+                          const Icon(
+                            Icons.local_fire_department_rounded,
+                            color: MacroSnapTheme.neonPink,
+                            size: 16,
+                          ),
                           const SizedBox(width: 4),
-                          Text('$streak day streak · ${h.frequency}',
-                              style: TextStyle(fontSize: 13,
-                                  color: MacroSnapTheme.textSecondary(context))),
+                          Text(
+                            '$streak day streak · ${h.frequency}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: MacroSnapTheme.textSecondary(context),
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -793,7 +885,9 @@ class _HabitsTabState extends State<HabitsTab> {
                   SnackBar(
                     content: Text('Streak reset for ${h.name}'),
                     behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     duration: const Duration(seconds: 2),
                   ),
                 );
@@ -835,7 +929,8 @@ class _HabitsTabState extends State<HabitsTab> {
         child: Row(
           children: [
             Container(
-              width: 44, height: 44,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: iconColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
@@ -847,13 +942,22 @@ class _HabitsTabState extends State<HabitsTab> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700,
-                          color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text(subtitle,
-                      style: TextStyle(fontSize: 13,
-                          color: MacroSnapTheme.textTertiary(context))),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: MacroSnapTheme.textTertiary(context),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -878,26 +982,38 @@ class _HabitsTabState extends State<HabitsTab> {
               Row(
                 children: [
                   Container(
-                    width: 32, height: 32,
+                    width: 32,
+                    height: 32,
                     decoration: BoxDecoration(
                       color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.grid_view_rounded,
-                        color: MacroSnapTheme.neonGreen, size: 18),
+                    child: const Icon(
+                      Icons.grid_view_rounded,
+                      color: MacroSnapTheme.neonGreen,
+                      size: 18,
+                    ),
                   ),
                   const SizedBox(width: 10),
-                  Text('Consistency',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900,
-                          color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+                  Text(
+                    'Consistency',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(width: 8),
-              Text('${active.length} habits',
-                  style: TextStyle(
-                    fontSize: 12, fontWeight: FontWeight.w700,
-                    color: MacroSnapTheme.textTertiary(context),
-                  )),
+              Text(
+                '${active.length} habits',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: MacroSnapTheme.textTertiary(context),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -938,21 +1054,33 @@ class _HabitsTabState extends State<HabitsTab> {
         children: [
           Row(
             children: [
-              Icon(Icons.info_outline_rounded,
-                  color: used >= limit ? MacroSnapTheme.neonOrange : MacroSnapTheme.neonGreen,
-                  size: 18),
+              Icon(
+                Icons.info_outline_rounded,
+                color: used >= limit
+                    ? MacroSnapTheme.neonOrange
+                    : MacroSnapTheme.neonGreen,
+                size: 18,
+              ),
               const SizedBox(width: 8),
-              Text('Habit Limit',
-                  style: TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-                  )),
+              Text(
+                'Habit Limit',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                ),
+              ),
               const Spacer(),
-              Text('$used / $limit',
-                  style: TextStyle(
-                    fontSize: 13, fontWeight: FontWeight.w800,
-                    color: used >= limit ? MacroSnapTheme.neonOrange : MacroSnapTheme.neonGreen,
-                  )),
+              Text(
+                '$used / $limit',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: used >= limit
+                      ? MacroSnapTheme.neonOrange
+                      : MacroSnapTheme.neonGreen,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -961,9 +1089,13 @@ class _HabitsTabState extends State<HabitsTab> {
             child: LinearProgressIndicator(
               value: pct,
               minHeight: 6,
-              backgroundColor: isDark ? const Color(0xFF303030) : const Color(0xFFE8DEFF),
+              backgroundColor: isDark
+                  ? const Color(0xFF303030)
+                  : const Color(0xFFE8DEFF),
               valueColor: AlwaysStoppedAnimation<Color>(
-                used >= limit ? MacroSnapTheme.neonOrange : MacroSnapTheme.neonGreen,
+                used >= limit
+                    ? MacroSnapTheme.neonOrange
+                    : MacroSnapTheme.neonGreen,
               ),
             ),
           ),
@@ -973,7 +1105,8 @@ class _HabitsTabState extends State<HabitsTab> {
                 ? 'Upgrade to Pro for unlimited habits'
                 : '${limit - used} habit${limit - used == 1 ? '' : 's'} remaining on Free',
             style: TextStyle(
-              fontSize: 12, fontWeight: FontWeight.w600,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
               color: MacroSnapTheme.textSecondary(context),
             ),
           ),
@@ -1023,7 +1156,8 @@ class _HabitsTabState extends State<HabitsTab> {
             // Handle bar
             Center(
               child: Container(
-                width: 40, height: 4,
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
                   color: MacroSnapTheme.borderSubtle(context),
                   borderRadius: BorderRadius.circular(2),
@@ -1034,28 +1168,38 @@ class _HabitsTabState extends State<HabitsTab> {
             Row(
               children: [
                 Container(
-                  width: 40, height: 40,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Icon(Icons.calendar_today_rounded,
-                      color: MacroSnapTheme.neonGreen, size: 22),
+                  child: const Icon(
+                    Icons.calendar_today_rounded,
+                    color: MacroSnapTheme.neonGreen,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.w900,
-                          color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-                        )),
-                    Text('$count/${habitNames.length} habits completed',
-                        style: TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w600,
-                          color: MacroSnapTheme.textTertiary(context),
-                        )),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                      ),
+                    ),
+                    Text(
+                      '$count/${habitNames.length} habits completed',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: MacroSnapTheme.textTertiary(context),
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -1069,38 +1213,54 @@ class _HabitsTabState extends State<HabitsTab> {
                     children: [
                       Text('😴', style: const TextStyle(fontSize: 36)),
                       const SizedBox(height: 8),
-                      Text('Nothing logged this day',
-                          style: TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w700,
-                            color: MacroSnapTheme.textTertiary(context),
-                          )),
+                      Text(
+                        'Nothing logged this day',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: MacroSnapTheme.textTertiary(context),
+                        ),
+                      ),
                     ],
                   ),
                 ),
               )
             else
-              ...habitNames.map((name) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 28, height: 28,
-                          decoration: BoxDecoration(
-                            color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
+              ...habitNames.map(
+                (name) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: MacroSnapTheme.neonGreen.withValues(
+                            alpha: 0.12,
                           ),
-                          child: const Icon(Icons.check_rounded,
-                              color: MacroSnapTheme.neonGreen, size: 16),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        const SizedBox(width: 12),
-                        Text(name,
-                            style: TextStyle(
-                              fontSize: 15, fontWeight: FontWeight.w700,
-                              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-                            )),
-                      ],
-                    ),
-                  )),
+                        child: const Icon(
+                          Icons.check_rounded,
+                          color: MacroSnapTheme.neonGreen,
+                          size: 16,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF1A1A1A),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -1117,43 +1277,68 @@ class _HabitsTabState extends State<HabitsTab> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         content: Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Container(
-              width: 64, height: 64,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+                ),
+                child: const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: MacroSnapTheme.neonGreen,
+                  size: 32,
+                ),
               ),
-              child: const Icon(Icons.auto_awesome_rounded,
-                  color: MacroSnapTheme.neonGreen, size: 32),
-            ),
-            const SizedBox(height: 16),
-            Text('Habit limit reached',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
-            const SizedBox(height: 8),
-            Text('Free users get ${HabitStore.freeHabitLimit} habits.\nGo Pro for unlimited habits, AI scans & more.',
+              const SizedBox(height: 16),
+              Text(
+                'Habit limit reached',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Free users get ${HabitStore.freeHabitLimit} habits.\nGo Pro for unlimited habits, AI scans & more.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14,
-                    color: MacroSnapTheme.textSecondary(context), height: 1.4)),
-            const SizedBox(height: 24),
-            GradientButton(
-              label: 'Go Pro - ₹29/mo',
-              onPressed: () {
-                Navigator.of(ctx).pop();
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
-              },
-              height: 48,
-            ),
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text('Maybe later',
-                  style: TextStyle(fontSize: 14,
-                      color: MacroSnapTheme.textTertiary(context))),
-            ),
-          ]),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: MacroSnapTheme.textSecondary(context),
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+              GradientButton(
+                label: 'Go Pro - ₹29/mo',
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SubscriptionScreen(),
+                    ),
+                  );
+                },
+                height: 48,
+              ),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: Text(
+                  'Maybe later',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: MacroSnapTheme.textTertiary(context),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1175,13 +1360,22 @@ class _HabitsTabState extends State<HabitsTab> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('✨',
-              style: TextStyle(fontSize: 40,
-                  color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+          Text(
+            '✨',
+            style: TextStyle(
+              fontSize: 40,
+              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+            ),
+          ),
           const SizedBox(height: 12),
-          Text('Start your rhythm',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900,
-                  color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+          Text(
+            'Start your rhythm',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+            ),
+          ),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1189,8 +1383,9 @@ class _HabitsTabState extends State<HabitsTab> {
               'No missions scheduled for today. Tap above to create one!',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 14, fontWeight: FontWeight.w500,
-                color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: MacroSnapTheme.textSecondary(context),
               ),
             ),
           ),
@@ -1201,10 +1396,10 @@ class _HabitsTabState extends State<HabitsTab> {
 
   // ─── CREATE / EDIT HABIT SHEET ─────────────────────────────
   /// Opens the habit form. Pass [existing] to edit an existing habit.
-  Future<void> _showCreateHabitSheet(BuildContext context, {Habit? existing}) async {
-    // Capture the tab's context — the sheet's builder context is disposed
-    // as soon as we pop it, so the celebration must use this one.
-    final tabContext = context;
+  Future<void> _showCreateHabitSheet(
+    BuildContext context, {
+    Habit? existing,
+  }) async {
     final isEdit = existing != null;
     final nameCtrl = TextEditingController(text: existing?.name ?? '');
     var emoji = existing?.emoji ?? '✨';
@@ -1222,15 +1417,22 @@ class _HabitsTabState extends State<HabitsTab> {
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) => Padding(
           padding: EdgeInsets.only(
-            left: 22, right: 22, top: 24,
+            left: 22,
+            right: 22,
+            top: 24,
             bottom: MediaQuery.of(context).viewInsets.bottom + 28,
           ),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(isEdit ? 'Edit mission' : 'Create a mission',
-                    style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900)),
+                Text(
+                  isEdit ? 'Edit mission' : 'Create a mission',
+                  style: const TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
                 const SizedBox(height: 18),
                 TextField(
                   controller: nameCtrl,
@@ -1238,7 +1440,9 @@ class _HabitsTabState extends State<HabitsTab> {
                   decoration: InputDecoration(
                     hintText: 'What do you want to build?',
                     filled: true,
-                    fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    fillColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(18),
                       borderSide: BorderSide.none,
@@ -1248,18 +1452,24 @@ class _HabitsTabState extends State<HabitsTab> {
                 const SizedBox(height: 18),
                 Row(
                   children: [
-                    const Text('Choose an icon',
-                        style: TextStyle(fontWeight: FontWeight.w800)),
+                    const Text(
+                      'Choose an icon',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
                     const Spacer(),
                     // Live preview of the currently selected emoji
                     Container(
-                      width: 36, height: 36,
+                      width: 36,
+                      height: 36,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(emoji, style: MacroSnapTheme.emojiStyle(fontSize: 20)),
+                      child: Text(
+                        emoji,
+                        style: MacroSnapTheme.emojiStyle(fontSize: 20),
+                      ),
                     ),
                   ],
                 ),
@@ -1268,44 +1478,81 @@ class _HabitsTabState extends State<HabitsTab> {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    ...['✨', '💧', '📚', '🏃', '🧘', '🎸', '🍎', '💻', '🎯', '😴', '🧠', '☕']
-                        .map((e) => ChoiceChip(
-                              label: Text(e, style: MacroSnapTheme.emojiStyle(fontSize: 20)),
-                              selected: emoji == e,
-                              onSelected: (_) => setModalState(() => emoji = e),
-                            )),
+                    ...[
+                      '✨',
+                      '💧',
+                      '📚',
+                      '🏃',
+                      '🧘',
+                      '🎸',
+                      '🍎',
+                      '💻',
+                      '🎯',
+                      '😴',
+                      '🧠',
+                      '☕',
+                    ].map(
+                      (e) => ChoiceChip(
+                        label: Text(
+                          e,
+                          style: MacroSnapTheme.emojiStyle(fontSize: 20),
+                        ),
+                        selected: emoji == e,
+                        onSelected: (_) => setModalState(() => emoji = e),
+                      ),
+                    ),
                     // Paste an emoji copied from anywhere (messages, web, etc.)
                     ActionChip(
-                      avatar: const Icon(Icons.content_paste_rounded,
-                          size: 16, color: MacroSnapTheme.neonCyan),
-                      label: const Text('Paste',
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-                      backgroundColor: MacroSnapTheme.neonCyan.withValues(alpha: 0.1),
+                      avatar: const Icon(
+                        Icons.content_paste_rounded,
+                        size: 16,
+                        color: MacroSnapTheme.neonCyan,
+                      ),
+                      label: const Text(
+                        'Paste',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      backgroundColor: MacroSnapTheme.neonCyan.withValues(
+                        alpha: 0.1,
+                      ),
                       side: BorderSide(
-                          color: MacroSnapTheme.neonCyan.withValues(alpha: 0.4)),
-                      onPressed: () =>
-                          _pasteEmojiFromClipboard(context, setModalState, (v) => emoji = v),
+                        color: MacroSnapTheme.neonCyan.withValues(alpha: 0.4),
+                      ),
+                      onPressed: () => _pasteEmojiFromClipboard(
+                        context,
+                        setModalState,
+                        (v) => emoji = v,
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 18),
-                const Text('Frequency',
-                    style: TextStyle(fontWeight: FontWeight.w800)),
+                const Text(
+                  'Frequency',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
                   children: ['Daily', 'Weekdays', 'Weekly']
-                      .map((e) => ChoiceChip(
-                            label: Text(e),
-                            selected: frequency == e,
-                            onSelected: (_) => setModalState(() => frequency = e),
-                          ))
+                      .map(
+                        (e) => ChoiceChip(
+                          label: Text(e),
+                          selected: frequency == e,
+                          onSelected: (_) => setModalState(() => frequency = e),
+                        ),
+                      )
                       .toList(),
                 ),
                 if (frequency == 'Weekly') ...{
                   const SizedBox(height: 14),
-                  const Text('Weekly day',
-                      style: TextStyle(fontWeight: FontWeight.w800)),
+                  const Text(
+                    'Weekly day',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
                   const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
@@ -1320,30 +1567,44 @@ class _HabitsTabState extends State<HabitsTab> {
                   ),
                 },
                 const SizedBox(height: 18),
-                const Text('Color',
-                    style: TextStyle(fontWeight: FontWeight.w800)),
+                const Text(
+                  'Color',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
-                  children: [
-                    0xFF00FF66, 0xFFFF007F, 0xFF6C3BFF,
-                    0xFFFF9500, 0xFF34C759, 0xFF00B8D4,
-                  ].map((value) => GestureDetector(
-                        onTap: () => setModalState(() => color = value),
-                        child: Container(
-                          width: 34, height: 34,
-                          decoration: BoxDecoration(
-                            color: Color(value),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: color == value
-                                  ? Theme.of(context).colorScheme.onSurface
-                                  : Colors.transparent,
-                              width: 3,
+                  children:
+                      [
+                            0xFF00FF66,
+                            0xFFFF007F,
+                            0xFF6C3BFF,
+                            0xFFFF9500,
+                            0xFF34C759,
+                            0xFF00B8D4,
+                          ]
+                          .map(
+                            (value) => GestureDetector(
+                              onTap: () => setModalState(() => color = value),
+                              child: Container(
+                                width: 34,
+                                height: 34,
+                                decoration: BoxDecoration(
+                                  color: Color(value),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: color == value
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface
+                                        : Colors.transparent,
+                                    width: 3,
+                                  ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                      )).toList(),
+                          )
+                          .toList(),
                 ),
                 const SizedBox(height: 18),
 
@@ -1354,33 +1615,46 @@ class _HabitsTabState extends State<HabitsTab> {
                     color: MacroSnapTheme.neonGreen.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
-                        color: MacroSnapTheme.neonGreen.withValues(alpha: 0.15)),
+                      color: MacroSnapTheme.neonGreen.withValues(alpha: 0.15),
+                    ),
                   ),
                   child: Row(
                     children: [
                       Container(
-                        width: 40, height: 40,
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
-                          color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+                          color: MacroSnapTheme.neonGreen.withValues(
+                            alpha: 0.12,
+                          ),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.notifications_active_rounded,
-                            color: MacroSnapTheme.neonGreen, size: 20),
+                        child: const Icon(
+                          Icons.notifications_active_rounded,
+                          color: MacroSnapTheme.neonGreen,
+                          size: 20,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Daily reminder',
-                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+                            const Text(
+                              'Daily reminder',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
                             Text(
                               reminderEnabled
                                   ? 'Every day at ${_formatTime(reminderHour, reminderMinute)}'
                                   : 'Get a nudge to complete this habit',
                               style: TextStyle(
-                                  fontSize: 12,
-                                  color: MacroSnapTheme.textTertiary(context)),
+                                fontSize: 12,
+                                color: MacroSnapTheme.textTertiary(context),
+                              ),
                             ),
                           ],
                         ),
@@ -1388,7 +1662,8 @@ class _HabitsTabState extends State<HabitsTab> {
                       Switch(
                         value: reminderEnabled,
                         activeTrackColor: MacroSnapTheme.neonGreen,
-                        onChanged: (v) => setModalState(() => reminderEnabled = v),
+                        onChanged: (v) =>
+                            setModalState(() => reminderEnabled = v),
                       ),
                     ],
                   ),
@@ -1402,7 +1677,9 @@ class _HabitsTabState extends State<HabitsTab> {
                         final picked = await showTimePicker(
                           context: context,
                           initialTime: TimeOfDay(
-                              hour: reminderHour, minute: reminderMinute),
+                            hour: reminderHour,
+                            minute: reminderMinute,
+                          ),
                         );
                         if (picked != null) {
                           setModalState(() {
@@ -1413,14 +1690,16 @@ class _HabitsTabState extends State<HabitsTab> {
                       },
                       icon: const Icon(Icons.access_time_rounded, size: 18),
                       label: Text(
-                          'Remind me at ${_formatTime(reminderHour, reminderMinute)}'),
+                        'Remind me at ${_formatTime(reminderHour, reminderMinute)}',
+                      ),
                     ),
                   ),
                 ],
 
                 const SizedBox(height: 22),
                 SizedBox(
-                  width: double.infinity, height: 54,
+                  width: double.infinity,
+                  height: 54,
                   child: FilledButton(
                     style: FilledButton.styleFrom(
                       backgroundColor: MacroSnapTheme.neonGreen,
@@ -1452,23 +1731,15 @@ class _HabitsTabState extends State<HabitsTab> {
                           reminderMinute: reminderMinute,
                         );
                         await store.add(habit);
-                        // Micro-celebration for the new mission (after the
-                        // sheet closes so it pops over the tab, not the form).
                         if (context.mounted) Navigator.pop(context);
-                        if (tabContext.mounted) {
-                          showMiniCelebration(
-                            tabContext,
-                            title: 'Mission Created!',
-                            subtitle: habit.name,
-                            accent: Color(habit.colorValue),
-                          );
-                        }
                         return;
                       }
                       if (context.mounted) Navigator.pop(context);
                     },
-                    child: Text(isEdit ? 'SAVE CHANGES' : 'CREATE MISSION',
-                        style: const TextStyle(fontWeight: FontWeight.w900)),
+                    child: Text(
+                      isEdit ? 'SAVE CHANGES' : 'CREATE MISSION',
+                      style: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
                   ),
                 ),
               ],
@@ -1500,7 +1771,9 @@ class _HabitsTabState extends State<HabitsTab> {
         if (sheetContext.mounted) {
           ScaffoldMessenger.of(sheetContext).showSnackBar(
             SnackBar(
-              content: const Text('No emoji found in clipboard. Copy one first!'),
+              content: const Text(
+                'No emoji found in clipboard. Copy one first!',
+              ),
               behavior: SnackBarBehavior.floating,
               backgroundColor: MacroSnapTheme.neonOrange,
             ),

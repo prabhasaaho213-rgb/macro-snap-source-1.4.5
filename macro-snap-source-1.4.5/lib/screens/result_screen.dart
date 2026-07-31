@@ -74,12 +74,16 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
       try {
         final result = await GeminiService.analyzeFoodImage(widget.imagePath);
         // Only count a scan after a SUCCESSFUL analysis — failed
-        // analyses must not consume the free scan limit.
+        // analyses must not consume the free scan limit. Also bail
+        // out without counting if the user closed the screen while
+        // the analysis was still running.
+        if (!mounted) return;
         await ScanGate.incrementScan();
-        if (mounted) {
-          setState(() { _result = result; _isAnalyzing = false; });
-          _animController.forward();
-        }
+        // Re-check after the async count — the screen may have been
+        // closed while the count was being persisted.
+        if (!mounted) return;
+        setState(() { _result = result; _isAnalyzing = false; });
+        _animController.forward();
         return;
       } catch (_) {
         // Fall through to local fallback
@@ -89,32 +93,34 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     // Fallback: Local ML Kit analysis
     try {
       final localResult = await LocalAnalyzer.analyze(widget.imagePath);
-      if (mounted) {
-        if (localResult.bestMatch != null) {
-          final item = localResult.bestMatch!;
-          final dish = DishItem(
-            name: item.name,
-            portionDescription: 'Local estimate',
-            caloriesPer100g: item.calories,
-            proteinPer100g: item.protein,
-            carbsPer100g: item.carbs,
-            fatsPer100g: item.fats,
-            fiberPer100g: item.fiber,
-            sugarPer100g: 0,
-            suitableFor: 'both',
-          );
-          final result = NutritionResult(
-            dishes: [dish],
-            description: 'On-device analysis (${localResult.labels.take(2).join(", ")})',
-            confidence: 0.5,
-          );
-          await ScanGate.incrementScan();
-          setState(() { _result = result; _isAnalyzing = false; });
-        } else {
-          setState(() { _error = 'Could not identify food. Try a clearer photo.'; _isAnalyzing = false; });
-        }
-        _animController.forward();
+      if (!mounted) return;
+      if (localResult.bestMatch != null) {
+        final item = localResult.bestMatch!;
+        final dish = DishItem(
+          name: item.name,
+          portionDescription: 'Local estimate',
+          caloriesPer100g: item.calories,
+          proteinPer100g: item.protein,
+          carbsPer100g: item.carbs,
+          fatsPer100g: item.fats,
+          fiberPer100g: item.fiber,
+          sugarPer100g: 0,
+          suitableFor: 'both',
+        );
+        final result = NutritionResult(
+          dishes: [dish],
+          description: 'On-device analysis (${localResult.labels.take(2).join(", ")})',
+          confidence: 0.5,
+        );
+        await ScanGate.incrementScan();
+        // Re-check after the async count — the screen may have been
+        // closed while the count was being persisted.
+        if (!mounted) return;
+        setState(() { _result = result; _isAnalyzing = false; });
+      } else {
+        setState(() { _error = 'Could not identify food. Try a clearer photo.'; _isAnalyzing = false; });
       }
+      _animController.forward();
     } catch (e) {
       if (mounted) {
         setState(() { _error = 'Analysis failed: ${e.toString()}'; _isAnalyzing = false; });
@@ -135,7 +141,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
             Flexible(
               child: Text('Total Serving', maxLines: 1, overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white60 : const Color(0xFF64748B))),
+                      color: MacroSnapTheme.textSecondary(context))),
             ),
             const Spacer(),
             GestureDetector(
@@ -903,7 +909,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w500,
-            color: isDark ? Colors.white60 : const Color(0xFF64748B),
+            color: MacroSnapTheme.textSecondary(context),
           ),
         ),
       ],

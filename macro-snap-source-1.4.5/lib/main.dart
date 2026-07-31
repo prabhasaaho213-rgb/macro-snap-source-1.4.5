@@ -8,6 +8,7 @@ import 'services/notification_service.dart';
 import 'services/gemini_service.dart';
 import 'services/razorpay_service.dart';
 import 'services/habit_store.dart';
+import 'services/subscription_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,7 @@ void main() async {
   }
   await GeminiService.init();
   RazorpayService.init();
+  await SubscriptionService.instance.load();
   await NotificationService().init();
   // Schedule daily reminders for ALL users (free + pro)
   try {

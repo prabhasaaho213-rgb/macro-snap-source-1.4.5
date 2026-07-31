@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'subscription_service.dart';
 
 class ScanGate {
   static const int _freeLimit = 3;
@@ -34,8 +35,8 @@ class ScanGate {
   }
 
   static Future<bool> _isSubscribed() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('subscribed') ?? false;
+    await SubscriptionService.instance.load();
+    return SubscriptionService.instance.isSubscribed;
   }
 
   static Future<void> _resetIfNewMonth(SharedPreferences prefs) async {
