@@ -1,12 +1,9 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../core/theme.dart';
 import '../widgets/gradient_button.dart';
-import '../widgets/app_text_field.dart';
 import '../widgets/glass_card.dart';
 import 'phone_login_screen.dart';
 import '../services/notification_service.dart';
@@ -30,15 +27,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
   bool _submitting = false;
   bool _checking = true;
   String? _subscribedDate;
-  String? _paymentStatus;
-  final _txnController = TextEditingController();
   AnimationController? _animController;
   CurvedAnimation? _checkAnim;
 
   @override
   void initState() {
     super.initState();
-    _txnController.addListener(() => setState(() {}));
     _loadState();
   }
 
@@ -48,7 +42,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     _checkAnim?.dispose();
     _animController?.stop();
     _animController?.dispose();
-    _txnController.dispose();
     super.dispose();
   }
 
@@ -78,7 +71,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         final data = jsonDecode(res.body);
         if (mounted) {
           setState(() {
-            _paymentStatus = data['payment']?['status'];
             if (data['subscribed'] == true && !_subscribed) {
               _activateFromServer();
             }
@@ -102,102 +94,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
       });
       _showConfirmation();
     }
-  }
-
-  Future<void> _submitPayment() async {
-    final txn = _txnController.text.trim();
-    if (txn.isEmpty || _phone == null) return;
-    setState(() { _submitting = true; _paymentStatus = null; });
-    try {
-      final res = await http.post(
-        Uri.parse('${GeminiService.serverUrl}/payment/request'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'phone': _phone, 'transaction_ref': txn}),
-      );
-      if (res.statusCode == 200) {
-        if (mounted) {
-          setState(() => _paymentStatus = 'pending');
-          _txnController.clear();
-          _showSubmitted();
-          // Auto-poll for payment confirmation every 10 seconds
-          _startPaymentPolling();
-        }
-      } else {
-        if (mounted) _showError('Failed to submit. Try again.');
-      }
-    } catch (_) {
-      if (mounted) _showError('Network error. Try again.');
-    } finally {
-      if (mounted) setState(() => _submitting = false);
-    }
-  }
-
-  bool _polling = false;
-
-  void _startPaymentPolling() {
-    if (_polling) return;
-    _polling = true;
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 10));
-      if (!mounted || _subscribed) return false;
-      if (_phone != null) {
-        await _checkPaymentStatus(_phone!);
-      }
-      return _paymentStatus == 'pending' && mounted;
-    }).then((_) => _polling = false);
-  }
-
-  void _showSubmitted() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => PopScope(
-        canPop: false,
-        child: AlertDialog(
-          backgroundColor: Theme.of(context).brightness == Brightness.dark
-              ? MacroSnapTheme.cardDark : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-          content: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Container(
-                width: 72, height: 72,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
-                ),
-                child: Icon(Icons.hourglass_top_rounded,
-                    color: MacroSnapTheme.neonGreen, size: 40),
-              ),
-              const SizedBox(height: 20),
-              Text('Payment Submitted',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
-                      color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
-              const SizedBox(height: 8),
-              Text('Your payment is being verified.\nYou\'ll get access once confirmed.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14,
-                      color: MacroSnapTheme.textSecondary(context))),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity, height: 48,
-                child: FilledButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: MacroSnapTheme.neonGreen,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: const Text('Got it',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-                ),
-              ),
-            ]),
-          ),
-        ),
-      ),
-    );
   }
 
   void _showConfirmation() {
@@ -301,33 +197,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     } catch (e) {
       _showError('Could not start payment: $e');
       if (mounted) setState(() => _submitting = false);
-    }
-  }
-
-  void _openUpiApp() async {
-    final uri = Uri.parse(
-        'upi://pay?pa=7569086885@yespop&pn=MacroSnap&am=29&cu=INR&tn=MacroSnap+Pro+Subscription&mode=04');
-    bool launched = false;
-    try {
-      // UPI deep links must launch externally; canLaunchUrl is unreliable
-      // for the upi:// scheme on some devices, so attempt launch directly.
-      launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (_) {
-      launched = false;
-    }
-    if (!launched) {
-      // Fallback: try without mode param, then show copy-to-clipboard.
-      try {
-        launched = await launchUrl(
-          Uri.parse('upi://pay?pa=7569086885@yespop&pn=MacroSnap&am=29&cu=INR&tn=MacroSnap+Pro+Subscription'),
-          mode: LaunchMode.externalApplication,
-        );
-      } catch (_) {
-        launched = false;
-      }
-    }
-    if (!launched && mounted) {
-      _showError('No UPI app found. Tap the UPI ID above to copy it and pay manually.');
     }
   }
 
@@ -539,177 +408,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                           style: TextStyle(fontSize: 12,
                               color: MacroSnapTheme.textTertiary(context))),
                     ]),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      const Expanded(child: Divider()),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text('OR',
-                            style: TextStyle(fontSize: 12,
-                                color: MacroSnapTheme.textTertiary(context))),
-                      ),
-                      const Expanded(child: Divider()),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // UPI payment section
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: isDark ? MacroSnapTheme.cardDark : Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          color: MacroSnapTheme.borderSubtle(context)),
-                    ),
-                    child: Column(children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 44, height: 44,
-                            decoration: BoxDecoration(
-                              color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: const Icon(Icons.payments_rounded,
-                                color: MacroSnapTheme.neonGreen, size: 22),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Pay via UPI',
-                                    style: TextStyle(fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                        color: isDark ? Colors.white
-                                            : MacroSnapTheme.cardDark)),
-                                Text('Send \u20B929 to the ID below',
-                                    style: TextStyle(fontSize: 13,
-                                        color: MacroSnapTheme.textTertiary(context))),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      GestureDetector(
-                        onTap: () {
-                          Clipboard.setData(
-                              const ClipboardData(text: '7569086885@yespop'));
-                          _showError('UPI ID copied!');
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: MacroSnapTheme.neonGreen.withValues(alpha:  0.06),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                                color: MacroSnapTheme.neonGreen.withValues(alpha:  0.2)),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.account_balance_rounded,
-                                  color: MacroSnapTheme.neonGreen, size: 18),
-                              const SizedBox(width: 8),
-                              Text('7569086885@yespop',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                    color: isDark ? Colors.white
-                                        : MacroSnapTheme.cardDark,
-                                    letterSpacing: 0.5,
-                                  )),
-                              const SizedBox(width: 8),
-                              Icon(Icons.copy_rounded,
-                                  color: MacroSnapTheme.neonGreen, size: 18),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text('Tap to copy  |  \u20B929 one-time',
-                          style: TextStyle(fontSize: 12,
-                              color: MacroSnapTheme.textTertiary(context))),
-                      const SizedBox(height: 16),
-                      GradientButton(
-                        label: 'Open UPI App',
-                        icon: Icons.open_in_new_rounded,
-                        onPressed: _openUpiApp,
-                        height: 52,
-                      ),
-                    ]),
-                  ),
-                  const SizedBox(height: 20),
-                  // Transaction reference input
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: isDark ? MacroSnapTheme.cardDark : Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          color: MacroSnapTheme.borderSubtle(context)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.verified_outlined,
-                                color: MacroSnapTheme.neonGreen, size: 20),
-                            const SizedBox(width: 8),
-                            Text('Verify Payment',
-                                style: TextStyle(fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    color: isDark ? Colors.white
-                                        : MacroSnapTheme.cardDark)),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text('After paying, enter the transaction reference (UTR) here',
-                            style: TextStyle(fontSize: 13,
-                                color: MacroSnapTheme.textTertiary(context))),
-                        const SizedBox(height: 14),
-                        AppTextField(
-                          controller: _txnController,
-                          label: 'Transaction Reference',
-                          hint: 'e.g. HDFC123456789',
-                          prefixIcon: Icon(Icons.tag_rounded, size: 20,
-                              color: MacroSnapTheme.textTertiary(context)),
-                        ),
-                        const SizedBox(height: 14),
-                        GradientButton(
-                          label: 'Submit for Verification',
-                          loading: _submitting,
-                          onPressed: _txnController.text.trim().isEmpty
-                              ? null
-                              : _submitPayment,
-                          height: 52,
-                        ),
-                        if (_paymentStatus == 'pending')
-                          Padding(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                  width: 14, height: 14,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 1.5,
-                                      color: MacroSnapTheme.neonGreen),
-                                ),
-                                const SizedBox(width: 8),
-                                Text('Awaiting confirmation...',
-                                    style: TextStyle(fontSize: 13,
-                                        color: MacroSnapTheme.neonGreen,
-                                        fontWeight: FontWeight.w600)),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
                   ),
                   const SizedBox(height: 8),
                 ],

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -81,12 +82,20 @@ class SubscriptionService extends ChangeNotifier {
     _subscribed = true;
     _subscribedAt = _lifetimeDate;
     notifyListeners();
-    // Post-activation side effects (pro reminders) — best-effort.
-    try {
-      await NotificationService().scheduleAllForSubscriber(_lifetimeDate);
-    } catch (_) {}
+    // Post-activation side effects (pro reminders) — fire-and-forget so a
+    // cold start isn't held on the splash screen while the notification
+    // plugin schedules 5+ reminders (the admin otherwise saw a black home
+    // tab for a few seconds on launch).
+    unawaited(_scheduleReminders(_lifetimeDate));
     try {
       MealStore.instance.changeNotifier.value++;
+    } catch (_) {}
+  }
+
+  /// Best-effort pro-reminder scheduling; never throws.
+  Future<void> _scheduleReminders(String subscribedDate) async {
+    try {
+      await NotificationService().scheduleAllForSubscriber(subscribedDate);
     } catch (_) {}
   }
 
@@ -140,11 +149,9 @@ class SubscriptionService extends ChangeNotifier {
     notifyListeners();
 
     // ── Post-activation side effects (best-effort, never throw) ──
-    // Schedule daily pro reminder notifications.
-    try {
-      await NotificationService().scheduleAllForSubscriber(
-          _subscribedAt ?? now);
-    } catch (_) {}
+    // Schedule daily pro reminder notifications — fire-and-forget so the
+    // payment confirmation never waits on the notification plugin.
+    unawaited(_scheduleReminders(_subscribedAt ?? now));
     // Bump the meal-store notifier so home/scan screens refresh scan counts.
     try {
       MealStore.instance.changeNotifier.value++;
