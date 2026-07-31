@@ -25,6 +25,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _name = 'User';
   String _email = '';
   bool _subscribed = false;
+  bool _isAdmin = false;
   String? _subscribedDate;
   String _lastSync = '';
   bool _syncing = false;
@@ -52,6 +53,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _subscribedDate = SubscriptionService.instance.subscribedAt;
       _lastSync = prefs.getString('last_sync') ?? '';
     });
+    _isAdmin = await SubscriptionService.instance.isAdmin();
+    if (mounted) setState(() {});
   }
 
   bool get _isGuest => _phone.isEmpty || _phone.startsWith('guest_');
@@ -283,7 +286,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     color: Colors.white.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Text(_subscribed ? 'Pro Member' : 'Free User',
+                  child: Text(_isAdmin ? 'Lifetime Pro' : (_subscribed ? 'Pro Member' : 'Free User'),
                       style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w700)),
                 ),
               ]),
@@ -293,7 +296,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             GlassCard(
               padding: const EdgeInsets.all(16),
               child: Column(children: [
-                AnimatedEntrance(delayMs: 50, child: _settingTile(Icons.subscriptions_rounded, _subscribed ? 'Manage Subscription' : 'Upgrade to Pro', _subscribed && _subscribedDate != null ? 'Subscribed since ${_subscribedDate!.substring(0, 10)}' : 'Unlock AI meal plans & more', () {
+                AnimatedEntrance(delayMs: 50, child: _settingTile(Icons.subscriptions_rounded, _isAdmin ? 'My Subscription' : (_subscribed ? 'Manage Subscription' : 'Upgrade to Pro'), _isAdmin ? 'Lifetime Pro · free forever' : (_subscribed && _subscribedDate != null ? 'Subscribed since ${_subscribedDate!.substring(0, 10)}' : 'Unlock AI meal plans & more'), () {
                   Navigator.push(context, habitFlowRoute(const SubscriptionScreen()));
                 }, isDark)),
                 const Divider(height: 24),

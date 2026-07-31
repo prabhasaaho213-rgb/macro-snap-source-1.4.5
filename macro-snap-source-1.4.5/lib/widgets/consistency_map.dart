@@ -3,208 +3,204 @@ import '../core/theme.dart';
 import '../models/habit.dart' show Habit, dateKey;
 
 /// A GitHub-style contribution heatmap showing habit completion
-/// consistency over the last 12 weeks.
-class ConsistencyMap extends StatelessWidget {
+/// consistency as a monthly calendar.
+///
+/// Shows one month at a time with ◀ ▶ arrows to navigate; each day cell is
+/// tinted by how many habits were completed that day (intensity scales with
+/// the highest single-day count in the shown month).
+class ConsistencyMap extends StatefulWidget {
   final List<Habit> habits;
-  final int weeksToShow;
   final void Function(DateTime date, int count, List<String> habitNames)? onCellTap;
 
   const ConsistencyMap({
     super.key,
     required this.habits,
-    this.weeksToShow = 12,
     this.onCellTap,
   });
+
+  @override
+  State<ConsistencyMap> createState() => _ConsistencyMapState();
+}
+
+class _ConsistencyMapState extends State<ConsistencyMap> {
+  /// The month currently shown (day component is always 1).
+  late DateTime _shownMonth;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _shownMonth = DateTime(now.year, now.month);
+  }
+
+  void _shiftMonth(int delta) {
+    setState(() {
+      _shownMonth = DateTime(_shownMonth.year, _shownMonth.month + delta);
+    });
+  }
+
+  bool get _isCurrentMonth {
+    final now = DateTime.now();
+    return _shownMonth.year == now.year && _shownMonth.month == now.month;
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final today = DateTime.now();
-    final totalDays = weeksToShow * 7;
+    final shownYear = _shownMonth.year;
+    final shownMonth = _shownMonth.month;
+    final daysInMonth = DateTime(shownYear, shownMonth + 1, 0).day;
+    final firstWeekday = DateTime(shownYear, shownMonth, 1).weekday;
 
-    // Build a map of dateKey → completion count across all habits
+    // Leading empty cells so day 1 lands on the correct weekday column.
+    final leading = (firstWeekday - 1) % 7;
+    final trailing = (7 - ((leading + daysInMonth) % 7)) % 7;
+    final totalCells = leading + daysInMonth + trailing;
+
+    // Build a map of dateKey → completion count across all habits.
     final Map<String, int> dailyCount = {};
     int maxCount = 0;
-    for (final h in habits) {
+    for (final h in widget.habits) {
       for (final key in h.completedDates) {
         dailyCount[key] = (dailyCount[key] ?? 0) + 1;
         if (dailyCount[key]! > maxCount) maxCount = dailyCount[key]!;
       }
     }
-
-    // Ensure maxCount is at least 1 to avoid division by zero
     if (maxCount < 1) maxCount = 1;
 
-    // Generate the grid cells (oldest to newest, left to right)
-    // Each column = a week (Mon-Sun), each row = a day of week
-    final startDate = DateTime(today.year, today.month, today.day)
-        .subtract(Duration(days: totalDays - 1));
-
-    // Build month labels: which columns have the first day of a month
-    final monthLabels = <_MonthLabel>[];
-    for (var i = 0; i < weeksToShow; i++) {
-      final weekStart = startDate.add(Duration(days: i * 7));
-      for (var d = 0; d < 7; d++) {
-        final date = weekStart.add(Duration(days: d));
-        if (date.day == 1 && !date.isAfter(today)) {
-          monthLabels.add(_MonthLabel(weekIndex: i, label: _monthAbbr(date.month)));
-          break;
-        }
-      }
-    }
-    // Always label the first week's month
-    if (monthLabels.isEmpty || monthLabels.first.weekIndex > 0) {
-      monthLabels.insert(0, _MonthLabel(weekIndex: 0, label: _monthAbbr(startDate.month)));
-    }
-
-    // Cell size calculation
-    const cellSize = 14.0;
+    const cellSize = 15.0;
     const cellGap = 3.0;
-    const colWidth = cellSize + cellGap;
-    const rowHeight = cellSize + cellGap;
-    const leftLabelWidth = 32.0;
-    const topLabelHeight = 20.0;
+
+    Color cellColor(DateTime date) {
+      final key = dateKey(date);
+      final count = dailyCount[key] ?? 0;
+      if (count == 0) {
+        return isDark ? const Color(0xFF26262E) : const Color(0xFFEDE9FE);
+      }
+      final intensity = count / maxCount;
+      return Color.lerp(
+        MacroSnapTheme.neonGreen.withValues(alpha: 0.3),
+        MacroSnapTheme.neonGreen,
+        intensity,
+      )!;
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ─── Month labels ──────────────────────────────────
-        SizedBox(
-          height: topLabelHeight,
-          child: Stack(
-            children: [
-              // Left spacer for weekday labels
-              const SizedBox(width: leftLabelWidth),
-              // Month labels positioned over the grid
-              ...monthLabels.map((ml) {
-                return Positioned(
-                  left: leftLabelWidth + ml.weekIndex * colWidth,
-                  top: 0,
-                  child: Text(
-                    ml.label,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: MacroSnapTheme.textTertiary(context),
-                    ),
-                  ),
-                );
-              }),
-            ],
-          ),
+        // ─── Month header with navigation ───────────────────
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _navButton(
+              icon: Icons.chevron_left_rounded,
+              tooltip: 'Previous month',
+              onTap: () => _shiftMonth(-1),
+            ),
+            Text(
+              '${_monthName(shownMonth)} $shownYear',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            _navButton(
+              icon: Icons.chevron_right_rounded,
+              tooltip: 'Next month',
+              onTap: _isCurrentMonth ? null : () => _shiftMonth(1),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 12),
 
-        // ─── Grid rows ─────────────────────────────────────
+        // ─── Weekday labels ──────────────────────────────────
+        Row(
+          children: List.generate(7, (i) {
+            return SizedBox(
+              width: cellSize + cellGap,
+              child: Text(
+                _weekdayAbbr(i),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  color: MacroSnapTheme.textTertiary(context),
+                ),
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: 6),
+
+        // ─── Day grid (7 columns, rows grow to fill) ────────
         SizedBox(
-          height: 7 * rowHeight,
-          child: Row(
+          width: double.infinity,
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Weekday labels (left side)
-              SizedBox(
-                width: leftLabelWidth,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: List.generate(7, (row) {
-                    // Only show Mon, Wed, Fri labels
-                    final showLabel = row == 0 || row == 2 || row == 4;
-                    return SizedBox(
-                      height: rowHeight,
-                      child: showLabel
-                          ? Padding(
-                              padding: EdgeInsets.only(top: row == 0 ? 0 : cellGap),
-                              child: Text(
-                                _weekdayAbbr(row + 1),
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: MacroSnapTheme.textTertiary(context),
-                                ),
-                              ),
-                            )
-                          : null,
+            children: List.generate(totalCells ~/ 7, (rowIndex) {
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: rowIndex == (totalCells ~/ 7) - 1 ? 0 : cellGap,
+                ),
+                child: Row(
+                  children: List.generate(7, (colIndex) {
+                    final cell = rowIndex * 7 + colIndex;
+                    final day = cell - leading + 1;
+                    final isThisMonth = day >= 1 && day <= daysInMonth;
+                    final date = DateTime(shownYear, shownMonth, day);
+                    final isToday = isThisMonth &&
+                        date.year == today.year &&
+                        date.month == today.month &&
+                        date.day == today.day;
+                    final isFuture = date.isAfter(today);
+
+                    if (!isThisMonth) {
+                      return const SizedBox(
+                        width: cellSize + cellGap,
+                        height: cellSize,
+                      );
+                    }
+
+                    final count = dailyCount[dateKey(date)] ?? 0;
+                    final names = widget.habits
+                        .where((h) => h.isCompleted(date))
+                        .map((h) => h.emoji + h.name)
+                        .toList();
+
+                    return Padding(
+                      padding: EdgeInsets.only(right: colIndex == 6 ? 0 : cellGap),
+                      child: Tooltip(
+                        message:
+                            '${date.day}/${date.month}/${date.year}: $count/${widget.habits.length} habits',
+                        child: GestureDetector(
+                          onTap: isFuture
+                              ? null
+                              : () => widget.onCellTap?.call(date, count, names),
+                          child: Container(
+                            width: cellSize,
+                            height: cellSize,
+                            decoration: BoxDecoration(
+                              color: cellColor(date),
+                              borderRadius: BorderRadius.circular(4),
+                              border: isToday
+                                  ? Border.all(
+                                      color: MacroSnapTheme.neonPink,
+                                      width: 2,
+                                    )
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      ),
                     );
                   }),
                 ),
-              ),
-              // Grid columns (weeks)
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    height: 7 * rowHeight,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: List.generate(weeksToShow, (weekIndex) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: List.generate(7, (dayIndex) {
-                            final date = startDate
-                                .add(Duration(days: weekIndex * 7 + dayIndex));
-                            final key = dateKey(date);
-                            final count = dailyCount[key] ?? 0;
-                            final intensity =
-                                maxCount > 0 ? count / maxCount : 0.0;
-
-                            Color cellColor;
-                            if (date.isAfter(today)) {
-                              cellColor = Colors.transparent;
-                            } else if (count == 0) {
-                              cellColor = isDark
-                                  ? const Color(0xFF26262E)
-                                  : const Color(0xFFEDE9FE);
-                            } else {
-                              cellColor = Color.lerp(
-                                MacroSnapTheme.neonGreen.withValues(alpha: 0.3),
-                                MacroSnapTheme.neonGreen,
-                                intensity,
-                              )!;
-                            }
-
-                            return Padding(
-                              padding: EdgeInsets.only(
-                                top: dayIndex == 0 ? 0 : cellGap,
-                                right: cellGap,
-                              ),
-                              child: Tooltip(
-                                message:
-                                    '${_formatDate(date)}: $count/${habits.length} habits',
-                                child: GestureDetector(
-                                  onTap: date.isAfter(today)
-                                      ? null
-                                      : () {
-                                          final names = habits
-                                              .where((h) =>
-                                                  h.isCompleted(date))
-                                              .map((h) => h.emoji + h.name)
-                                              .toList();
-                                          onCellTap?.call(
-                                              date, count, names);
-                                        },
-                                  child: Container(
-                                    width: cellSize,
-                                    height: cellSize,
-                                    decoration: BoxDecoration(
-                                      color: cellColor,
-                                      borderRadius:
-                                          BorderRadius.circular(3),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          }),
-                        );
-                      }),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+              );
+            }),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
 
         // ─── Legend ─────────────────────────────────────────
         Row(
@@ -219,17 +215,14 @@ class ConsistencyMap extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             ...List.generate(5, (i) {
-              final intensity = maxCount > 0 ? (i * maxCount ~/ 4) / maxCount : 0.0;
-              Color c;
-              if (i == 0) {
-                c = isDark ? const Color(0xFF26262E) : const Color(0xFFEDE9FE);
-              } else {
-                c = Color.lerp(
-                  MacroSnapTheme.neonGreen.withValues(alpha: 0.3),
-                  MacroSnapTheme.neonGreen,
-                  intensity,
-                )!;
-              }
+              final intensity = (i * maxCount ~/ 4) / maxCount;
+              final Color c = i == 0
+                  ? (isDark ? const Color(0xFF26262E) : const Color(0xFFEDE9FE))
+                  : Color.lerp(
+                      MacroSnapTheme.neonGreen.withValues(alpha: 0.3),
+                      MacroSnapTheme.neonGreen,
+                      intensity,
+                    )!;
               return Padding(
                 padding: const EdgeInsets.only(right: 3),
                 child: Container(
@@ -256,26 +249,37 @@ class ConsistencyMap extends StatelessWidget {
     );
   }
 
-  String _monthAbbr(int month) {
+  Widget _navButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback? onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.all(2),
+        child: Icon(
+          icon,
+          size: 20,
+          color: onTap == null
+              ? MacroSnapTheme.textQuaternary(context)
+              : MacroSnapTheme.neonGreen,
+        ),
+      ),
+    );
+  }
+
+  String _monthName(int month) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
     ];
     return months[(month - 1).clamp(0, 11)];
   }
 
-  String _weekdayAbbr(int weekday) {
-    const labels = ['Mon', '', 'Wed', '', 'Fri', '', ''];
-    return labels[(weekday - 1).clamp(0, 6)];
+  String _weekdayAbbr(int index) {
+    const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    return labels[index.clamp(0, 6)];
   }
-
-  String _formatDate(DateTime d) {
-    return '${d.day}/${d.month}/${d.year}';
-  }
-}
-
-class _MonthLabel {
-  final int weekIndex;
-  final String label;
-  const _MonthLabel({required this.weekIndex, required this.label});
 }

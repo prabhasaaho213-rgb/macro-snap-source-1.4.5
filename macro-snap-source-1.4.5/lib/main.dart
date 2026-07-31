@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -22,6 +24,10 @@ void main() async {
   await GeminiService.init();
   RazorpayService.init();
   await SubscriptionService.instance.load();
+  // Verify the paid subscription against the backend Postgres database — the
+  // source of truth — so paying users get Pro restored on reinstall/device
+  // change even before opening the subscription screen.
+  unawaited(SubscriptionService.instance.verifyServerSubscription());
   await NotificationService().init();
   // Schedule daily reminders for ALL users (free + pro)
   try {

@@ -26,6 +26,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     with SingleTickerProviderStateMixin {
   String? _phone;
   bool _subscribed = false;
+  bool _isAdmin = false;
   bool _submitting = false;
   bool _checking = true;
   String? _subscribedDate;
@@ -57,11 +58,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     final phone = prefs.getString('phone');
     final subscribed = SubscriptionService.instance.isSubscribed;
     final date = SubscriptionService.instance.subscribedAt;
+    final isAdmin = await SubscriptionService.instance.isAdmin();
     if (mounted) {
       setState(() {
         _phone = phone;
         _subscribed = subscribed;
         _subscribedDate = date;
+        _isAdmin = isAdmin;
       });
     }
     if (phone != null && !subscribed) await _checkPaymentStatus(phone);
@@ -379,7 +382,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               ),
               const SizedBox(height: 24),
               Text(
-                _subscribed ? "You're a Pro!" : 'Never manually calculate macros again',
+                _subscribed ? (_isAdmin ? "You're a Lifetime Pro!" : "You're a Pro!") : 'Never manually calculate macros again',
                 style: TextStyle(
                   fontSize: 26, fontWeight: FontWeight.w800,
                   color: isDark ? Colors.white : const Color(0xFF1A1A1A),
@@ -389,7 +392,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               const SizedBox(height: 8),
               Text(
                 _subscribed
-                    ? 'Enjoy all features. ${_daysRemaining()}'
+                    ? (_isAdmin ? 'All Pro features, free forever' : 'Enjoy all features. ${_daysRemaining()}')
                     : 'Snap, log, track your week automatically',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -441,7 +444,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       const SizedBox(height: 4),
                       Text(
                         _subscribed && _subscribedDate != null
-                            ? 'Subscribed ${_subscribedDate!.substring(0, 10)}'
+                            ? (_isAdmin ? 'Lifetime \u2022 Free forever' : 'Subscribed ${_subscribedDate!.substring(0, 10)}')
                             : 'One-time payment \u2022 Unlimited access',
                         style: TextStyle(fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -721,25 +724,27 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18)),
                     ),
-                    child: Text('Subscribed \u2713',
+                    child: Text(_isAdmin ? 'Lifetime Pro \u2713' : 'Subscribed \u2713',
                         style: TextStyle(
                             color: MacroSnapTheme.textSecondary(context),
                             fontSize: 16, fontWeight: FontWeight.w700)),
                   ),
                 ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: () async {
-                    await SubscriptionService.instance.cancel();
-                    await NotificationService().cancelAll();
-                    setState(() {
-                      _subscribed = false;
-                      _subscribedDate = null;
-                    });
-                  },
-                  child: const Text('Cancel Subscription',
-                      style: TextStyle(color: MacroSnapTheme.neonPink)),
-                ),
+                if (!_isAdmin) ...[
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () async {
+                      await SubscriptionService.instance.cancel();
+                      await NotificationService().cancelAll();
+                      setState(() {
+                        _subscribed = false;
+                        _subscribedDate = null;
+                      });
+                    },
+                    child: const Text('Cancel Subscription',
+                        style: TextStyle(color: MacroSnapTheme.neonPink)),
+                  ),
+                ],
               ],
               const SizedBox(height: 16),
               Text('Cancel anytime. No questions asked.',
