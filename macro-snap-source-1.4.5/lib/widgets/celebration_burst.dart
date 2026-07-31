@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../core/theme.dart';
@@ -271,6 +272,7 @@ void showCelebration(
   String? streakText,
   Duration duration = const Duration(milliseconds: 2600),
 }) {
+  if (!context.mounted) return;
   _showBurstDialog(context, title, subtitle, streakText, duration);
 }
 
@@ -285,43 +287,18 @@ void showMiniCelebration(
   Color accent = MacroSnapTheme.neonGreen,
   Duration duration = const Duration(milliseconds: 1400),
 }) {
-  showGeneralDialog(
-    context: context,
-    barrierDismissible: true,
+  if (!context.mounted) return;
+  _showCelebrationDialog(
+    context,
     barrierLabel: 'Done',
-    barrierColor: Colors.black.withValues(alpha: 0.0),
     transitionDuration: const Duration(milliseconds: 200),
-    pageBuilder: (ctx, _, _) {
-      return Stack(
-        children: [
-          // Dismiss on tap anywhere
-          Positioned.fill(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => Navigator.of(ctx).pop(),
-            ),
-          ),
-          Positioned.fill(
-            child: IgnorePointer(
-              child: Center(
-                child: _MiniBurstContent(
-                  title: title,
-                  subtitle: subtitle,
-                  accent: accent,
-                  autoHide: duration,
-                  onDone: () {
-                    if (ctx.mounted) Navigator.of(ctx).pop();
-                  },
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-    },
-    transitionBuilder: (_, animation, _, child) {
-      return FadeTransition(opacity: animation, child: child);
-    },
+    contentBuilder: (dismiss) => _MiniBurstContent(
+      title: title,
+      subtitle: subtitle,
+      accent: accent,
+      autoHide: duration,
+      onDone: dismiss,
+    ),
   );
 }
 
@@ -350,6 +327,7 @@ class _MiniBurstContentState extends State<_MiniBurstContent>
   late AnimationController _controller;
   late Animation<double> _badgeScale;
   late Animation<double> _textFade;
+  Timer? _autoHideTimer;
 
   @override
   void initState() {
@@ -372,13 +350,16 @@ class _MiniBurstContentState extends State<_MiniBurstContent>
 
     _controller.forward();
     HapticFeedback.lightImpact();
-    Future.delayed(widget.autoHide, () {
+    // Cancellable timer — never fires after the route has been dismissed,
+    // eliminating the delayed-callback double-pop window entirely.
+    _autoHideTimer = Timer(widget.autoHide, () {
       if (mounted) widget.onDone();
     });
   }
 
   @override
   void dispose() {
+    _autoHideTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -485,35 +466,61 @@ void _showBurstDialog(
   String? streakText,
   Duration duration,
 ) {
+  _showCelebrationDialog(
+    context,
+    barrierLabel: 'Day complete',
+    transitionDuration: const Duration(milliseconds: 250),
+    contentBuilder: (dismiss) => _BurstContent(
+      title: title,
+      subtitle: subtitle,
+      streakText: streakText,
+      autoHide: duration,
+      onDone: dismiss,
+    ),
+  );
+}
+
+/// Shared dialog scaffold for both celebration styles.
+///
+/// Every dismissal path — the full-screen tap handler and the content's
+/// auto-hide [onDone] — routes through ONE idempotent [dismiss] closure.
+/// Without this, a tap landing right at auto-hide time would pop the route
+/// twice: the second pop hits the UNDERLYING screen because the route stays
+/// mounted (but leaves history) during its reverse transition, so
+/// `ctx.mounted` alone is NOT a sufficient guard. The barrier is
+/// non-dismissible so the framework can't add a third pop path.
+void _showCelebrationDialog(
+  BuildContext context, {
+  required String barrierLabel,
+  required Duration transitionDuration,
+  required Widget Function(VoidCallback onDone) contentBuilder,
+}) {
   showGeneralDialog(
     context: context,
-    barrierDismissible: true,
-    barrierLabel: 'Day complete',
+    barrierDismissible: false,
+    barrierLabel: barrierLabel,
     barrierColor: Colors.black.withValues(alpha: 0.0),
-    transitionDuration: const Duration(milliseconds: 250),
+    transitionDuration: transitionDuration,
     pageBuilder: (ctx, _, _) {
+      var dismissed = false;
+      void dismiss() {
+        if (dismissed) return;
+        dismissed = true;
+        if (ctx.mounted) Navigator.of(ctx).pop();
+      }
+
       return Stack(
         children: [
           // Dismiss on tap anywhere
           Positioned.fill(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => Navigator.of(ctx).pop(),
+              onTap: dismiss,
             ),
           ),
           Positioned.fill(
             child: IgnorePointer(
-              child: Center(
-                child: _BurstContent(
-                  title: title,
-                  subtitle: subtitle,
-                  streakText: streakText,
-                  autoHide: duration,
-                  onDone: () {
-                    if (ctx.mounted) Navigator.of(ctx).pop();
-                  },
-                ),
-              ),
+              child: Center(child: contentBuilder(dismiss)),
             ),
           ),
         ],
@@ -551,6 +558,7 @@ class _BurstContentState extends State<_BurstContent>
   late Animation<double> _badgeScale;
   late Animation<double> _textFade;
   late Animation<double> _ringOpacity;
+  Timer? _autoHideTimer;
 
   @override
   void initState() {
@@ -575,13 +583,15 @@ class _BurstContentState extends State<_BurstContent>
 
     _controller.forward();
     HapticFeedback.heavyImpact();
-    Future.delayed(widget.autoHide, () {
+    // Cancellable timer — see _MiniBurstContentState for the rationale.
+    _autoHideTimer = Timer(widget.autoHide, () {
       if (mounted) widget.onDone();
     });
   }
 
   @override
   void dispose() {
+    _autoHideTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }

@@ -67,21 +67,26 @@ class _StreakFlameState extends State<StreakFlame>
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        AnimatedBuilder(
-          animation: _flicker,
-          builder: (context, _) {
-            final t = _flicker.value * 2 * math.pi;
-            return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 350),
-              transitionBuilder: (child, anim) => ScaleTransition(
-                scale: CurvedAnimation(parent: anim, curve: Curves.easeOutBack),
-                child: FadeTransition(opacity: anim, child: child),
-              ),
-              child: Row(
-                key: ValueKey<int>(count),
-                mainAxisSize: MainAxisSize.min,
-                children: List.generate(count, (i) {
+        // The AnimatedSwitcher sits OUTSIDE the per-frame flicker builder: it
+        // should only rebuild/transition when the tier (count) changes. Each
+        // flame below owns its own tiny AnimatedBuilder so the 900ms flicker
+        // tick only rebuilds the flame's Transform.scale, not the switcher's
+        // transition machinery.
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 350),
+          transitionBuilder: (child, anim) => ScaleTransition(
+            scale: CurvedAnimation(parent: anim, curve: Curves.easeOutBack),
+            child: FadeTransition(opacity: anim, child: child),
+          ),
+          child: Row(
+            key: ValueKey<int>(count),
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(count, (i) {
+              return AnimatedBuilder(
+                animation: _flicker,
+                builder: (context, _) {
                   // Phase-shifted sine so flames flicker out of sync.
+                  final t = _flicker.value * 2 * math.pi;
                   final flicker = 0.5 + 0.5 * math.sin(t + i * 1.1);
                   final scale = 1 + 0.09 * flicker;
                   return Transform.scale(
@@ -89,10 +94,10 @@ class _StreakFlameState extends State<StreakFlame>
                     child: Text('🔥',
                         style: TextStyle(fontSize: widget.fontSize)),
                   );
-                }),
-              ),
-            );
-          },
+                },
+              );
+            }),
+          ),
         ),
         if (level > 0) ...[
           const SizedBox(height: 3),

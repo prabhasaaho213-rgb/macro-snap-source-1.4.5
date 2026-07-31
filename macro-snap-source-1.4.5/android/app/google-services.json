@@ -30,15 +30,7 @@
           }
         },
         {
-          "client_id": "562037381-t3osrdt63s91eho5nrt0e1ks33dnpgad.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.macrosnap.macro_snap",
-            "certificate_hash": "63ee17a796b93cf02c4e1ec6b3fcef0669f213b7"
-          }
-        },
-        {
-          "client_id": "562037381-dapit1ovl1pi51m046b7q0d4kro2pg6e.apps.googleusercontent.com",
+          "client_id": "562037381-pepkbog7f0fmuun6511t6gun8ucjcjsr.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.macrosnap.macro_snap",
@@ -50,7 +42,7 @@
           "client_type": 1,
           "android_info": {
             "package_name": "com.macrosnap.macro_snap",
-            "certificate_hash": "b662159fbd0e21e4db735bf4437a81ea123d2036"
+            "certificate_hash": "63ee17a796b93cf02c4e1ec6b3fcef0669f213b7"
           }
         },
         {
