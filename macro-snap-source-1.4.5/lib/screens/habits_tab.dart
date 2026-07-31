@@ -359,7 +359,7 @@ class _HabitsTabState extends State<HabitsTab> {
                   Text(
                     'TODAY',
                     style: TextStyle(
-                      color: Colors.white54,
+                      color: Colors.white70,
                       fontSize: 12,
                       letterSpacing: 1.4,
                       fontWeight: FontWeight.w800,
@@ -597,12 +597,12 @@ class _HabitsTabState extends State<HabitsTab> {
             : MainAxisAlignment.start,
         children: [
           if (!rightSwipe) ...[
-            Icon(icon, color: Colors.white, size: 28),
+            Icon(icon, color: Colors.black, size: 28),
             const SizedBox(width: 10),
             Text(
               label,
               style: const TextStyle(
-                color: Colors.white,
+                color: Colors.black,
                 fontWeight: FontWeight.w900,
                 fontSize: 17,
               ),
@@ -611,13 +611,13 @@ class _HabitsTabState extends State<HabitsTab> {
             Text(
               label,
               style: const TextStyle(
-                color: Colors.white,
+                color: Colors.black,
                 fontWeight: FontWeight.w900,
                 fontSize: 17,
               ),
             ),
             const SizedBox(width: 10),
-            Icon(icon, color: Colors.white, size: 28),
+            Icon(icon, color: Colors.black, size: 28),
           ],
         ],
       ),
@@ -1349,14 +1349,7 @@ class _HabitsTabState extends State<HabitsTab> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A24) : const Color(0xFFF8F6FF),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDark ? const Color(0xFF303045) : const Color(0xFFD4C9FF),
-          width: 1.5,
-        ),
-      ),
+      decoration: MacroSnapTheme.habitlyCard(context),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

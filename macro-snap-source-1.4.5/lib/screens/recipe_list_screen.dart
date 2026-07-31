@@ -92,8 +92,8 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
           if (result == true) _onChanged();
         },
         backgroundColor: MacroSnapTheme.neonGreen,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text('New Recipe', style: TextStyle(color: Colors.white)),
+        icon: const Icon(Icons.add_rounded, color: Colors.black),
+        label: const Text('New Recipe', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
       ),
       body: recipes.isEmpty
           ? Center(

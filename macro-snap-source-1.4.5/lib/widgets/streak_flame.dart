@@ -129,11 +129,11 @@ class _StreakFlameState extends State<StreakFlame>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.military_tech_rounded,
-                      color: Colors.white, size: 12),
+                      color: Colors.black, size: 12),
                   const SizedBox(width: 3),
                   Text('Lv $level',
                       style: const TextStyle(
-                          color: Colors.white,
+                          color: Colors.black,
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 0.3)),

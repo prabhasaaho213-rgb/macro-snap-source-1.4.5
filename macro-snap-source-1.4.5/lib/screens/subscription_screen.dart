@@ -375,7 +375,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   ],
                 ),
                 child: const Icon(Icons.auto_awesome_rounded,
-                    color: Colors.white, size: 36),
+                    color: Colors.black, size: 36),
               ),
               const SizedBox(height: 24),
               Text(

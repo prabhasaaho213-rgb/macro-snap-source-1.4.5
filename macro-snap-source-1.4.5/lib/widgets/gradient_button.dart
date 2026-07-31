@@ -49,15 +49,15 @@ class GradientButton extends StatelessWidget {
             onTap: isDisabled ? null : onPressed,
             child: Center(
               child: loading
-                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.black))
                   : Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (icon != null) ...[
-                          Icon(icon, color: isDisabled ? const Color(0xFF64748B) : Colors.white, size: 20),
+                          Icon(icon, color: isDisabled ? const Color(0xFF64748B) : Colors.black, size: 20),
                           const SizedBox(width: 8),
                         ],
-                        Text(label, style: TextStyle(color: isDisabled ? const Color(0xFF64748B) : Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
+                        Text(label, style: TextStyle(color: isDisabled ? const Color(0xFF64748B) : Colors.black, fontSize: 16, fontWeight: FontWeight.w700)),
                       ],
                     ),
             ),

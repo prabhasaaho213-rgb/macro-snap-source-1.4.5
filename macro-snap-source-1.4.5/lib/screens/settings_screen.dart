@@ -1,11 +1,11 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/theme.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/animations.dart';
-import '../services/gemini_service.dart';
 import '../services/meal_store.dart';
 import '../services/meal_sync_service.dart';
 import '../services/habit_store.dart';
@@ -26,7 +26,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _email = '';
   bool _subscribed = false;
   String? _subscribedDate;
-  String _serverUrl = GeminiService.serverUrl;
   String _lastSync = '';
   bool _syncing = false;
 
@@ -51,43 +50,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _phone = prefs.getString('phone') ?? '';
       _subscribed = SubscriptionService.instance.isSubscribed;
       _subscribedDate = SubscriptionService.instance.subscribedAt;
-      _serverUrl = GeminiService.serverUrl;
       _lastSync = prefs.getString('last_sync') ?? '';
     });
-  }
-
-  Future<void> _editServerUrl() async {
-    final ctrl = TextEditingController(text: _serverUrl);
-    final newUrl = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? MacroSnapTheme.cardDark : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Server URL'),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'https://your-backend.example.com',
-            border: OutlineInputBorder(),
-          ),
-          keyboardType: TextInputType.url,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-    ctrl.dispose();
-    if (newUrl != null && newUrl.isNotEmpty && newUrl != _serverUrl) {
-      await GeminiService.setServerUrl(newUrl);
-      setState(() => _serverUrl = GeminiService.serverUrl);
-    }
   }
 
   bool get _isGuest => _phone.isEmpty || _phone.startsWith('guest_');
@@ -253,6 +217,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: Text('Settings', style: TextStyle(fontWeight: FontWeight.w800, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          // Tap = quick toggle light/dark · Long-press = full System picker
+          Tooltip(
+            message: 'Tap to toggle · Long-press for more',
+            child: InkWell(
+              onTap: () => _toggleTheme(isDark),
+              onLongPress: () => _showThemeDialog(isDark),
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Icon(
+                  isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                  color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                  size: 24,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -270,9 +254,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Row(children: [
                   Container(
                     width: 56, height: 56,
-                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(16)),
+                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.35), borderRadius: BorderRadius.circular(16)),
                     child: Center(child: Text(_name.isNotEmpty ? _name[0].toUpperCase() : 'U',
-                        style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w700))),
+                        style: const TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.w700))),
                   ),
                   const SizedBox(width: 14),
                   Expanded(child: GestureDetector(
@@ -281,14 +265,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Row(
                         children: [
                           Flexible(
-                            child: Text(_name, overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
+                            child: Text(_name.isNotEmpty ? _name : 'User', overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w800)),
                           ),
                           const SizedBox(width: 6),
-                          const Icon(Icons.edit_rounded, color: Colors.white, size: 16),
+                          const Icon(Icons.edit_rounded, color: Colors.black, size: 16),
                         ],
                       ),
-                      if (_email.isNotEmpty) Text(_email, style: const TextStyle(color: Colors.white, fontSize: 13)),
+                      if (_email.isNotEmpty) Text(_email, style: const TextStyle(color: Colors.black, fontSize: 13)),
                     ]),
                   )),
                 ]),
@@ -296,11 +280,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: Colors.white.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(_subscribed ? 'Pro Member' : 'Free User',
-                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                      style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w700)),
                 ),
               ]),
             ),
@@ -313,11 +297,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Navigator.push(context, habitFlowRoute(const SubscriptionScreen()));
                 }, isDark)),
                 const Divider(height: 24),
-                AnimatedEntrance(delayMs: 100, child: _settingTile(Icons.dark_mode_rounded, 'Theme', 'Switch between Light, Dark, or System', () => _showThemeDialog(isDark), isDark)),
-                const Divider(height: 24),
-                AnimatedEntrance(delayMs: 150, child: _settingTile(Icons.dns_outlined, 'Server URL', _serverUrl.isNotEmpty ? _serverUrl : 'Not configured', _editServerUrl, isDark)),
-                const Divider(height: 24),
-                AnimatedEntrance(delayMs: 200, child: _settingTile(Icons.cloud_upload_rounded, 'Cloud Backup', _syncing ? 'Syncing...' : (_lastSync.isNotEmpty ? 'Last sync: $_lastSync' : 'Never backed up'), () => _showBackupDialog(isDark), isDark)),
+                AnimatedEntrance(delayMs: 100, child: _settingTile(Icons.cloud_upload_rounded, 'Cloud Backup', _syncing ? 'Syncing...' : (_lastSync.isNotEmpty ? 'Last sync: $_lastSync' : 'Never backed up'), () => _showBackupDialog(isDark), isDark)),
                 const Divider(height: 24),
                 AnimatedEntrance(delayMs: 220, child: _settingTile(Icons.info_outline_rounded, 'App Version', _packageVersion, null, isDark)),
                 const Divider(height: 24),
@@ -352,6 +332,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  /// Quick toggle: flips between light and dark based on the CURRENT
+  /// effective brightness (so System mode resolves to whichever it's showing).
+  /// Full Light/Dark/System picker lives in [_showThemeDialog] (long-press).
+  Future<void> _toggleTheme(bool isDark) async {
+    final current = themeModeNotifier.value;
+    final effectiveDark = current == ThemeMode.dark ||
+        (current == ThemeMode.system && isDark);
+    final next = effectiveDark ? ThemeMode.light : ThemeMode.dark;
+    if (next == current) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('theme_mode', next.name);
+    themeModeNotifier.value = next;
+    HapticFeedback.selectionClick();
   }
 
   Future<void> _showThemeDialog(bool isDark) async {

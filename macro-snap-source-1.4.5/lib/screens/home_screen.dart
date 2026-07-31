@@ -272,7 +272,7 @@ class _HomeScreenState extends State<HomeScreen>
                   children: [
                     Text('TODAY',
                         style: TextStyle(
-                          color: Colors.white54, fontSize: 12,
+                          color: Colors.white70, fontSize: 12,
                           letterSpacing: 1.4, fontWeight: FontWeight.w800,
                         )),
                     const SizedBox(height: 5),

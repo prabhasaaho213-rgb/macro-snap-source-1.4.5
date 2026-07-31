@@ -312,7 +312,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
                 gradient: const LinearGradient(colors: [MacroSnapTheme.neonGreen, MacroSnapTheme.neonGreen]),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Text('AI', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
+              child: const Text('AI', style: TextStyle(color: Colors.black, fontSize: 11, fontWeight: FontWeight.w800)),
             ),
             const SizedBox(width: 8),
             Text('Personalized Meal Plan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
@@ -455,7 +455,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
           _mealItem(Icons.nightlight_round, 'Evening Snack (~${(p.targetCalories * 0.1).round()} kcal)', _snackSuggestion(p), MacroSnapTheme.neonGreen, isDark),
           _mealItem(Icons.nights_stay_rounded, 'Dinner (~${(p.targetCalories * 0.25).round()} kcal)', _dinnerSuggestion(p), MacroSnapTheme.macroProtein, isDark),
           const SizedBox(height: 16),
-          Text('Portion sizes are approximate. Adjust based on your appetite and progress.', style: TextStyle(fontSize: 12, color: MacroSnapTheme.textQuaternary(context))),
+          Text('Portion sizes are approximate. Adjust based on your appetite and progress.', style: TextStyle(fontSize: 12, color: MacroSnapTheme.textTertiary(context))),
         ],
       ),
     );

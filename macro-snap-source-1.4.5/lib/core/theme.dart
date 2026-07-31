@@ -27,6 +27,10 @@ class MacroSnapTheme {
   static const Color macroFiber = neonGreen;
 
   // ─── General Purpose Semantic Tokens ───────────────────────
+  // Dark-mode hierarchy: textPrimaryMuted (white70) is the BRIGHTEST token
+  // (body text on dark gradient cards), then textSecondary (0.64, metadata),
+  // then textTertiary (0.52, hints). Not a strict "primary > secondary"
+  // ordering by name — brightness follows usage context. Keep it this way.
   /// Primary text color, slightly muted (body text, descriptions)
   static Color textPrimaryMuted(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
@@ -35,17 +39,17 @@ class MacroSnapTheme {
   /// Secondary text color (subtle, for metadata/descriptions)
   static Color textSecondary(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-          ? Colors.white54
+          ? Colors.white.withValues(alpha: 0.64)
           : const Color(0xFF64748B);
   /// Tertiary text color (very subtle, for hints/placeholders)
   static Color textTertiary(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-          ? Colors.white38
+          ? Colors.white.withValues(alpha: 0.52)
           : const Color(0xFF94A3B8);
   /// Quaternary text color (barely visible, decorative)
   static Color textQuaternary(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-          ? Colors.white24
+          ? Colors.white38
           : const Color(0xFFCBD5E1);
   /// Card background color (themed)
   static Color cardBackground(BuildContext context) =>
@@ -82,56 +86,67 @@ class MacroSnapTheme {
     );
   }
 
-  /// Standard elevated card (Pop UPI style)
+  /// Standard elevated card (Pop UPI style).
+  ///
+  /// Shares the exact same rich gradient background as the hero "Make it
+  /// count" card in dark mode so every card across the app looks uniform.
+  /// Light mode uses a matching light gradient to preserve readability.
   static BoxDecoration habitlyCard(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (isDark) {
+      // Identical to the hero card → uniform dark gradient cards everywhere.
+      return habitlyHeroCard(context);
+    }
     return BoxDecoration(
-      color: isDark ? cardDark : Colors.white,
-      borderRadius: BorderRadius.circular(28),
-      border: Border.all(
-        color: isDark ? const Color(0xFF303045) : const Color(0xFFC8BEFF),
+      gradient: const LinearGradient(
+        colors: [Color(0xFFFFFFFF), Color(0xFFF4EFFF)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
       ),
+      borderRadius: BorderRadius.circular(28),
+      border: Border.all(color: const Color(0xFFC8BEFF)),
     );
   }
 
   /// Mission-style emoji icon container — a vivid tinted tile with a
-  /// colored border so emoji glyphs pop instead of looking washed out.
+  /// strong colored border and glow so emoji glyphs pop with rich color
+  /// instead of looking washed out.
   static BoxDecoration emojiContainer(Color color) {
     return BoxDecoration(
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          color.withValues(alpha: 0.32),
-          color.withValues(alpha: 0.14),
+          color.withValues(alpha: 0.55),
+          color.withValues(alpha: 0.26),
         ],
       ),
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: color.withValues(alpha: 0.4), width: 1.2),
+      border: Border.all(color: color.withValues(alpha: 0.65), width: 1.4),
       boxShadow: [
         BoxShadow(
-          color: color.withValues(alpha: 0.18),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
+          color: color.withValues(alpha: 0.35),
+          blurRadius: 12,
+          offset: const Offset(0, 3),
         ),
       ],
     );
   }
 
-  /// Style for emoji glyphs inside an [emojiContainer] tile — adds a soft
-  /// glow/drop-shadow that lifts the emoji off its tinted background.
+  /// Style for emoji glyphs inside an [emojiContainer] tile — a bright
+  /// halo + soft drop-shadow that makes the emoji read vivid on its tile.
   static TextStyle emojiStyle({double fontSize = 25}) {
     return TextStyle(
       fontSize: fontSize,
       shadows: const [
         Shadow(
-          color: Color(0x55000000),
-          blurRadius: 6,
+          color: Color(0x66000000),
+          blurRadius: 5,
           offset: Offset(0, 2),
         ),
         Shadow(
-          color: Color(0x22FFFFFF),
-          blurRadius: 3,
+          color: Color(0x33FFFFFF),
+          blurRadius: 6,
           offset: Offset(0, 0),
         ),
       ],
@@ -160,8 +175,8 @@ class MacroSnapTheme {
       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: neonGreen, width: 2)),
       errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: neonPink, width: 1.5)),
       focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: neonPink, width: 2)),
-      labelStyle: TextStyle(fontSize: 14, color: dark ? Colors.white54 : const Color(0xFF94A3B8)),
-      hintStyle: TextStyle(fontSize: 14, color: dark ? Colors.white24 : const Color(0xFFCBD5E1)),
+      labelStyle: TextStyle(fontSize: 14, color: dark ? Colors.white.withValues(alpha: 0.64) : const Color(0xFF94A3B8)),
+      hintStyle: TextStyle(fontSize: 14, color: dark ? Colors.white.withValues(alpha: 0.4) : const Color(0xFFCBD5E1)),
     );
   }
 
@@ -294,9 +309,13 @@ class MacroSnapTheme {
   static BoxDecoration glassDecoration(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return isDark ? habitlyCard(context) : BoxDecoration(
-      color: Colors.white.withValues(alpha: 0.85),
+      gradient: const LinearGradient(
+        colors: [Color(0xFFFFFFFF), Color(0xFFF4EFFF)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
       borderRadius: BorderRadius.circular(24),
-      border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+      border: Border.all(color: const Color(0xFFC8BEFF)),
       boxShadow: [
         BoxShadow(
           color: neonGreen.withValues(alpha: 0.08),
@@ -313,16 +332,23 @@ class MacroSnapTheme {
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [
-          isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
-          isDark ? cardDark : const Color(0xFFF8FAFC),
-          isDark ? cardDark : const Color(0xFFF8FAFC),
-          isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.5),
-        ],
+        colors: isDark
+            ? const [
+                Color(0xFF050508),
+                Color(0xFF181830),
+                Color(0xFF11151E),
+                Color(0xFF181830),
+              ]
+            : [
+                Colors.white,
+                const Color(0xFFF8FAFC),
+                const Color(0xFFF8FAFC),
+                Colors.white.withValues(alpha: 0.5),
+              ],
       ),
       borderRadius: BorderRadius.circular(28),
       border: Border.all(
-        color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.04),
+        color: isDark ? const Color(0xFF353550) : Colors.black.withValues(alpha: 0.04),
       ),
     );
   }

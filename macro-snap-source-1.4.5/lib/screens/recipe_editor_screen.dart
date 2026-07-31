@@ -242,7 +242,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
           color: MacroSnapTheme.neonPink,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Icon(Icons.delete_rounded, color: Colors.white),
+        child: const Icon(Icons.delete_rounded, color: Colors.black),
       ),
       onDismissed: (_) => setState(() => _ingredients.removeAt(index)),
       child: GlassCard(

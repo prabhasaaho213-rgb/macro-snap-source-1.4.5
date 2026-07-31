@@ -284,7 +284,7 @@ class _NavItem extends StatelessWidget {
           child: Icon(
             icon,
             color: isSelected
-                ? Colors.white
+                ? Colors.black
                 : (isDark ? Colors.white54 : MacroSnapTheme.neonGreen.withValues(alpha: 0.6)),
             size: 24,
           ),
