@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
@@ -27,36 +28,65 @@ class HabitStore extends ChangeNotifier {
   bool _cloudRestored = false;
   /// Whether a cloud restore is currently in progress
   bool _restoring = false;
+  /// The in-flight restore, so [reload] can await it before re-fetching
+  /// for a newly active account.
+  Future<void>? _restoreFuture;
 
   Future<void> load() async {
     if (_loaded) return;
     final p = await SharedPreferences.getInstance();
-    final raw = p.getString('habits');
-    if (raw != null && raw.isNotEmpty) {
-      final list = jsonDecode(raw) as List;
-      habits
-        ..clear()
-        ..addAll(list.map((e) => Habit.fromJson(Map<String, dynamic>.from(e))));
+
+    // Habits — parsed defensively: a corrupted JSON string must reset the
+    // list, never crash the app at launch (a throw here used to kill main()
+    // before runApp(), leaving the app unable to open).
+    try {
+      final raw = p.getString('habits');
+      if (raw != null && raw.isNotEmpty) {
+        final decoded = jsonDecode(raw);
+        if (decoded is List) {
+          habits
+            ..clear()
+            ..addAll(decoded
+                .whereType<Map>()
+                .map((e) => Habit.fromJson(Map<String, dynamic>.from(e))));
+        }
+      }
+    } catch (_) {
+      habits.clear();
     }
 
-    // Load water log
-    final waterRaw = p.getString('water_log');
-    if (waterRaw != null && waterRaw.isNotEmpty) {
-      final decoded = jsonDecode(waterRaw) as Map<String, dynamic>;
+    // Water log — same defensive parsing.
+    try {
+      final waterRaw = p.getString('water_log');
+      if (waterRaw != null && waterRaw.isNotEmpty) {
+        final decoded = jsonDecode(waterRaw);
+        if (decoded is Map) {
+          _waterLog.clear();
+          decoded.forEach((k, v) {
+            if (v is num) _waterLog[k.toString()] = v.toInt();
+          });
+        }
+      }
+    } catch (_) {
       _waterLog.clear();
-      decoded.forEach((k, v) => _waterLog[k] = v as int);
     }
     waterGoal = p.getInt('water_goal') ?? 8;
 
     _loaded = true;
 
-    // Restore from cloud backup
-    await _restoreFromCloud();
+    // Restore from cloud backup in the background so a slow or sleeping
+    // backend never blocks the app from opening.
+    unawaited(_restoreFromCloud());
   }
 
   /// Force a full reload from local + cloud (used after login/logout so
   /// the cloud data for the newly active account is pulled in).
   Future<void> reload() async {
+    // If a background restore is still in flight from the previous account,
+    // let it finish before clearing — otherwise its late merge would pollute
+    // the freshly loaded state AND set `_cloudRestored`, blocking the new
+    // account's own cloud fetch until the next restart.
+    await _restoreFuture;
     _loaded = false;
     _cloudRestored = false;
     habits.clear();
@@ -66,9 +96,18 @@ class HabitStore extends ChangeNotifier {
   }
 
   /// Merge habits + water log from cloud backup (only adds missing data).
-  Future<void> _restoreFromCloud() async {
-    if (_cloudRestored || _restoring) return;
+  /// Reentrant-safe: returns the in-flight future if a restore is already
+  /// running, so concurrent callers can await the same operation.
+  Future<void> _restoreFromCloud() {
+    if (_cloudRestored || _restoring) {
+      return _restoreFuture ?? Future.value();
+    }
     _restoring = true;
+    _restoreFuture = _doRestoreFromCloud();
+    return _restoreFuture!;
+  }
+
+  Future<void> _doRestoreFromCloud() async {
     try {
       final cloud = await MealSyncService.fetchHabits();
       if (cloud != null) {
@@ -103,6 +142,7 @@ class HabitStore extends ChangeNotifier {
     } catch (_) {}
     _restoring = false;
     _cloudRestored = true;
+    _restoreFuture = null;
   }
 
   Future<void> save({bool notify = true}) async {

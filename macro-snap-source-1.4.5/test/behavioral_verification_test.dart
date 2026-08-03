@@ -125,6 +125,35 @@ void main() {
   });
 
   // ──────────────────────────────────────────────────────────
+  // SECTION 2.5: Startup resilience
+  //   Corrupted persisted data must reset, never crash main()
+  //   (a throw in HabitStore.load() used to kill the app before
+  //   runApp(), leaving it permanently unable to open)
+  // ──────────────────────────────────────────────────────────
+  group('Startup resilience — corrupted persisted data', () {
+    test('load() survives corrupted habits JSON — resets instead of throwing',
+        () async {
+      SharedPreferences.setMockInitialValues({'habits': '{not valid json!!'});
+      await HabitStore.instance.reload();
+      expect(HabitStore.instance.habits, isEmpty);
+    });
+
+    test('load() survives corrupted water_log JSON — resets instead of throwing',
+        () async {
+      SharedPreferences.setMockInitialValues({'water_log': 'oops['});
+      await HabitStore.instance.reload();
+      expect(HabitStore.instance.waterToday, 0);
+    });
+
+    test('load() survives habits stored as wrong type (Map instead of List)',
+        () async {
+      SharedPreferences.setMockInitialValues({'habits': '{"a":1}'});
+      await HabitStore.instance.reload();
+      expect(HabitStore.instance.habits, isEmpty);
+    });
+  });
+
+  // ──────────────────────────────────────────────────────────
   // SECTION 3: HabitStore behavioral correctness
   //   CRUD + toggle completion state transitions
   // ──────────────────────────────────────────────────────────

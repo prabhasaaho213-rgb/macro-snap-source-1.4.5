@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
@@ -44,12 +45,14 @@ class MealStore {
           }
         }
       }
-      // Also sync from cloud backup
-      await _syncFromCloud();
     } catch (_) {
+      // Corrupted or unreadable local data — reset rather than crash.
       _meals = [];
     }
     _loaded = true;
+    // Cloud restore merges missing meals in the background so a slow or
+    // sleeping backend never blocks the app from opening.
+    unawaited(_syncFromCloud());
   }
 
   /// Force a full reload from local + cloud
