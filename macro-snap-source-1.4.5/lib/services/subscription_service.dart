@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'meal_store.dart';
 import 'notification_service.dart';
 import 'gemini_service.dart';
+import 'sync_status_service.dart';
 
 /// Central reactive store for the Pro subscription flag.
 ///
@@ -129,7 +130,10 @@ class SubscriptionService extends ChangeNotifier {
         await activate();
       }
     } catch (_) {
-      // Offline or server unreachable — keep the local state as-is.
+      // Offline or server unreachable — keep the local state as-is, but
+      // surface the dead backend so the user isn't silently cut off from
+      // cloud features (same signal the meal/habit sync uses).
+      SyncStatusService.instance.reportFailure('Subscription check failed');
     }
   }
 

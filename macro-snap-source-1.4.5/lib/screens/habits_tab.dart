@@ -637,14 +637,13 @@ class _HabitsTabState extends State<HabitsTab> {
         confirmDismiss: (direction) async {
           HapticFeedback.mediumImpact();
           if (direction == DismissDirection.startToEnd) {
-            // Swipe right → complete (toggle)
+            // Swipe right → complete (toggle). Mutate the habit NOW so the
+            // state is correct, but persist AFTER the Dismissible snaps back.
             h.toggle(DateTime.now());
-            store.update(h);
           } else {
             // Swipe left → reset streak
             h.completedDates.clear();
             h.skippedDates.clear();
-            store.update(h);
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -658,6 +657,15 @@ class _HabitsTabState extends State<HabitsTab> {
               );
             }
           }
+          // Persist AFTER the snap-back (~300ms) finishes. Updating mid-slide
+          // notifies the tab and rebuilds the list while the card is still
+          // moving — the emoji tile glow re-rasterizes every frame, which
+          // reads as a text/emoji flicker for a moment after swiping.
+          // syncReminder: false — toggling completion doesn't change the
+          // reminder schedule, so don't churn zonedSchedule on every swipe.
+          Future.delayed(const Duration(milliseconds: 350), () {
+            store.update(h, syncReminder: false);
+          });
           return false; // Snap back — don't dismiss
         },
         // RepaintBoundary composites the card (emoji tile's blur shadows +
@@ -669,7 +677,9 @@ class _HabitsTabState extends State<HabitsTab> {
             onTap: () {
               HapticFeedback.mediumImpact();
               h.toggle(DateTime.now());
-              store.update(h);
+              // Completion toggle only — the reminder schedule is unchanged,
+              // so skip the zonedSchedule cancel+recreate churn.
+              store.update(h, syncReminder: false);
             },
             onLongPress: () {
               HapticFeedback.heavyImpact();
@@ -880,7 +890,10 @@ class _HabitsTabState extends State<HabitsTab> {
                 Navigator.pop(ctx);
                 h.completedDates.clear();
                 h.skippedDates.clear();
-                store.update(h);
+                // Completion-state change only — the reminder schedule is
+                // unchanged, so skip the zonedSchedule cancel+recreate churn
+                // (consistent with the mission-card swipe/tap paths).
+                store.update(h, syncReminder: false);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Streak reset for ${h.name}'),

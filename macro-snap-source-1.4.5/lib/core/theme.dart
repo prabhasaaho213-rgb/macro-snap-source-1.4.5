@@ -133,24 +133,14 @@ class MacroSnapTheme {
     );
   }
 
-  /// Style for emoji glyphs inside an [emojiContainer] tile — a bright
-  /// halo + soft drop-shadow that makes the emoji read vivid on its tile.
+  /// Style for emoji glyphs — FLAT, with no text shadows.
+  ///
+  /// Shadows on emoji glyphs previously painted a dark "ghost reflection"
+  /// under the emoji (visible when swiping cards or on tinted chips). Every
+  /// emoji surface in the app now renders flat; the vivid tinted tile behind
+  /// it ([emojiContainer]) provides the depth instead.
   static TextStyle emojiStyle({double fontSize = 25}) {
-    return TextStyle(
-      fontSize: fontSize,
-      shadows: const [
-        Shadow(
-          color: Color(0x66000000),
-          blurRadius: 5,
-          offset: Offset(0, 2),
-        ),
-        Shadow(
-          color: Color(0x33FFFFFF),
-          blurRadius: 6,
-          offset: Offset(0, 0),
-        ),
-      ],
-    );
+    return TextStyle(fontSize: fontSize);
   }
 
   /// Neon accent pill

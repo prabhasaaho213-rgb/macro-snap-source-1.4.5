@@ -9,7 +9,7 @@ import 'subscription_service.dart';
 class RazorpayService {
   static final Razorpay _razorpay = Razorpay();
   static bool _initialized = false;
-  static String? _lastOrderId;
+  static String? _lastSubscriptionId;
 
   /// Initialize Razorpay. Call this once in the app lifecycle.
   static void init() {
@@ -27,45 +27,47 @@ class RazorpayService {
     _initialized = false;
   }
 
-  /// Start the Razorpay checkout flow for a ₹29 subscription.
+  /// Start the Razorpay checkout flow for the ₹29/month RECURRING
+  /// subscription. Creates a Razorpay Subscription (auto-charges every
+  /// month) instead of a one-time order, and opens checkout with the
+  /// returned subscription_id so Razorpay handles renewals.
   static Future<void> startCheckout({
     required String phone,
     required String name,
     required String email,
   }) async {
     try {
-      // 1. Create order on backend
-      final orderResponse = await http.post(
-        Uri.parse('${GeminiService.serverUrl}/payment/create-order'),
+      // 1. Create recurring subscription on backend
+      final subResponse = await http.post(
+        Uri.parse('${GeminiService.serverUrl}/payment/create-subscription'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'phone': phone,
-          'amount': 2900, // ₹29 in paise
-          'currency': 'INR',
+          'name': name,
+          'email': email,
         }),
       );
 
-      if (orderResponse.statusCode != 200) {
-        throw Exception('Failed to create payment order');
+      if (subResponse.statusCode != 200) {
+        throw Exception('Failed to create payment subscription');
       }
 
-      final orderData = jsonDecode(orderResponse.body);
-      _lastOrderId = orderData['order_id'] as String;
-      final razorpayKey = orderData['razorpay_key'] as String;
+      final subData = jsonDecode(subResponse.body);
+      _lastSubscriptionId = subData['subscription_id'] as String;
+      final razorpayKey = subData['razorpay_key'] as String;
 
       // Get stored user info for receipt
       final prefs = await SharedPreferences.getInstance();
       final userName = prefs.getString('name') ?? name;
       final userEmail = prefs.getString('email') ?? email;
 
-      // 2. Open Razorpay checkout
+      // 2. Open Razorpay checkout with subscription_id (no order_id) so the
+      //    customer is enrolled in the recurring plan.
       final options = {
         'key': razorpayKey,
-        'amount': 2900,
-        'currency': 'INR',
+        'subscription_id': _lastSubscriptionId,
         'name': 'MacroSnap',
-        'description': 'Pro Subscription (₹29)',
-        'order_id': _lastOrderId,
+        'description': 'Pro Subscription (₹29/month)',
         'prefill': {
           'contact': phone,
           'name': userName,
@@ -78,7 +80,7 @@ class RazorpayService {
 
       _razorpay.open(options);
     } catch (e) {
-      _lastOrderId = null;
+      _lastSubscriptionId = null;
       rethrow;
     }
   }
@@ -86,12 +88,18 @@ class RazorpayService {
   /// Handle successful payment from Razorpay.
   static void _handlePaymentSuccess(PaymentSuccessResponse response) async {
     try {
-      // Verify payment on backend
+      // The SDK puts razorpay_subscription_id in the raw response map for
+      // subscription checkouts; fall back to the id we created it with.
+      final subscriptionId =
+          (response.data?['razorpay_subscription_id'] as String?) ??
+              _lastSubscriptionId;
+      // Verify payment on backend (subscription signature is
+      // HMAC(subscription_id|payment_id))
       final verifyResponse = await http.post(
         Uri.parse('${GeminiService.serverUrl}/payment/verify'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'razorpay_order_id': response.orderId,
+          'razorpay_subscription_id': ?subscriptionId,
           'razorpay_payment_id': response.paymentId,
           'razorpay_signature': response.signature,
         }),
@@ -114,7 +122,7 @@ class RazorpayService {
 
   /// Handle payment failure.
   static void _handlePaymentError(PaymentFailureResponse response) {
-    _lastOrderId = null;
+    _lastSubscriptionId = null;
     String message = 'Payment cancelled';
     if (response.code != 0) {
       message = 'Payment failed: ${response.message ?? "Please try again"}';
@@ -134,7 +142,7 @@ class RazorpayService {
   /// in the subscription screen.
   static Future<void> _activateSubscription() async {
     await SubscriptionService.instance.activate();
-    _lastOrderId = null;
+    _lastSubscriptionId = null;
   }
 
   /// Show a snackbar error message (uses a global key approach).

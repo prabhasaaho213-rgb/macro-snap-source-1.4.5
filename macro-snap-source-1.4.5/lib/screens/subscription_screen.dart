@@ -206,16 +206,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     if (phone != null) setState(() => _phone = phone);
   }
 
-  String _daysRemaining() {
-    if (_subscribedDate == null) return '';
-    final start = DateTime.parse(_subscribedDate!);
-    final expiry = start.add(const Duration(days: 30));
-    final remaining = expiry.difference(DateTime.now()).inDays;
-    if (remaining <= 0) return 'Expired';
-    if (remaining == 1) return '1 day remaining';
-    return '$remaining days remaining';
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -261,7 +251,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               const SizedBox(height: 8),
               Text(
                 _subscribed
-                    ? (_isAdmin ? 'All Pro features, free forever' : 'Enjoy all features. ${_daysRemaining()}')
+                    ? (_isAdmin ? 'All Pro features, free forever' : 'Enjoy all features. Billed ₹29 every month.')
                     : 'Snap, log, track your week automatically',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -313,8 +303,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       const SizedBox(height: 4),
                       Text(
                         _subscribed && _subscribedDate != null
-                            ? (_isAdmin ? 'Lifetime \u2022 Free forever' : 'Subscribed ${_subscribedDate!.substring(0, 10)}')
-                            : 'One-time payment \u2022 Unlimited access',
+                            ? (_isAdmin ? 'Lifetime \u2022 Free forever' : 'Auto-renews monthly \u2022 Cancel anytime')
+                            : 'Auto-renews ₹29/month \u2022 Cancel anytime',
                         style: TextStyle(fontSize: 13,
                             fontWeight: FontWeight.w500,
                             color: MacroSnapTheme.neonGreen.withValues(alpha:  0.8)),
@@ -404,7 +394,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         height: 52,
                       ),
                       const SizedBox(height: 8),
-                      Text('Secure payment • Instant activation',
+                      Text('Secure payment • Auto-renews ₹29/month • Cancel anytime',
                           style: TextStyle(fontSize: 12,
                               color: MacroSnapTheme.textTertiary(context))),
                     ]),

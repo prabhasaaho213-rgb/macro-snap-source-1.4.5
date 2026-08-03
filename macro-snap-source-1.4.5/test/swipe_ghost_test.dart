@@ -84,10 +84,12 @@ void main() {
     expect(shadow.blurRadius, 12);
   });
 
-  test('emojiStyle keeps the bright halo + drop shadow', () {
+  test('emojiStyle is flat — no ghost shadows on the glyph', () {
     final style = MacroSnapTheme.emojiStyle();
-    expect(style.shadows, isNotNull);
-    expect(style.shadows!.length, 2);
+    // Ghost-shadow fix: glyphs must render flat (no drop shadow / halo),
+    // otherwise a dark shadow shows through as a ghost reflection on
+    // emoji surfaces (picker chips, mission cards, actions sheet).
+    expect(style.shadows, isNull);
   });
 
   // ─── SWIPE BEHAVIOR (still works with the stronger glow) ───
@@ -110,9 +112,15 @@ void main() {
     // so confirmDismiss actually fires. Fixed pumps (never pumpAndSettle):
     // StreakFlame's flicker controller repeats forever, so pumpAndSettle
     // would time out.
+    //
+    // Persistence is now DEFERRED until after the snap-back (see
+    // _missionCard): the Dismissible must finish moving to the dismissed
+    // position first, then confirmDismiss runs and starts a 350ms deferred
+    // persist timer, which needs one more pump to flush.
     await tester.drag(find.text('Morning Run'), const Offset(500, 0));
-    await tester.pump(); // gesture ends → confirmDismiss starts
-    await tester.pump(const Duration(milliseconds: 400)); // resolve confirmDismiss + async store.update
+    await tester.pump(); // gesture ends → move-to-dismissed starts
+    await tester.pump(const Duration(milliseconds: 400)); // move completes → confirmDismiss → 350ms persist timer starts
+    await tester.pump(const Duration(milliseconds: 500)); // deferred persist (350ms) fires with margin → store.update + notify
     await tester.pump(const Duration(milliseconds: 300)); // snap-back reverse animation
 
     expect(h.isCompleted(now), isTrue,
@@ -142,10 +150,12 @@ void main() {
     expect(h.currentStreak(), greaterThan(0));
 
     // Fixed pumps — StreakFlame's flicker repeats forever so pumpAndSettle
-    // would time out.
+    // would time out. Same deferred-persist timing as the swipe-right test:
+    // move completes → confirmDismiss → 350ms persist timer → flush it.
     await tester.drag(find.text('Morning Run'), const Offset(-500, 0));
-    await tester.pump(); // gesture ends → confirmDismiss starts
-    await tester.pump(const Duration(milliseconds: 400)); // resolve confirmDismiss + async store.update + SnackBar
+    await tester.pump(); // gesture ends → move-to-dismissed starts
+    await tester.pump(const Duration(milliseconds: 400)); // move completes → confirmDismiss → 350ms persist timer starts
+    await tester.pump(const Duration(milliseconds: 500)); // deferred persist (350ms) fires with margin → store.update + notify + SnackBar
     await tester.pump(const Duration(milliseconds: 300)); // snap-back reverse animation
 
     expect(h.completedDates, isEmpty,

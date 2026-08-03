@@ -162,14 +162,19 @@ class HabitStore extends ChangeNotifier {
     }
   }
 
-  Future<void> update(Habit h) async {
+  Future<void> update(Habit h, {bool syncReminder = true}) async {
     await save();
     _syncToCloud();
-    // Re-sync reminder when the habit's schedule or toggle changes
-    if (h.reminderEnabled) {
-      await NotificationService().scheduleHabitReminder(h);
-    } else {
-      await NotificationService().cancelHabitReminder(h);
+    // Re-sync reminder when the habit's schedule or toggle changes.
+    // Completion toggles (swipe/tap on a mission card) pass syncReminder:
+    // false so we don't cancel+recreate the daily zonedSchedule on every
+    // swipe — the schedule only changes on edit.
+    if (syncReminder) {
+      if (h.reminderEnabled) {
+        await NotificationService().scheduleHabitReminder(h);
+      } else {
+        await NotificationService().cancelHabitReminder(h);
+      }
     }
   }
 
