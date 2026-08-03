@@ -20,17 +20,6 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
-  /// Direction of the last tab change: +1 = moving to a higher index (new
-  /// page slides in from the right), -1 = moving to a lower index (new page
-  /// slides in from the left). Drives the swipe-feel slide transition.
-  int _slideDirection = 1;
-
-  /// Stable key for the Scan tab, regenerated once per entry so the camera
-  /// screen isn't remounted on every shell rebuild (a timestamp key used to
-  /// change every build, making AnimatedSwitcher recreate ScanScreen — the
-  /// source of random "camera failed" re-inits).
-  Key? _scanKey;
-
   @override
   void initState() {
     super.initState();
@@ -44,33 +33,10 @@ class _MainShellState extends State<MainShell> {
   }
 
   /// Single entry point for tab changes (bottom-nav taps, swipes, notification
-  /// taps) so every path computes the slide direction and regenerates the Scan
-  /// camera key on re-entry.
+  /// taps). Tab switches are instant — no transition animation.
   void _goToTab(int index) {
     if (index == _currentIndex) return;
-    setState(() {
-      _slideDirection = index > _currentIndex ? 1 : -1;
-      if (index == 1) {
-        _scanKey = ValueKey('scan_${DateTime.now().millisecondsSinceEpoch}');
-      }
-      _currentIndex = index;
-    });
-  }
-
-  /// Stable per-tab key used to tell AnimatedSwitcher which child is incoming.
-  Key _tabKey(int index) {
-    switch (index) {
-      case 0:
-        return const ValueKey('HomeTab');
-      case 1:
-        return _scanKey ??
-            (_scanKey =
-                ValueKey('scan_${DateTime.now().millisecondsSinceEpoch}'));
-      case 2:
-        return const ValueKey('HabitsTab');
-      default:
-        return const ValueKey('HomeTab');
-    }
+    setState(() => _currentIndex = index);
   }
 
   void _onShellTabChanged() {
@@ -199,30 +165,28 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
-  /// Build the current tab content with AnimatedSwitcher key for smooth transitions
+  /// Build the current tab content — plain instant switch, no transition.
   Widget _buildTabContent() {
     switch (_currentIndex) {
       case 0:
-        return HomeScreen(key: _tabKey(0));
+        return const HomeScreen();
       case 1:
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) _goToTab(0);
           },
-          child: ScanScreen(key: _tabKey(1)),
+          child: const ScanScreen(),
         );
       case 2:
-        return HabitsTab(key: _tabKey(2));
+        return const HabitsTab();
       default:
-        return HomeScreen(key: _tabKey(0));
+        return const HomeScreen();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentKey = _tabKey(_currentIndex);
-    final dir = _slideDirection.toDouble();
     return Scaffold(
       // Live-wire the cloud-backup warning so a dead backend shows a
       // dismissible banner on every tab instead of failing silently.
@@ -238,7 +202,7 @@ class _MainShellState extends State<MainShell> {
                 child: GestureDetector(
                   behavior: HitTestBehavior.translucent,
                   // Swipe left/right anywhere on the tab body to move to the
-                  // adjacent tab (Home ⇄ Scan ⇄ Habits).
+                  // adjacent tab (Home ⇄ Scan ⇄ Habits). Instant switch.
                   onHorizontalDragEnd: (details) {
                     final velocity = details.primaryVelocity ?? 0;
                     if (velocity.abs() < 300) return;
@@ -250,32 +214,7 @@ class _MainShellState extends State<MainShell> {
                       if (_currentIndex > 0) _goToTab(_currentIndex - 1);
                     }
                   },
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: (child, animation) {
-                      // Directional swipe transition. The INCOMING child (key matches
-                      // the current tab) slides in from the side the swipe came from;
-                      // the OUTGOING child (stale key) is pushed out the opposite way.
-                      // AnimatedSwitcher drives incoming 0→1 and outgoing 1→0, so the
-                      // same tween gives slide-in for one and slide-out for the other.
-                      final isIncoming = child.key == currentKey;
-                      final begin = isIncoming ? Offset(dir, 0) : Offset.zero;
-                      final end = isIncoming ? Offset.zero : Offset(-dir, 0);
-                      // Incoming tab springs slightly past center then settles back
-                      // (easeOutBack overshoots ~10%) — the iOS-style bounce. The
-                      // outgoing tab is pushed out with a clean ease-out, no bounce.
-                      final curve = isIncoming ? Curves.easeOutBack : Curves.easeOutCubic;
-                      return SlideTransition(
-                        position: Tween<Offset>(begin: begin, end: end).animate(
-                          CurvedAnimation(parent: animation, curve: curve),
-                        ),
-                        child: FadeTransition(opacity: animation, child: child),
-                      );
-                    },
-                    child: _buildTabContent(),
-                  ),
+                  child: _buildTabContent(),
                 ),
               ),
             ],

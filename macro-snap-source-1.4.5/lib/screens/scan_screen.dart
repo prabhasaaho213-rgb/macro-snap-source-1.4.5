@@ -26,6 +26,10 @@ class _ScanScreenState extends State<ScanScreen>
   List<CameraDescription> _cameras = [];
   bool _initialized = false;
   bool _cameraError = false;
+  /// True when camera access is permanently blocked ("Don't ask again") — in
+  /// that state request() never re-shows the dialog, so the user must be
+  /// sent to the system Settings screen instead.
+  bool _cameraPermanentlyDenied = false;
   int _scansLeft = 3;
   String? _capturedImagePath;
   Timer? _previewTimer;
@@ -35,7 +39,11 @@ class _ScanScreenState extends State<ScanScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadScans();
-    _initCamera();
+    // Defer the camera permission request until AFTER the first frame. When
+    // requested from initState (mid widget-mount), Android can suppress the
+    // system "Allow camera?" dialog — the tab opened with no prompt and no
+    // camera. Post-frame the prompt reliably appears.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initCamera());
     // Refresh scan count when data changes (e.g. after subscribing)
     MealStore.instance.changeNotifier.addListener(_onDataChanged);
   }
@@ -70,8 +78,21 @@ class _ScanScreenState extends State<ScanScreen>
 
   Future<void> _initCamera() async {
     final status = await Permission.camera.request();
-    if (status.isDenied || status.isPermanentlyDenied) {
-      if (mounted) setState(() => _cameraError = true);
+    if (!mounted) return;
+    if (status.isPermanentlyDenied) {
+      // request() will NEVER re-show the dialog from this state — the only
+      // way out is the system Settings screen.
+      setState(() {
+        _cameraError = true;
+        _cameraPermanentlyDenied = true;
+      });
+      return;
+    }
+    if (status.isDenied || status.isRestricted) {
+      setState(() {
+        _cameraError = true;
+        _cameraPermanentlyDenied = false;
+      });
       return;
     }
     try {
@@ -91,10 +112,39 @@ class _ScanScreenState extends State<ScanScreen>
         setState(() {
           _controller = controller;
           _initialized = true;
+          _cameraError = false;
+          _cameraPermanentlyDenied = false;
         });
       }
     } catch (e) {
       if (mounted) setState(() => _cameraError = true);
+    }
+  }
+
+  /// Re-request camera permission and re-initialize the preview. Used by the
+  /// "Grant Camera Access" button on the camera-unavailable screen so a user
+  /// who dismissed the first prompt (or denied it) can try again in-app.
+  Future<void> _retryCamera() async {
+    setState(() {
+      _cameraError = false;
+      _initialized = false;
+      _cameraPermanentlyDenied = false;
+    });
+    await _initCamera();
+  }
+
+  /// Opens the system Settings so a permanently-blocked camera can be
+  /// re-enabled manually (request() never re-prompts from that state).
+  Future<void> _openCameraSettings() async {
+    await openAppSettings();
+    // Re-check after the user returns from Settings.
+    if (mounted) {
+      setState(() {
+        _cameraError = false;
+        _initialized = false;
+        _cameraPermanentlyDenied = false;
+      });
+      await _initCamera();
     }
   }
 
@@ -241,26 +291,57 @@ class _ScanScreenState extends State<ScanScreen>
           ),
         ),
         body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.videocam_off_rounded,
-                  color: MacroSnapTheme.textTertiary(context), size: 64),
-              const SizedBox(height: 16),
-              Text('Camera unavailable',
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.videocam_off_rounded,
+                    color: MacroSnapTheme.textTertiary(context), size: 64),
+                const SizedBox(height: 16),
+                Text('Camera unavailable',
+                    style: TextStyle(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.6)
+                            : const Color(0xFF475569),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700)),
+                const SizedBox(height: 8),
+                Text(
+                  'Allow camera access to scan your meals.',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.6)
-                          : const Color(0xFF475569),
-                      fontSize: 18)),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: _pickFromGallery,
-                icon: const Icon(Icons.photo_library_rounded),
-                label: const Text('Choose from Gallery'),
-                style: FilledButton.styleFrom(backgroundColor: MacroSnapTheme.neonGreen, foregroundColor: Colors.black),
-              ),
-            ],
+                    color: MacroSnapTheme.textSecondary(context),
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                if (_cameraPermanentlyDenied)
+                  FilledButton.icon(
+                    onPressed: _openCameraSettings,
+                    icon: const Icon(Icons.settings_rounded),
+                    label: const Text('Open Settings'),
+                    style: FilledButton.styleFrom(
+                        backgroundColor: MacroSnapTheme.neonPink,
+                        foregroundColor: Colors.black),
+                  )
+                else
+                  FilledButton.icon(
+                    onPressed: _retryCamera,
+                    icon: const Icon(Icons.camera_alt_rounded),
+                    label: const Text('Grant Camera Access'),
+                    style: FilledButton.styleFrom(
+                        backgroundColor: MacroSnapTheme.neonGreen,
+                        foregroundColor: Colors.black),
+                  ),
+                const SizedBox(height: 12),
+                FilledButton.tonalIcon(
+                  onPressed: _pickFromGallery,
+                  icon: const Icon(Icons.photo_library_rounded),
+                  label: const Text('Choose from Gallery'),
+                ),
+              ],
+            ),
           ),
         ),
       );
