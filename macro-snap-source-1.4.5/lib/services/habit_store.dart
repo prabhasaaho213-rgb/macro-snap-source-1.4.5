@@ -180,6 +180,22 @@ class HabitStore extends ChangeNotifier {
     _syncToCloud();
   }
 
+  /// Mark a habit as completed for today (used by the notification's
+  /// "Mark done" action), persist, sync to cloud, clear any snoozed
+  /// reminder, and push today's upcoming daily reminder to tomorrow so the
+  /// habit never re-reminds the same day.
+  Future<void> completeToday(Habit h) async {
+    final key = dateKey(DateTime.now());
+    if (!h.completedDates.contains(key)) {
+      h.completedDates.add(key);
+      h.skippedDates.remove(key);
+    }
+    await save();
+    _syncToCloud();
+    await NotificationService().cancelHabitReminderSnooze(h);
+    await NotificationService().rescheduleHabitReminderFromTomorrow(h);
+  }
+
 
 
   /// Water tracking

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/app_nav.dart';
 import '../core/theme.dart';
 import '../services/rate_us_service.dart';
 import '../services/subscription_service.dart';
@@ -21,11 +22,25 @@ class _MainShellState extends State<MainShell> {
   @override
   void initState() {
     super.initState();
+    _currentIndex = shellTabIndex.value;
+    shellTabIndex.addListener(_onShellTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowSubscription());
     // Prompt for a Play Store rating after a few launches (best-effort).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       RateUsService.onAppLaunch(context);
     });
+  }
+
+  void _onShellTabChanged() {
+    if (mounted) {
+      setState(() => _currentIndex = shellTabIndex.value);
+    }
+  }
+
+  @override
+  void dispose() {
+    shellTabIndex.removeListener(_onShellTabChanged);
+    super.dispose();
   }
 
   Future<void> _maybeShowSubscription() async {
@@ -168,26 +183,46 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 400),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        transitionBuilder: (child, animation) {
-          return FadeTransition(
-            opacity: animation,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 0.05),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-              )),
-              child: child,
-            ),
-          );
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        // Swipe left/right anywhere on the tab body to move to the
+        // adjacent tab (Home ⇄ Scan ⇄ Habits).
+        onHorizontalDragEnd: (details) {
+          final velocity = details.primaryVelocity ?? 0;
+          if (velocity.abs() < 300) return;
+          if (velocity < 0) {
+            // Swipe left → next tab
+            if (_currentIndex < 2) {
+              setState(() => _currentIndex += 1);
+            }
+          } else {
+            // Swipe right → previous tab
+            if (_currentIndex > 0) {
+              setState(() => _currentIndex -= 1);
+            }
+          }
         },
-        child: _buildTabContent(),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 400),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.05),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                )),
+                child: child,
+              ),
+            );
+          },
+          child: _buildTabContent(),
+        ),
       ),
       bottomNavigationBar: _buildBottomNav(context),
     );

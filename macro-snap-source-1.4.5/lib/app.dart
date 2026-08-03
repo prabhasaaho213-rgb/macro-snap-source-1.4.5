@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'core/app_nav.dart';
 import 'core/theme.dart';
 import 'screens/main_shell.dart';
 import 'screens/onboarding_screen.dart';
@@ -86,6 +87,7 @@ class _MacroSnapAppState extends State<MacroSnapApp> {
     return MaterialApp(
       title: 'MacroSnap',
       debugShowCheckedModeBanner: false,
+      navigatorKey: appNavigatorKey,
       theme: MacroSnapTheme.light,
       darkTheme: MacroSnapTheme.dark,
       themeMode: _themeMode,

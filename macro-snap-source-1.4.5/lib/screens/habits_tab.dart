@@ -332,7 +332,7 @@ class _HabitsTabState extends State<HabitsTab> {
           ),
           const SizedBox(width: 4),
           Text(
-            '${coins}d streak',
+            '$coins',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontWeight: FontWeight.w800),
@@ -419,7 +419,7 @@ class _HabitsTabState extends State<HabitsTab> {
                     const SizedBox(width: 6),
                     Flexible(
                       child: Text(
-                        '${store.totalStreakPower}d best streak',
+                        '${store.totalStreakPower}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -725,7 +725,7 @@ class _HabitsTabState extends State<HabitsTab> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '${h.currentStreak()} day streak · ${h.frequency}',
+                              '${h.currentStreak()} · ${h.frequency}',
                               style: TextStyle(
                                 color: MacroSnapTheme.textSecondary(context),
                                 fontSize: 12,
@@ -840,7 +840,7 @@ class _HabitsTabState extends State<HabitsTab> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '$streak day streak · ${h.frequency}',
+                            '$streak · ${h.frequency}',
                             style: TextStyle(
                               fontSize: 13,
                               color: MacroSnapTheme.textSecondary(context),
@@ -1486,9 +1486,11 @@ class _HabitsTabState extends State<HabitsTab> {
                       '☕',
                     ].map(
                       (e) => ChoiceChip(
+                        // Flat style — no drop shadow under the glyph, which
+                        // previously rendered as a ghost reflection on the chip.
                         label: Text(
                           e,
-                          style: MacroSnapTheme.emojiStyle(fontSize: 20),
+                          style: const TextStyle(fontSize: 20),
                         ),
                         selected: emoji == e,
                         onSelected: (_) => setModalState(() => emoji = e),

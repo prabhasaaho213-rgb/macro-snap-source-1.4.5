@@ -2,8 +2,10 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:permission_handler/permission_handler.dart';
+import '../core/app_nav.dart';
 import '../models/habit.dart';
 import 'habit_reminder_service.dart';
+import 'habit_store.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._();
@@ -33,6 +35,8 @@ class NotificationService {
       await _plugin.initialize(
         initSettings,
         onDidReceiveNotificationResponse: _onNotificationTap,
+        onDidReceiveBackgroundNotificationResponse:
+            handleHabitReminderActionBackground,
       );
     } catch (_) {
       // Ignore notification initialization failures; app should still run.
@@ -41,7 +45,55 @@ class NotificationService {
     _initialized = true;
   }
 
-  void _onNotificationTap(NotificationResponse response) {}
+  /// Handles taps and action buttons on notifications.
+  ///
+  /// Habit reminders carry the habit id as the payload, so we can snooze,
+  /// mark the habit done, or open the Habits tab right from the shade.
+  void _onNotificationTap(NotificationResponse response) {
+    final actionId = response.actionId;
+    final habitId = response.payload;
+
+    // Only habit reminders carry a habit id payload.
+    if (habitId == null || habitId.isEmpty) return;
+
+    if (actionId == HabitReminderService.snoozeAction) {
+      _snoozeHabit(habitId);
+    } else if (actionId == HabitReminderService.doneAction) {
+      _completeHabit(habitId);
+    } else {
+      // Plain tap on the notification -> open the Habits tab.
+      openShellTab(2);
+    }
+  }
+
+  Habit? _findHabit(String habitId) {
+    for (final h in HabitStore.instance.habits) {
+      if (h.id == habitId) return h;
+    }
+    return null;
+  }
+
+  Future<void> _snoozeHabit(String habitId) async {
+    try {
+      await HabitStore.instance.load();
+      final habit = _findHabit(habitId);
+      if (habit == null) return;
+      await HabitReminderService.snooze(habit, _plugin);
+    } catch (_) {
+      // Never let a notification action crash the app.
+    }
+  }
+
+  Future<void> _completeHabit(String habitId) async {
+    try {
+      await HabitStore.instance.load();
+      final habit = _findHabit(habitId);
+      if (habit == null) return;
+      await HabitStore.instance.completeToday(habit);
+    } catch (_) {
+      // Never let a notification action crash the app.
+    }
+  }
 
   Future<void> showSubscribed() async {
     await _plugin.show(
@@ -230,6 +282,22 @@ class NotificationService {
   Future<void> cancelHabitReminder(Habit h) async {
     try {
       await HabitReminderService.cancel(h, _plugin);
+    } catch (_) {}
+  }
+
+  /// Cancel just the one-off snoozed reminder (keeps the daily one).
+  Future<void> cancelHabitReminderSnooze(Habit h) async {
+    try {
+      await HabitReminderService.cancelSnooze(h, _plugin);
+    } catch (_) {}
+  }
+
+  /// Suppress today's remaining daily reminder for [h] by cancelling the
+  /// repeating schedule and re-creating it from tomorrow. Called after the
+  /// habit is marked done today so it never re-reminds the same day.
+  Future<void> rescheduleHabitReminderFromTomorrow(Habit h) async {
+    try {
+      await HabitReminderService.rescheduleTomorrow(h, _plugin);
     } catch (_) {}
   }
 
