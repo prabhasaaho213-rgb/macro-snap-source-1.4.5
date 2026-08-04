@@ -1,0 +1,78 @@
+rules_version = '2';
+// MacroSnap Firestore security rules
+//
+// Equivalent of the old Postgres Row-Level-Security model:
+//   - Only authenticated users can touch data.
+//   - Users can only read/write their OWN documents (keyed by Firebase UID).
+//   - Money / entitlement records (subscriptions, payments) are
+//     SERVER-WRITE-ONLY — only the backend's Admin SDK (which bypasses these
+//     rules) may write them; clients may read only their own.
+//
+// Deploy with:  firebase deploy --only firestore:rules
+// (or paste into Firebase Console → Firestore → Rules)
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    // ─── users/{uid} — profile, subscription flag, scan counters ────────
+    // A user may read/write only their own profile. The backend's Razorpay
+    // webhook/verify writes `subscribed` via the Admin SDK (rules bypass).
+    match /users/{uid} {
+      allow read, write: if signedIn() && isOwner(uid);
+    }
+
+    // ─── userIndex/{identifier} — identifier → uid mapping ──────────────
+    // Only the person who owns that identifier may look it up (used by the
+    // backend for restore; the app keys directly by UID).
+    match /userIndex/{identifier} {
+      allow read: if signedIn() && (
+        request.auth.token.phone_number == identifier ||
+        request.auth.token.email == identifier);
+      allow write: if false; // backend Admin SDK only
+    }
+
+    // ─── meals/{mealId} — one doc per meal, `uid` field = owner ─────────
+    match /meals/{mealId} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid;
+      allow read, update, delete: if signedIn()
+        && resource.data.uid == request.auth.uid;
+    }
+
+    // ─── habitData/{uid} — one doc per user: habits[], waterLog, waterGoal ─
+    match /habitData/{uid} {
+      allow read, write: if signedIn() && isOwner(uid);
+    }
+
+    // ─── subscriptions/{subId} — Razorpay subscription lifecycle ────────
+    // Written ONLY by the backend webhook via Admin SDK. Read = owner only.
+    match /subscriptions/{subId} {
+      allow read: if signedIn()
+        && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // ─── payments/{id} — payment records ────────────────────────────────
+    // Written ONLY by /payment/verify + webhook via Admin SDK.
+    match /payments/{id} {
+      allow read: if signedIn()
+        && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // ─── referrals/{code} — referral-code index ─────────────────────────
+    // Reward grants run server-side (Admin SDK); clients may read any code
+    // but only create their own.
+    match /referrals/{code} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid;
+      allow read: if signedIn();
+      allow update, delete: if false;
+    }
+  }
+}

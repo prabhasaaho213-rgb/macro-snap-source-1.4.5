@@ -1,40 +1,46 @@
-import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/meal_record.dart';
-import 'gemini_service.dart';
+import 'firebase_identity.dart';
 import 'sync_status_service.dart';
 
-/// Handles cloud backup/sync of ALL user data to the backend server.
-/// Uses the user's 500MB backend database for storage.
+/// Cloud backup/sync of ALL user data to **Cloud Firestore (Firebase)**.
 ///
-/// Currently backs up:
-/// - Meals (individual + bulk)
-/// - Habits (full list + water log)
+/// Phase 3 of the Firestore migration: this replaces the old HTTP sync to the
+/// Railway/Postgres backend. Every meal, habit and water write lands directly
+/// in Firestore, keyed by the Firebase Auth UID, so a reinstall or a new
+/// device restores everything from Firebase — no backend required.
+///
+/// Collection layout (matches docs/firestore-migration.md):
+///   meals/{mealId}      — one doc per meal, uid field for security rules
+///   habitData/{uid}     — one doc per user: habits[], waterLog{}, waterGoal
+///
+/// Guests (no Firebase Auth account) have no cloud storage and are skipped
+/// silently — exactly like the old flow skipped `guest_*` identifiers. A
+/// guest skip is NOT a failure, so it never raises the sync banner.
 class MealSyncService {
-  static String get _baseUrl => GeminiService.serverUrl;
+  static FirebaseFirestore get _db => FirebaseFirestore.instance;
+
+  /// Resolves the current Firebase Auth UID (see [FirebaseIdentity.currentUid]).
+  static Future<String?> _uid() => FirebaseIdentity.currentUid();
+
+  static bool _isGuestUid(String? uid) => uid == null || uid.isEmpty;
 
   // ═══════════════════════════════════════════════════════════════
   // MEALS
   // ═══════════════════════════════════════════════════════════════
 
-  /// Sync a single meal to the backend.
+  /// Sync a single meal to Firestore (upsert by meal id).
   static Future<bool> syncMeal(MealRecord meal) async {
-    final phone = await _getPhone();
-    if (phone == null) return false;
+    final uid = await _uid();
+    if (_isGuestUid(uid)) return false;
     try {
-      final resp = await http.post(
-        Uri.parse('$_baseUrl/meals/sync'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'phone': phone, 'meal': meal.toJson()}),
-      ).timeout(const Duration(seconds: 10));
-      if (resp.statusCode == 200) {
-        SyncStatusService.instance.reportSuccess();
-        return true;
-      }
-      SyncStatusService.instance.reportFailure('Meal sync (HTTP ${resp.statusCode})');
-      return false;
+      await _db.collection('meals').doc(meal.id).set(
+            {...meal.toJson(), 'uid': uid},
+            SetOptions(merge: true),
+          );
+      SyncStatusService.instance.reportSuccess();
+      return true;
     } catch (e) {
       debugPrint('MealSyncService.syncMeal failed: $e');
       SyncStatusService.instance.reportFailure('Meal sync failed');
@@ -42,22 +48,14 @@ class MealSyncService {
     }
   }
 
-  /// Remove a meal from cloud backup.
+  /// Remove a meal from Firestore.
   static Future<bool> removeMeal(String mealId) async {
-    final phone = await _getPhone();
-    if (phone == null) return false;
+    final uid = await _uid();
+    if (_isGuestUid(uid)) return false;
     try {
-      final resp = await http.post(
-        Uri.parse('$_baseUrl/meals/remove'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'phone': phone, 'meal_id': mealId}),
-      ).timeout(const Duration(seconds: 10));
-      if (resp.statusCode == 200) {
-        SyncStatusService.instance.reportSuccess();
-        return true;
-      }
-      SyncStatusService.instance.reportFailure('Meal remove (HTTP ${resp.statusCode})');
-      return false;
+      await _db.collection('meals').doc(mealId).delete();
+      SyncStatusService.instance.reportSuccess();
+      return true;
     } catch (e) {
       debugPrint('MealSyncService.removeMeal failed: $e');
       SyncStatusService.instance.reportFailure('Meal remove failed');
@@ -65,44 +63,94 @@ class MealSyncService {
     }
   }
 
-  /// Fetch all meals from cloud backup.
+  /// Fetch all meals for the signed-in user from Firestore.
+  ///
+  /// Normalizes both app-written docs (ISO-string `date`, explicit `id`) and
+  /// backend/backfill-written docs (Timestamp `date`, no `id` field) so old
+  /// cloud data reads cleanly after the migration.
   static Future<List<MealRecord>> fetchMeals() async {
-    final phone = await _getPhone();
-    if (phone == null) return [];
+    final uid = await _uid();
+    if (_isGuestUid(uid)) return [];
     try {
-      final resp = await http.get(
-        Uri.parse('$_baseUrl/meals/list/$phone'),
-      ).timeout(const Duration(seconds: 15));
-      if (resp.statusCode == 200) {
-        final data = jsonDecode(resp.body);
-        if (data is List) {
-          // Report success only after the body parses as the expected shape,
-          // so a 200-with-error-JSON never wrongly clears the banner.
-          SyncStatusService.instance.reportSuccess();
-          return data
-              .whereType<Map<String, dynamic>>()
-              .map((e) => MealRecord.fromJson(e))
-              .toList();
-        }
-      } else {
-        SyncStatusService.instance
-            .reportFailure('Meal restore (HTTP ${resp.statusCode})');
-      }
+      final snap = await _db
+          .collection('meals')
+          .where('uid', isEqualTo: uid)
+          .get()
+          .timeout(const Duration(seconds: 15));
+      final meals = snap.docs.map(_mealFromDoc).toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
+      SyncStatusService.instance.reportSuccess();
+      return meals;
     } catch (e) {
       debugPrint('MealSyncService.fetchMeals failed: $e');
       SyncStatusService.instance.reportFailure('Meal restore failed');
+      return [];
     }
-    return [];
   }
 
-  /// Bulk sync all local meals to the backend.
+  static MealRecord _mealFromDoc(
+      QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    return mealFromMap(Map<String, dynamic>.from(doc.data()), doc.id);
+  }
+
+  /// Converts a Firestore meal doc map into a [MealRecord], normalizing both
+  /// app-written docs (ISO-string `date`, explicit `id` field) and
+  /// backend/backfill-written docs (Firestore [Timestamp] `date`, no `id`
+  /// field, possible null optional strings) so old cloud data reads cleanly
+  /// after the migration. Exposed for testing; prefer [_mealFromDoc] when a
+  /// snapshot is available.
+  @visibleForTesting
+  static MealRecord mealFromMap(Map<String, dynamic> data, String docId) {
+    final normalized = Map<String, dynamic>.from(data);
+    normalized['id'] = normalized['id'] ?? docId;
+    final date = normalized['date'];
+    if (date is Timestamp) {
+      normalized['date'] = date.toDate().toIso8601String();
+    } else if (date is DateTime) {
+      normalized['date'] = date.toIso8601String();
+    }
+    return MealRecord.fromJson(normalized);
+  }
+
+  /// Bulk sync all local meals to Firestore (SYNC ALL DATA button).
+  ///
+  /// Batch-replace semantics, matching the old backend `/meals/sync` (which
+  /// deleted all then re-inserted): cloud meals that no longer exist locally
+  /// are deleted too, so a meal deleted on this device never resurrects on
+  /// reinstall.
   static Future<void> syncAllMeals(List<MealRecord> meals) async {
-    for (final meal in meals) {
-      await syncMeal(meal);
+    final uid = await _uid();
+    if (_isGuestUid(uid)) return;
+    try {
+      final db = _db;
+      final col = db.collection('meals');
+      final existing = await col.where('uid', isEqualTo: uid).get();
+      final localIds = meals.map((m) => m.id).toSet();
+      final batch = db.batch();
+      var ops = 0;
+      for (final doc in existing.docs) {
+        if (!localIds.contains(doc.id)) {
+          batch.delete(doc.reference);
+          ops++;
+        }
+      }
+      for (final meal in meals) {
+        batch.set(
+          col.doc(meal.id),
+          {...meal.toJson(), 'uid': uid},
+          SetOptions(merge: true),
+        );
+        ops++;
+      }
+      if (ops > 0) await batch.commit();
+      SyncStatusService.instance.reportSuccess();
+    } catch (e) {
+      debugPrint('MealSyncService.syncAllMeals failed: $e');
+      SyncStatusService.instance.reportFailure('Bulk meal sync failed');
     }
   }
 
-  /// Get total meal count stored in cloud.
+  /// Total meal count stored in Firestore for the current user.
   static Future<int> mealCount() async {
     final meals = await fetchMeals();
     return meals.length;
@@ -112,32 +160,23 @@ class MealSyncService {
   // HABITS & WATER
   // ═══════════════════════════════════════════════════════════════
 
-  /// Sync all habits + water log to the backend.
+  /// Sync all habits + water log to Firestore (one habitData doc per user).
   static Future<bool> syncHabits({
     required List<Map<String, dynamic>> habitsJson,
     required Map<String, int> waterLog,
     required int waterGoal,
   }) async {
-    final phone = await _getPhone();
-    if (phone == null) return false;
+    final uid = await _uid();
+    if (_isGuestUid(uid)) return false;
     try {
-      final resp = await http.post(
-        Uri.parse('$_baseUrl/habits/sync'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'phone': phone,
-          'habits': habitsJson,
-          'water_log': waterLog,
-          'water_goal': waterGoal,
-        }),
-      ).timeout(const Duration(seconds: 10));
-      if (resp.statusCode == 200) {
-        SyncStatusService.instance.reportSuccess();
-        return true;
-      }
-      SyncStatusService.instance
-          .reportFailure('Habit sync (HTTP ${resp.statusCode})');
-      return false;
+      await _db.collection('habitData').doc(uid).set({
+        'habits': habitsJson,
+        'waterLog': waterLog,
+        'waterGoal': waterGoal,
+        'updatedAt': DateTime.now(),
+      });
+      SyncStatusService.instance.reportSuccess();
+      return true;
     } catch (e) {
       debugPrint('MealSyncService.syncHabits failed: $e');
       SyncStatusService.instance.reportFailure('Habit sync failed');
@@ -145,43 +184,39 @@ class MealSyncService {
     }
   }
 
-  /// Fetch habits + water log from cloud backup.
-  /// Returns a map with 'habits', 'waterLog', 'waterGoal' keys, or null on failure.
+  /// Fetch habits + water log from Firestore.
+  /// Returns a map with 'habits', 'waterLog', 'waterGoal' keys, or null when
+  /// the user has never backed up (or on failure).
   static Future<Map<String, dynamic>?> fetchHabits() async {
-    final phone = await _getPhone();
-    if (phone == null) return null;
+    final uid = await _uid();
+    if (_isGuestUid(uid)) return null;
     try {
-      final resp = await http.get(
-        Uri.parse('$_baseUrl/habits/list/$phone'),
-      ).timeout(const Duration(seconds: 15));
-      if (resp.statusCode == 200) {
-        final data = jsonDecode(resp.body);
-        if (data is Map<String, dynamic>) {
-          // Report success only after the body parses as the expected shape,
-          // so a 200-with-error-JSON never wrongly clears the banner.
-          SyncStatusService.instance.reportSuccess();
-          return {
-            'habits': (data['habits'] as List?)?.cast<Map<String, dynamic>>() ?? [],
-            'waterLog': Map<String, int>.from(data['water_log'] as Map? ?? {}),
-            'waterGoal': (data['water_goal'] as int?) ?? 8,
-          };
-        }
-      } else {
-        SyncStatusService.instance
-            .reportFailure('Habit restore (HTTP ${resp.statusCode})');
-      }
+      final doc = await _db
+          .collection('habitData')
+          .doc(uid)
+          .get()
+          .timeout(const Duration(seconds: 15));
+      if (!doc.exists) return null;
+      final data = doc.data() ?? const <String, dynamic>{};
+      SyncStatusService.instance.reportSuccess();
+      return {
+        'habits':
+            (data['habits'] as List?)?.cast<Map<String, dynamic>>() ?? [],
+        'waterLog': Map<String, int>.from(data['waterLog'] as Map? ?? {}),
+        'waterGoal': (data['waterGoal'] as num?)?.toInt() ?? 8,
+      };
     } catch (e) {
       debugPrint('MealSyncService.fetchHabits failed: $e');
       SyncStatusService.instance.reportFailure('Habit restore failed');
+      return null;
     }
-    return null;
   }
 
   // ═══════════════════════════════════════════════════════════════
   // FULL BACKUP / RESTORE
   // ═══════════════════════════════════════════════════════════════
 
-  /// Backup ALL data (meals + habits + water) to the cloud.
+  /// Backup ALL data (meals + habits + water) to Firestore.
   /// Returns true if ALL syncs succeeded.
   static Future<bool> backupAll({
     required List<MealRecord> meals,
@@ -189,42 +224,20 @@ class MealSyncService {
     required Map<String, int> waterLog,
     required int waterGoal,
   }) async {
-    final phone = await _getPhone();
-    if (phone == null) return false;
-
     bool allOk = true;
 
-    // Backup meals
     for (final meal in meals) {
-      final ok = await syncMeal(meal);
-      if (!ok) allOk = false;
+      if (!await syncMeal(meal)) allOk = false;
     }
 
-    // Backup habits + water
-    final ok = await syncHabits(
+    if (!await syncHabits(
       habitsJson: habitsJson,
       waterLog: waterLog,
       waterGoal: waterGoal,
-    );
-    if (!ok) allOk = false;
+    )) {
+      allOk = false;
+    }
 
     return allOk;
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // HELPERS
-  // ═══════════════════════════════════════════════════════════════
-
-  static Future<String?> _getPhone() async {
-    final prefs = await SharedPreferences.getInstance();
-    final phone = prefs.getString('phone');
-    if (phone == null || phone.isEmpty) return null;
-    // Skip guest users
-    if (phone.startsWith('guest_')) return null;
-    return phone;
-  }
-  // NOTE: callers return early (reporting nothing) when _getPhone() is null,
-  // because a guest/not-logged-in user has no cloud account — that is NOT a
-  // backend failure. Widget tests rely on this: with no phone seeded in mock
-  // prefs, no HTTP request is made, so no banner pops in the shell tests.
 }

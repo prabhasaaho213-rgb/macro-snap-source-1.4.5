@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'firebase_identity.dart';
 import 'meal_store.dart';
 import 'notification_service.dart';
 import 'gemini_service.dart';
@@ -100,16 +102,48 @@ class SubscriptionService extends ChangeNotifier {
     } catch (_) {}
   }
 
-  /// Verifies the subscription against the backend PostgreSQL database — the
-  /// source of truth for payments and subscription state.
+  /// Verifies the paid subscription from **Firestore** — the source of truth
+  /// for payments and subscription state after the Phase-3 migration.
+  ///
+  /// Reads `users/{uid}.subscribed` (written by the backend's Razorpay
+  /// webhook/verify via the Admin SDK). Falls back to the legacy
+  /// `/subscription/status` backend call when Firestore has no user doc yet
+  /// (Phase-1/2 backfill not caught up) or when Firestore is unreachable.
   ///
   /// Called at app startup and after sign-in so a paying user who reinstalls
-  /// or switches devices gets Pro restored from the database without needing
-  /// to open the subscription screen. Never deactivates locally — transient
-  /// network failures must not strip a user's paid status.
+  /// or switches devices gets Pro restored without opening the subscription
+  /// screen. Never deactivates locally — transient network failures must not
+  /// strip a user's paid status.
   Future<void> verifyServerSubscription() async {
     // The admin's lifetime Pro is local-only; don't override it.
     if (await isAdmin()) return;
+
+    // ── Firestore first: users/{uid}.subscribed ────────────────────────
+    try {
+      final uid = await FirebaseIdentity.currentUid();
+      if (uid != null) {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .get()
+            .timeout(const Duration(seconds: 8));
+        if (doc.exists) {
+          final subscribed = doc.data()?['subscribed'] == true;
+          if (subscribed && !_subscribed) {
+            // Activation from Firestore is authoritative.
+            await activate();
+            return;
+          }
+          // `subscribed == false` is NOT authoritative during the migration
+          // window (a Firestore doc can be stale while Postgres says paid) —
+          // fall through to the backend check below to confirm.
+        }
+      }
+    } catch (_) {
+      // Firestore unavailable — fall through to the backend check.
+    }
+
+    // ── Backend fallback: Postgres /subscription/status ─────────────────
     final p = await SharedPreferences.getInstance();
     final email = p.getString('email');
     final phone = p.getString('phone');

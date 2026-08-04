@@ -1,7 +1,12 @@
 # MacroSnap → Firestore Migration Design
 
-> Status: **Proposed — no code changed yet.** This document is the agreed design
-> (collections, security rules, phased plan) produced before implementation.
+> Status: **In progress.** Phases 1–2 done (backend dual-write `macro-snap-backend/firestore.js`,
+> `backfill_firestore.js`). **Phase 3 (app swap) implemented:** `MealSyncService` now reads/writes
+> Firestore directly (`meals/{id}`, `habitData/{uid}`) keyed by Firebase Auth UID;
+> `SubscriptionService.verifyServerSubscription` reads `users/{uid}.subscribed` with a
+> backend fallback; `SyncStatusService.probeBackend` probes Firestore for signed-in users.
+> Security rules live in `firestore.rules` (deploy via `firebase deploy --only firestore:rules`).
+> This document remains the agreed design (collections, security rules, phased plan).
 
 ## 0. Why this migration
 

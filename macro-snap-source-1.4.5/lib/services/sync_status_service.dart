@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'firebase_identity.dart';
 import 'gemini_service.dart';
 
 /// Reactive tracker for backend (cloud backup) reachability.
@@ -51,10 +53,33 @@ class SyncStatusService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Re-probe the backend (Retry button). The root route returns 200 'OK'
-  /// when the app is live; Railway returns a 404 JSON when no deployment is
-  /// running on the domain.
+  /// Re-probe the cloud (Retry button).
+  ///
+  /// The data plane is now Firestore, so for a signed-in user we probe it
+  /// directly: reading the user's own `users/{uid}` doc verifies both
+  /// connectivity and security-rule permissions (a missing doc reads fine
+  /// without error). Guests have no Firestore docs, so we fall back to
+  /// probing the AI/payments backend root, which still serves /analyze and
+  /// Razorpay.
   Future<bool> probeBackend() async {
+    // ── Firestore probe for signed-in users ───────────────────────────
+    try {
+      final uid = await FirebaseIdentity.currentUid();
+      if (uid != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .get()
+            .timeout(const Duration(seconds: 8));
+        reportSuccess();
+        return true;
+      }
+    } catch (_) {
+      reportFailure('Cannot reach cloud database');
+      return false;
+    }
+
+    // ── Backend fallback for guests (AI + payments) ────────────────────
     try {
       final resp = await http
           .get(Uri.parse('${GeminiService.serverUrl}/'))
