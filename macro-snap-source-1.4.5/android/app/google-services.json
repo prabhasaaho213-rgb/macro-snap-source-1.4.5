@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "562037381",
+    "firebase_url": "https://macrosnap-cfde3-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "macrosnap-cfde3",
     "storage_bucket": "macrosnap-cfde3.firebasestorage.app"
   },
@@ -14,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "562037381-b53os69f1joejirvt48mi9nsgjkp2vqq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.macrosnap.macro_snap",
+            "certificate_hash": "280430afe6b33b4f6c70beb6f7371eb4ddc2cef6"
+          }
+        },
+        {
           "client_id": "562037381-chh5aop2j003hhpieiuhpulfuknl4kps.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -22,11 +31,11 @@
           }
         },
         {
-          "client_id": "562037381-dapit1ovl1pi51m046b7q0d4kro2pg6e.apps.googleusercontent.com",
+          "client_id": "562037381-d7phq9eitfcqbhl2kuif89j072akc9go.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.macrosnap.macro_snap",
-            "certificate_hash": "1f6f274db9389c1ee17905d6be22d7bf749110bc"
+            "certificate_hash": "9b999d833518d971e3154c1d784d3b9a1330b744"
           }
         },
         {
