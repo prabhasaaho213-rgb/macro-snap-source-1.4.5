@@ -353,30 +353,32 @@ class _HabitsTabState extends State<HabitsTab> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'TODAY',
                     style: TextStyle(
-                      color: Colors.white70,
+                      color: isDark
+                          ? Colors.white70
+                          : MacroSnapTheme.textTertiary(context),
                       fontSize: 12,
                       letterSpacing: 1.4,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   Text(
                     'Make it count.',
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
+                      color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                     ),
                   ),
                 ],
               ),
-              _progressRing(progress),
+              _progressRing(progress, isDark),
             ],
           ),
           const SizedBox(height: 22),
@@ -385,7 +387,9 @@ class _HabitsTabState extends State<HabitsTab> {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 10,
-              backgroundColor: Colors.white10,
+              backgroundColor: isDark
+                  ? Colors.white10
+                  : const Color(0xFFE8DEFF),
               valueColor: const AlwaysStoppedAnimation<Color>(
                 MacroSnapTheme.neonGreen,
               ),
@@ -402,8 +406,10 @@ class _HabitsTabState extends State<HabitsTab> {
                       : '$completed of $total missions complete',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white70,
+                  style: TextStyle(
+                    color: isDark
+                        ? Colors.white70
+                        : MacroSnapTheme.textSecondary(context),
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -422,8 +428,10 @@ class _HabitsTabState extends State<HabitsTab> {
                         '${store.totalStreakPower}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white70,
+                        style: TextStyle(
+                          color: isDark
+                              ? Colors.white70
+                              : MacroSnapTheme.textSecondary(context),
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                         ),
@@ -439,7 +447,7 @@ class _HabitsTabState extends State<HabitsTab> {
     );
   }
 
-  Widget _progressRing(double progress) {
+  Widget _progressRing(double progress, bool isDark) {
     return SizedBox(
       width: 72,
       height: 72,
@@ -449,16 +457,18 @@ class _HabitsTabState extends State<HabitsTab> {
           CircularProgressIndicator(
             value: progress,
             strokeWidth: 7,
-            backgroundColor: Colors.white10,
+            backgroundColor: isDark
+                ? Colors.white10
+                : const Color(0xFFE8DEFF),
             valueColor: const AlwaysStoppedAnimation<Color>(
               MacroSnapTheme.neonPink,
             ),
           ),
           Text(
             '${(progress * 100).round()}%',
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w900,
-              color: Colors.white,
+              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
               fontSize: 16,
             ),
           ),

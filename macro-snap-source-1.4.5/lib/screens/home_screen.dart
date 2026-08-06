@@ -268,14 +268,18 @@ class _HomeScreenState extends State<HomeScreen>
                   children: [
                     Text('TODAY',
                         style: TextStyle(
-                          color: Colors.white70, fontSize: 12,
+                          color: isDark
+                              ? Colors.white70
+                              : MacroSnapTheme.textTertiary(context),
+                          fontSize: 12,
                           letterSpacing: 1.4, fontWeight: FontWeight.w800,
                         )),
                     const SizedBox(height: 5),
-                    const Text(
+                    Text(
                       'Calorie goal',
                       style: TextStyle(
-                        fontSize: 25, fontWeight: FontWeight.w900, color: Colors.white,
+                        fontSize: 25, fontWeight: FontWeight.w900,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                       ),
                     ),
                   ],
@@ -289,13 +293,17 @@ class _HomeScreenState extends State<HomeScreen>
                       CircularProgressIndicator(
                         value: progress,
                         strokeWidth: 7,
-                        backgroundColor: Colors.white10,
+                        backgroundColor: isDark
+                            ? Colors.white10
+                            : const Color(0xFFE8DEFF),
                         valueColor: const AlwaysStoppedAnimation<Color>(MacroSnapTheme.neonPink),
                       ),
                       Text(
                         '${(progress * 100).round()}%',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900, color: Colors.white, fontSize: 16,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                          fontSize: 16,
                         ),
                       ),
                     ],
@@ -309,7 +317,9 @@ class _HomeScreenState extends State<HomeScreen>
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 10,
-                backgroundColor: Colors.white10,
+                backgroundColor: isDark
+                    ? Colors.white10
+                    : const Color(0xFFE8DEFF),
                 valueColor: const AlwaysStoppedAnimation<Color>(MacroSnapTheme.neonGreen),
               ),
             ),
@@ -322,7 +332,12 @@ class _HomeScreenState extends State<HomeScreen>
                     '${consumed.toInt()} of ${targetCal.toInt()} kcal',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: isDark
+                          ? Colors.white70
+                          : MacroSnapTheme.textSecondary(context),
+                      fontSize: 13, fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),

@@ -73,16 +73,33 @@ class MacroSnapTheme {
   static const Color cardDarkLight = Color(0xFF181822);
 
   // ─── Card Decorations ──────────────────────────────────────
-  /// Dark gradient card with neon border (Pop UPI hero card style)
+  /// Hero gradient card with neon border (Pop UPI hero card style).
+  ///
+  /// Theme-aware: dark mode keeps the signature near-black hero gradient;
+  /// light mode uses the matching light gradient (same as [habitlyCard]) so
+  /// hero cards like "Calorie goal" and "Make it count" never stay dark when
+  /// the app is in light theme.
   static BoxDecoration habitlyHeroCard(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (isDark) {
+      return BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF050508), Color(0xFF181830), Color(0xFF11151E)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0xFF353550)),
+      );
+    }
     return BoxDecoration(
       gradient: const LinearGradient(
-        colors: [Color(0xFF050508), Color(0xFF181830), Color(0xFF11151E)],
+        colors: [Color(0xFFFFFFFF), Color(0xFFF4EFFF)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
       borderRadius: BorderRadius.circular(28),
-      border: Border.all(color: const Color(0xFF353550)),
+      border: Border.all(color: const Color(0xFFC8BEFF)),
     );
   }
 
