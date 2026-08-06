@@ -75,7 +75,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setState(() => _phone = phone);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account upgraded! Your data is now linked to your phone.')),
+          const SnackBar(content: Text('Account upgraded! Your data is now linked to your Google account.')),
         );
       }
     }
@@ -312,7 +312,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 AnimatedEntrance(delayMs: 260, child: _settingTile(Icons.star_rounded, 'Rate Us', 'Love MacroSnap? Leave a 5-star review', () => RateUsService.rateNowFromSettings(), isDark)),
                 const Divider(height: 24),
                 if (_isGuest)
-                  AnimatedEntrance(delayMs: 270, child: _settingTile(Icons.person_add_rounded, 'Save Your Account', 'Link phone to keep your data permanently', _upgradeFromGuest, isDark)),
+                  AnimatedEntrance(delayMs: 270, child: _settingTile(Icons.person_add_rounded, 'Save Your Account', 'Link Google to keep your data permanently', _upgradeFromGuest, isDark)),
                 if (_isGuest) const Divider(height: 24),
                 AnimatedEntrance(delayMs: 280, child: _settingTile(Icons.privacy_tip_outlined, 'Privacy Policy', 'How we handle your data', () async {
                   final uri = Uri.parse('https://prabhasaaho213-rgb.github.io/macro-snap-source-1.4.5/');
