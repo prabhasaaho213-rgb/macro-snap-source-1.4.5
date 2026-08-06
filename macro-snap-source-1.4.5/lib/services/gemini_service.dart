@@ -128,7 +128,7 @@ class NutritionResult {
 
 class GeminiService {
   static const _prefsKey = 'server_url';
-  static String _serverUrl = 'https://macro-snap-backend-production.up.railway.app';
+  static String _serverUrl = 'https://macro-snap-backend.vercel.app';
 
   /// Test-only mock result. When non-null, [analyzeFoodImage] returns this
   /// immediately instead of making a network request.
