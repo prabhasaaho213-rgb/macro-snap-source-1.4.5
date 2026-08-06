@@ -4,7 +4,6 @@ import 'package:uuid/uuid.dart';
 import '../core/theme.dart';
 import '../models/meal_record.dart';
 import '../services/gemini_service.dart';
-import '../services/local_analyzer.dart';
 import '../services/meal_store.dart';
 import '../services/scan_gate.dart';
 import '../widgets/animations.dart';
@@ -62,71 +61,67 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
       if (mounted && _isAnalyzing) {
         setState(() {
           _analysisStage = 'Taking longer than expected';
-          _analysisSub = 'The server may be busy. You can retry or use local analysis.';
+          _analysisSub = 'The server may be busy. Please retry in a moment.';
         });
       }
     });
   }
 
   Future<void> _analyze() async {
-    // Try Gemini AI first
-    if (GeminiService.hasServerUrl) {
-      try {
-        final result = await GeminiService.analyzeFoodImage(widget.imagePath);
-        // Only count a scan after a SUCCESSFUL analysis — failed
-        // analyses must not consume the free scan limit. Also bail
-        // out without counting if the user closed the screen while
-        // the analysis was still running.
-        if (!mounted) return;
-        await ScanGate.incrementScan();
-        // Re-check after the async count — the screen may have been
-        // closed while the count was being persisted.
-        if (!mounted) return;
-        setState(() { _result = result; _isAnalyzing = false; });
-        _animController.forward();
-        return;
-      } catch (_) {
-        // Fall through to local fallback
+    // AI is the ONLY identifier — there is no offline fallback. If the AI
+    // can't be reached or fails, show a clear error instead of a wrong
+    // offline guess.
+    if (!GeminiService.hasServerUrl) {
+      if (mounted) {
+        setState(() { _error = 'no_url'; _isAnalyzing = false; });
       }
+      return;
     }
-
-    // Fallback: Local ML Kit analysis
     try {
-      final localResult = await LocalAnalyzer.analyze(widget.imagePath);
+      final result = await GeminiService.analyzeFoodImage(widget.imagePath);
+      // Only count a scan after a SUCCESSFUL analysis — failed
+      // analyses must not consume the free scan limit. Also bail
+      // out without counting if the user closed the screen while
+      // the analysis was still running.
       if (!mounted) return;
-      if (localResult.bestMatch != null) {
-        final item = localResult.bestMatch!;
-        final dish = DishItem(
-          name: item.name,
-          portionDescription: 'Local estimate',
-          caloriesPer100g: item.calories,
-          proteinPer100g: item.protein,
-          carbsPer100g: item.carbs,
-          fatsPer100g: item.fats,
-          fiberPer100g: item.fiber,
-          sugarPer100g: 0,
-          suitableFor: 'both',
-        );
-        final result = NutritionResult(
-          dishes: [dish],
-          description: 'On-device analysis (${localResult.labels.take(2).join(", ")})',
-          confidence: 0.5,
-        );
-        await ScanGate.incrementScan();
-        // Re-check after the async count — the screen may have been
-        // closed while the count was being persisted.
-        if (!mounted) return;
-        setState(() { _result = result; _isAnalyzing = false; });
-      } else {
-        setState(() { _error = 'Could not identify food. Try a clearer photo.'; _isAnalyzing = false; });
-      }
+      await ScanGate.incrementScan();
+      // Re-check after the async count — the screen may have been
+      // closed while the count was being persisted.
+      if (!mounted) return;
+      setState(() { _result = result; _isAnalyzing = false; });
       _animController.forward();
     } catch (e) {
-      if (mounted) {
-        setState(() { _error = 'Analysis failed: ${e.toString()}'; _isAnalyzing = false; });
-        _animController.forward();
+      // Scan limit reached is not a recognition failure — show the clear
+      // upsell message.
+      if (e.toString().contains('Scan limit')) {
+        if (mounted) {
+          setState(() {
+            _error = 'Free scans used up.\nSubscribe for unlimited scans.';
+            _isAnalyzing = false;
+          });
+        }
+        return;
       }
+      if (mounted) {
+        setState(() {
+          _error = 'AI analysis failed: '
+              '${e.toString().replaceFirst('Exception: ', '')}';
+          _isAnalyzing = false;
+        });
+      }
+      _animController.forward();
     }
+  }
+
+  /// Applies a new serving size: updates the slider value AND rebuilds the
+  /// [NutritionResult] with the new grams so every macro (calories, protein,
+  /// carbs, fats, fiber, sugar) rescales from its per-100g value.
+  void _setGrams(int g) {
+    setState(() {
+      _grams = g;
+      final r = _result;
+      if (r != null) _result = r.withGrams(g);
+    });
   }
 
   Widget _buildGramAdjuster(bool isDark) {
@@ -145,7 +140,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
             ),
             const Spacer(),
             GestureDetector(
-              onTap: () => setState(() => _grams = _grams >= 50 ? _grams - 25 : 25),
+              onTap: () => _setGrams(_grams >= 50 ? _grams - 25 : 25),
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
@@ -165,7 +160,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                     color: MacroSnapTheme.textTertiary(context))),
             const SizedBox(width: 12),
             GestureDetector(
-              onTap: () => setState(() => _grams = _grams <= 975 ? _grams + 25 : 1000),
+              onTap: () => _setGrams(_grams <= 975 ? _grams + 25 : 1000),
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(

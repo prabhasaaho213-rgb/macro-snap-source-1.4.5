@@ -144,6 +144,19 @@ class FoodDatabase {
     FoodItem(name: 'Kaju Katli (1 pc)', category: 'Sweets', calories: 110, protein: 2.0, carbs: 12.0, fats: 6.5, fiber: 0.3, serving: '1 piece (20g)'),
     FoodItem(name: 'Shrikhand (100g)', category: 'Sweets', calories: 210, protein: 5.0, carbs: 32.0, fats: 8.0, fiber: 0.0, serving: '100g'),
 
+    // --- BAKERY & DESSERTS ---
+    // Real per-100g-appropriate values so a cake photo never falls back to an
+    // Indian sweet with wrong nutrition (the old 'cake' → 'Barfi' mapping).
+    FoodItem(name: 'Chocolate Cake (1 slice)', category: 'Bakery & Desserts', calories: 320, protein: 4.5, carbs: 45.0, fats: 14.0, fiber: 1.5, serving: '1 slice (80g)'),
+    FoodItem(name: 'Cupcake (1 pc)', category: 'Bakery & Desserts', calories: 250, protein: 3.0, carbs: 35.0, fats: 11.0, fiber: 1.0, serving: '1 medium (60g)'),
+    FoodItem(name: 'Cheesecake (1 slice)', category: 'Bakery & Desserts', calories: 350, protein: 6.0, carbs: 26.0, fats: 25.0, fiber: 0.5, serving: '1 slice (100g)'),
+    FoodItem(name: 'Donut (1 pc)', category: 'Bakery & Desserts', calories: 250, protein: 3.5, carbs: 30.0, fats: 13.0, fiber: 1.0, serving: '1 glazed (60g)'),
+    FoodItem(name: 'Cookie (1 pc)', category: 'Bakery & Desserts', calories: 80, protein: 1.0, carbs: 10.0, fats: 4.0, fiber: 0.5, serving: '1 medium (20g)'),
+    FoodItem(name: 'Brownie (1 pc)', category: 'Bakery & Desserts', calories: 230, protein: 3.0, carbs: 30.0, fats: 12.0, fiber: 1.5, serving: '1 square (55g)'),
+    FoodItem(name: 'Croissant (1 pc)', category: 'Bakery & Desserts', calories: 270, protein: 5.0, carbs: 31.0, fats: 14.0, fiber: 1.5, serving: '1 medium (60g)'),
+    FoodItem(name: 'Pastry (1 pc)', category: 'Bakery & Desserts', calories: 320, protein: 4.0, carbs: 30.0, fats: 20.0, fiber: 1.0, serving: '1 piece (70g)'),
+    FoodItem(name: 'Pancake (2 pcs)', category: 'Bakery & Desserts', calories: 180, protein: 5.0, carbs: 25.0, fats: 7.0, fiber: 1.0, serving: '2 medium'),
+
     // --- FRUITS ---
     FoodItem(name: 'Banana (1 medium)', category: 'Fruits', calories: 105, protein: 1.3, carbs: 27.0, fats: 0.4, fiber: 3.0, serving: '1 medium'),
     FoodItem(name: 'Apple (1 medium)', category: 'Fruits', calories: 95, protein: 0.5, carbs: 25.0, fats: 0.3, fiber: 4.5, serving: '1 medium'),

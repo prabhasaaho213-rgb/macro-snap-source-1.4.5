@@ -209,7 +209,13 @@ class _ScanScreenState extends State<ScanScreen>
       return;
     }
     final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery, maxWidth: 512, imageQuality: 70);
+    // Higher resolution feeds the AI more detail for accurate recognition
+    // (512px was too small for fine details like desserts and packaged food).
+    final image = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      imageQuality: 82,
+    );
     if (image != null && mounted) {
       final bytes = await image.readAsBytes();
       final tempDir = Directory.systemTemp;
