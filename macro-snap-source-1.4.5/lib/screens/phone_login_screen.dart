@@ -109,6 +109,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
           _loading = false;
           _error = 'Google sign in failed: ${e.toString()}';
         });
+        _shakeController.forward(from: 0);
       }
     }
   }
