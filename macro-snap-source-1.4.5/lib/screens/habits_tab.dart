@@ -21,6 +21,12 @@ class HabitsTab extends StatefulWidget {
 class _HabitsTabState extends State<HabitsTab> {
   HabitStore get store => HabitStore.instance;
   bool _subscribed = false;
+  bool _isAdmin = false;
+
+  /// True when this user can create unlimited habits: the owner/admin account
+  /// is always exempt (lifetime Pro) even before [SubscriptionService.load]
+  /// finishes, and paying subscribers are exempt too.
+  bool get _unlimitedHabits => _subscribed || _isAdmin;
 
   @override
   void initState() {
@@ -30,9 +36,16 @@ class _HabitsTabState extends State<HabitsTab> {
   }
 
   Future<void> _checkSub() async {
+    // Resolve the admin flag FIRST (pure prefs read — instant) and store it on
+    // the field immediately, so the owner is never gated even during the async
+    // subscription-state load that follows (a defensive guard on top of
+    // SubscriptionService.load() already granting admins lifetime Pro).
+    _isAdmin = await SubscriptionService.instance.isAdmin();
     await SubscriptionService.instance.load();
     if (mounted) {
-      setState(() => _subscribed = SubscriptionService.instance.isSubscribed);
+      setState(() {
+        _subscribed = SubscriptionService.instance.isSubscribed;
+      });
     }
   }
 
@@ -266,7 +279,8 @@ class _HabitsTabState extends State<HabitsTab> {
                         ),
 
                       // ─── Habit Limit Indicator ───────────────────────
-                      if (!_subscribed && store.habits.isNotEmpty) ...[
+                      // Hidden for subscribers AND the admin (both unlimited).
+                      if (!_unlimitedHabits && store.habits.isNotEmpty) ...[
                         const SizedBox(height: 16),
                         _habitLimitCard(isDark),
                       ],
@@ -307,18 +321,18 @@ class _HabitsTabState extends State<HabitsTab> {
       child: FilledButton.icon(
         onPressed: () => _onCreateTap(context),
         icon: Icon(
-          store.habitLimitReached && !_subscribed
+          store.habitLimitReached && !_unlimitedHabits
               ? Icons.lock_rounded
               : Icons.add_rounded,
         ),
         label: Text(
-          store.habitLimitReached && !_subscribed
+          store.habitLimitReached && !_unlimitedHabits
               ? 'GO PRO FOR UNLIMITED'
               : 'CREATE HABIT',
           style: const TextStyle(fontWeight: FontWeight.w900),
         ),
         style: FilledButton.styleFrom(
-          backgroundColor: store.habitLimitReached && !_subscribed
+          backgroundColor: store.habitLimitReached && !_unlimitedHabits
               ? MacroSnapTheme.neonPurple
               : MacroSnapTheme.neonGreen,
           foregroundColor: Colors.black,
@@ -1171,7 +1185,7 @@ class _HabitsTabState extends State<HabitsTab> {
 
   // ─── CREATE TAP HANDLER ────────────────────────────────────
   void _onCreateTap(BuildContext context) {
-    if (store.habitLimitReached && !_subscribed) {
+    if (store.habitLimitReached && !_unlimitedHabits) {
       _showProUpsell(context);
     } else {
       _showCreateHabitSheet(context);

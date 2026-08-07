@@ -194,6 +194,52 @@ void main() {
     expect(store.todayCompleted, 0);
   });
 
+  // ─── WIDGET TEST: the admin is exempt from the 3-habit free limit ─
+  testWidgets('admin with more than 3 habits still sees CREATE HABIT unlocked',
+      (tester) async {
+    // Seed the admin email so SubscriptionService.isAdmin() resolves true.
+    SharedPreferences.setMockInitialValues({
+      'email': 'PRABHASAAHO213@GMAIL.COM', // case-insensitive match
+    });
+    final store = HabitStore.instance;
+    // 4 habits — above the free limit of 3.
+    for (var i = 0; i < 4; i++) {
+      store.habits.add(Habit(
+        id: 'h$i',
+        name: 'Habit $i',
+        emoji: '✨',
+        colorValue: 0xFF00FF66,
+        frequency: 'Daily',
+      ));
+    }
+
+    await pumpHabitsTab(tester);
+
+    // Admin is unlimited: the button must NOT be the Pro upsell, and the
+    // habit-limit card must be hidden. The create button sits below the fold
+    // with 4 missions, so scroll to it (same as the sections-order test).
+    await tester.scrollUntilVisible(
+      find.text('CREATE HABIT'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.text('GO PRO FOR UNLIMITED'),
+      findsNothing,
+      reason: 'admin must never see the Pro upsell button',
+    );
+    expect(find.text('CREATE HABIT'), findsOneWidget,
+        reason: 'admin with 4 habits must still be able to create more');
+    expect(
+      find.text('Habit Limit'),
+      findsNothing,
+      reason: 'admin must never see the habit-limit card',
+    );
+
+    store.habits.clear();
+  });
+
   // ─── WIDGET TEST: repeated right swipes must not need repeated left swipes ─
   testWidgets('swipe right twice then left once fully un-completes', (tester) async {
     final store = HabitStore.instance;
