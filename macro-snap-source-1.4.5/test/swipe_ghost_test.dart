@@ -44,17 +44,20 @@ void main() {
     final emoji = find.text('🏃');
     expect(emoji, findsOneWidget);
 
-    // The RepaintBoundary (ghost fix) must be the DIRECT child of the
-    // Dismissible, wrapping the card — if it's missing or moved outside, the
-    // glow shadows are repainted raw against the swipe background.
+    // Ghost-fix structure: the emoji tile's glow/blur shadow is the only
+    // thing that smears during a swipe, so it must be isolated in its own
+    // RepaintBoundary. The boundary must NOT wrap the whole card — a whole-
+    // card raster layer renders a black rectangle that slides with the card
+    // on some GPUs (the black-box glitch).
     final dismissible = find.byType(Dismissible).first;
     expect(dismissible, findsWidgets,
         reason: 'mission card must be a Dismissible');
     final dismissibleWidget = tester.widget<Dismissible>(dismissible);
-    expect(dismissibleWidget.child, isA<RepaintBoundary>(),
+    expect(dismissibleWidget.child, isNot(isA<RepaintBoundary>()),
         reason:
-            'RepaintBoundary must be the direct child of the Dismissible '
-            '(swipe-ghost fix)');
+            'the whole card must NOT be wrapped in a RepaintBoundary — that '
+            'renders a black rectangle sliding with the card on swipe '
+            '(black-box fix)');
 
     final boundary = find.ancestor(
       of: emoji,
@@ -129,7 +132,7 @@ void main() {
         reason: 'confirmDismiss returns false → card snaps back, not removed');
   });
 
-  testWidgets('swipe left resets the streak and the card snaps back',
+  testWidgets('swipe left un-completes today (does NOT reset the streak)',
       (tester) async {
     final store = HabitStore.instance;
     final h = Habit(
@@ -138,12 +141,10 @@ void main() {
         emoji: '🏃',
         colorValue: 0xFFFF007F,
         frequency: 'Daily');
-    // Pre-complete today + yesterday so there is a streak to reset.
+    // Pre-complete today + yesterday so there is a streak that must survive.
     final now = DateTime.now();
-    h.completedDates.addAll([
-      dateKey(now),
-      dateKey(now.subtract(const Duration(days: 1))),
-    ]);
+    final yesterday = now.subtract(const Duration(days: 1));
+    h.completedDates.addAll([dateKey(now), dateKey(yesterday)]);
     store.habits.add(h);
     await pumpHabitsTab(tester);
 
@@ -158,9 +159,36 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500)); // deferred persist (350ms) fires with margin → store.update + notify + SnackBar
     await tester.pump(const Duration(milliseconds: 300)); // snap-back reverse animation
 
-    expect(h.completedDates, isEmpty,
-        reason: 'swipe left = reset the streak');
+    expect(h.isCompleted(now), isFalse,
+        reason: 'swipe left = un-complete today\'s task');
+    expect(h.isCompleted(yesterday), isTrue,
+        reason: 'swipe left must NOT reset the streak — past days stay intact');
     expect(find.text('Morning Run'), findsOneWidget,
         reason: 'confirmDismiss returns false → card snaps back, not removed');
+  });
+
+  testWidgets('swipe right on an already-completed habit keeps it completed',
+      (tester) async {
+    final store = HabitStore.instance;
+    final h = Habit(
+        id: 'v1',
+        name: 'Morning Run',
+        emoji: '🏃',
+        colorValue: 0xFFFF007F,
+        frequency: 'Daily');
+    final now = DateTime.now();
+    h.completedDates.add(dateKey(now)); // already completed
+    store.habits.add(h);
+    await pumpHabitsTab(tester);
+
+    await tester.drag(find.text('Morning Run'), const Offset(500, 0));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(h.isCompleted(now), isTrue,
+        reason: 'swipe right = complete, never un-complete');
+    expect(find.text('Morning Run'), findsOneWidget);
   });
 }

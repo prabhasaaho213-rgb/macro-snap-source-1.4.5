@@ -148,8 +148,8 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(recipe.ingredients.length == 1 ? '1 Ingredient' : '${recipe.ingredients.length} Ingredients',
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
-                              color: MacroSnapTheme.neonGreen)),
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
+                              color: MacroSnapTheme.greenText(context))),
                     ),
                     const Spacer(),
                     PopupMenuButton<String>(

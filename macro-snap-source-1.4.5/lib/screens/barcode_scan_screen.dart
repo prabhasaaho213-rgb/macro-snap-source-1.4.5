@@ -244,7 +244,7 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
                 _row('Protein', '${f.proteinPer100g.toStringAsFixed(1)}g', MacroSnapTheme.macroProtein, isDark),
                 _row('Carbs', '${f.carbsPer100g.toStringAsFixed(1)}g', MacroSnapTheme.macroCalories, isDark),
                 _row('Fats', '${f.fatsPer100g.toStringAsFixed(1)}g', MacroSnapTheme.macroFats, isDark),
-                if (f.fiberPer100g > 0) _row('Fiber', '${f.fiberPer100g.toStringAsFixed(1)}g', MacroSnapTheme.neonGreen, isDark),
+                if (f.fiberPer100g > 0) _row('Fiber', '${f.fiberPer100g.toStringAsFixed(1)}g', MacroSnapTheme.greenText(context), isDark),
                 if (f.sugarPer100g > 0) _row('Sugar', '${f.sugarPer100g.toStringAsFixed(1)}g', const Color(0xFFDB2777), isDark),
               ],
             ),

@@ -112,7 +112,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                           style: TextStyle(
                             fontSize: 32, fontWeight: FontWeight.w800,
                             letterSpacing: 6,
-                            color: MacroSnapTheme.neonGreen,
+                            color: MacroSnapTheme.greenText(context),
                           ),
                         ),
                       ),

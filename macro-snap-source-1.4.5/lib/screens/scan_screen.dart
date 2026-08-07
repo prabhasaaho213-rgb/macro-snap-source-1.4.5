@@ -528,7 +528,7 @@ class _ScanScreenState extends State<ScanScreen>
                             _scansLeft >= 99 ? 'Unlimited' : '$_scansLeft left',
                             style: TextStyle(
                               fontSize: 12, fontWeight: FontWeight.w700,
-                              color: canUse ? MacroSnapTheme.neonGreen : MacroSnapTheme.neonPink,
+                              color: canUse ? MacroSnapTheme.greenText(context) : MacroSnapTheme.neonPink,
                             ),
                           ),
                         ],

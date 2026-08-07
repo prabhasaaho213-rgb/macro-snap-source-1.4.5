@@ -44,8 +44,8 @@ class AddMealScreen extends StatelessWidget {
                           child: Center(
                             child: Text(
                               food.category[0],
-                              style: const TextStyle(
-                                color: MacroSnapTheme.neonGreen,
+                              style: TextStyle(
+                                color: MacroSnapTheme.greenText(context),
                                 fontSize: 24,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -104,7 +104,7 @@ class AddMealScreen extends StatelessWidget {
                     _buildRow(context, 'Protein', '${food.protein}g', MacroSnapTheme.macroProtein, isDark),
                     _buildRow(context, 'Carbs', '${food.carbs}g', MacroSnapTheme.macroCalories, isDark),
                     _buildRow(context, 'Fats', '${food.fats}g', MacroSnapTheme.macroFats, isDark),
-                    _buildRow(context, 'Fiber', '${food.fiber}g', MacroSnapTheme.neonGreen, isDark),
+                    _buildRow(context, 'Fiber', '${food.fiber}g', MacroSnapTheme.greenText(context), isDark),
                   ],
                 ),
               ),

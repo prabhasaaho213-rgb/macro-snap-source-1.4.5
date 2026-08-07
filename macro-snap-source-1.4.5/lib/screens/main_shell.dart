@@ -426,7 +426,7 @@ class _NavItem extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: MacroSnapTheme.neonGreen,
+                  color: MacroSnapTheme.greenText(context),
                 ),
               ),
             ],

@@ -174,8 +174,8 @@ class _HabitsTabState extends State<HabitsTab> {
                           ),
                           Text(
                             '$completed/${active.length}',
-                            style: const TextStyle(
-                              color: MacroSnapTheme.neonGreen,
+                            style: TextStyle(
+                              color: MacroSnapTheme.greenText(context),
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -454,22 +454,35 @@ class _HabitsTabState extends State<HabitsTab> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          CircularProgressIndicator(
-            value: progress,
-            strokeWidth: 7,
-            backgroundColor: isDark
-                ? Colors.white10
-                : const Color(0xFFE8DEFF),
-            valueColor: const AlwaysStoppedAnimation<Color>(
-              MacroSnapTheme.neonPink,
+          // Ring fills the whole box (SizedBox.expand) so it renders at full
+          // size — without this it silently renders at CircularProgress-
+          // Indicator's 36px default inside the loose-fit Stack.
+          SizedBox.expand(
+            child: CircularProgressIndicator(
+              value: progress,
+              strokeWidth: 7,
+              backgroundColor: isDark
+                  ? Colors.white10
+                  : const Color(0xFFE8DEFF),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                MacroSnapTheme.neonPink,
+              ),
             ),
           ),
-          Text(
-            '${(progress * 100).round()}%',
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-              fontSize: 16,
+          // % text stays INSIDE the stroke: padded off the ring and FittedBox-
+          // scaled down on large text scales instead of overlapping it.
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                '${(progress * 100).round()}%',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                  fontSize: 16,
+                ),
+              ),
             ),
           ),
         ],
@@ -591,8 +604,8 @@ class _HabitsTabState extends State<HabitsTab> {
         : MacroSnapTheme.neonOrange;
     final icon = rightSwipe
         ? Icons.check_circle_rounded
-        : Icons.refresh_rounded;
-    final label = rightSwipe ? 'Complete' : 'Reset';
+        : Icons.undo_rounded;
+    final label = rightSwipe ? 'Complete' : 'Undo';
     return Container(
       decoration: BoxDecoration(
         color: color,
@@ -647,17 +660,20 @@ class _HabitsTabState extends State<HabitsTab> {
         confirmDismiss: (direction) async {
           HapticFeedback.mediumImpact();
           if (direction == DismissDirection.startToEnd) {
-            // Swipe right → complete (toggle). Mutate the habit NOW so the
-            // state is correct, but persist AFTER the Dismissible snaps back.
-            h.toggle(DateTime.now());
+            // Swipe right → COMPLETE today's task (explicit: swiping right
+            // again on an already-completed card stays completed, it never
+            // un-completes). Mutate NOW so the state is correct, but persist
+            // AFTER the Dismissible snaps back.
+            h.completedDates.add(dateKey(DateTime.now()));
+            h.skippedDates.remove(dateKey(DateTime.now()));
           } else {
-            // Swipe left → reset streak
-            h.completedDates.clear();
-            h.skippedDates.clear();
+            // Swipe left → UN-COMPLETE today's task. This is NOT a streak
+            // reset: previous days' history and skipped marks stay intact.
+            h.completedDates.remove(dateKey(DateTime.now()));
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('${h.name} streak reset'),
+                  content: Text('${h.name} marked as not completed'),
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -678,31 +694,35 @@ class _HabitsTabState extends State<HabitsTab> {
           });
           return false; // Snap back — don't dismiss
         },
-        // RepaintBoundary composites the card (emoji tile's blur shadows +
-        // emoji glow) into one cached layer so the horizontal swipe transform
-        // doesn't smear a ghosted "reflection" of the emoji onto the revealed
-        // green/orange Dismissible background.
-        child: RepaintBoundary(
-          child: GestureDetector(
-            onTap: () {
-              HapticFeedback.mediumImpact();
-              h.toggle(DateTime.now());
-              // Completion toggle only — the reminder schedule is unchanged,
-              // so skip the zonedSchedule cancel+recreate churn.
-              store.update(h, syncReminder: false);
-            },
-            onLongPress: () {
-              HapticFeedback.heavyImpact();
-              _showHabitActions(context, h, isDark);
-            },
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: MacroSnapTheme.habitlyCard(context),
-              child: Row(
-                children: [
-                  // Drag handle — emoji container (long-hold to reorder)
-                  ReorderableDragStartListener(
-                    index: index,
+        // The swipe-ghost RepaintBoundary now wraps ONLY the emoji tile
+        // inside the card (see below). Rasterizing the whole gradient card
+        // into one cached layer made a black rectangle slide along with the
+        // card on some GPUs while swiping, so the card itself renders as
+        // plain widgets.
+        child: GestureDetector(
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            h.toggle(DateTime.now());
+            // Completion toggle only — the reminder schedule is unchanged,
+            // so skip the zonedSchedule cancel+recreate churn.
+            store.update(h, syncReminder: false);
+          },
+          onLongPress: () {
+            HapticFeedback.heavyImpact();
+            _showHabitActions(context, h, isDark);
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: MacroSnapTheme.habitlyCard(context),
+            child: Row(
+              children: [
+                // Drag handle — emoji container (long-hold to reorder). The
+                // emoji tile's glow/blur shadow is the ONLY thing that smears
+                // during a swipe, so it gets its own RepaintBoundary right
+                // here — isolating this tile rather than the whole card.
+                ReorderableDragStartListener(
+                  index: index,
+                  child: RepaintBoundary(
                     child: Container(
                       width: 52,
                       height: 52,
@@ -715,80 +735,80 @@ class _HabitsTabState extends State<HabitsTab> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 13),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          h.name,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            decoration: done
-                                ? TextDecoration.lineThrough
-                                : null,
-                            color: done
-                                ? (MacroSnapTheme.textTertiary(context))
-                                : (isDark
-                                      ? Colors.white
-                                      : const Color(0xFF1A1A1A)),
-                          ),
+                ),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        h.name,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          decoration: done
+                              ? TextDecoration.lineThrough
+                              : null,
+                          color: done
+                              ? (MacroSnapTheme.textTertiary(context))
+                              : (isDark
+                                    ? Colors.white
+                                    : const Color(0xFF1A1A1A)),
                         ),
-                        const SizedBox(height: 5),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.local_fire_department_rounded,
-                              color: MacroSnapTheme.neonPink,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${h.currentStreak()} · ${h.frequency}',
-                              style: TextStyle(
-                                color: MacroSnapTheme.textSecondary(context),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  // Check/Bolt status indicator
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: done
-                          ? MacroSnapTheme.neonGreen
-                          : MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(
-                      done ? Icons.check_rounded : Icons.bolt_rounded,
-                      color: done ? Colors.black : MacroSnapTheme.neonGreen,
-                      size: 27,
-                    ),
-                  ),
-                  // Drag grip icon
-                  ReorderableDragStartListener(
-                    index: index,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 6),
-                      child: Icon(
-                        Icons.drag_handle_rounded,
-                        color: MacroSnapTheme.textQuaternary(context),
-                        size: 28,
                       ),
+                      const SizedBox(height: 5),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.local_fire_department_rounded,
+                            color: MacroSnapTheme.neonPink,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${h.currentStreak()} · ${h.frequency}',
+                            style: TextStyle(
+                              color: MacroSnapTheme.textSecondary(context),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 4),
+                // Check/Bolt status indicator
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: done
+                        ? MacroSnapTheme.neonGreen
+                        : MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    done ? Icons.check_rounded : Icons.bolt_rounded,
+                    color: done ? Colors.black : MacroSnapTheme.neonGreen,
+                    size: 27,
+                  ),
+                ),
+                // Drag grip icon
+                ReorderableDragStartListener(
+                  index: index,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: Icon(
+                      Icons.drag_handle_rounded,
+                      color: MacroSnapTheme.textQuaternary(context),
+                      size: 28,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -1101,7 +1121,7 @@ class _HabitsTabState extends State<HabitsTab> {
                   fontWeight: FontWeight.w800,
                   color: used >= limit
                       ? MacroSnapTheme.neonOrange
-                      : MacroSnapTheme.neonGreen,
+                      : MacroSnapTheme.greenText(context),
                 ),
               ),
             ],

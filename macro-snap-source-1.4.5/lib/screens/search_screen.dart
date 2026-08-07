@@ -178,8 +178,8 @@ class _SearchScreenState extends State<SearchScreen> {
               child: Center(
                 child: Text(
                   category[0],
-                  style: const TextStyle(
-                    color: MacroSnapTheme.neonGreen,
+                  style: TextStyle(
+                    color: MacroSnapTheme.greenText(context),
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                   ),

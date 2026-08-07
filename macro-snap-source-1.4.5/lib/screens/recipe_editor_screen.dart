@@ -261,7 +261,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
               ),
             ),
             Text('${ing.calories.toStringAsFixed(0)} kcal',
-                style: TextStyle(fontWeight: FontWeight.w700, color: MacroSnapTheme.neonGreen)),
+                style: TextStyle(fontWeight: FontWeight.w700, color: MacroSnapTheme.greenText(context))),
           ],
         ),
       ),
@@ -279,7 +279,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
               style: TextStyle(fontWeight: FontWeight.w600,
                   color: isDark ? Colors.white : const Color(0xFF1A1A1A), fontSize: 13))),
           Expanded(child: Text(perServing, textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.w700, color: MacroSnapTheme.neonGreen, fontSize: 13))),
+              style: TextStyle(fontWeight: FontWeight.w700, color: MacroSnapTheme.greenText(context), fontSize: 13))),
         ],
       ),
     );

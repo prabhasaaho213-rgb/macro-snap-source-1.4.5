@@ -272,7 +272,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
                       TextSpan(
                         text: 'Privacy Policy',
                         style: TextStyle(
-                          color: MacroSnapTheme.neonGreen,
+                          color: MacroSnapTheme.greenText(context),
                           decoration: TextDecoration.underline,
                         ),
                         recognizer: TapGestureRecognizer()

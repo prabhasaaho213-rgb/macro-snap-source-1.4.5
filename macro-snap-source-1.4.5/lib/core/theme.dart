@@ -51,6 +51,14 @@ class MacroSnapTheme {
       Theme.of(context).brightness == Brightness.dark
           ? Colors.white38
           : const Color(0xFFCBD5E1);
+
+  /// Green used for TEXT (not fills/icons). Neon green (#00FF66) has terrible
+  /// contrast on white/light cards, so light mode swaps it for a darker,
+  /// readable green while dark mode keeps the bright neon accent.
+  static Color greenText(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? neonGreen
+          : const Color(0xFF008A43);
   /// Card background color (themed)
   static Color cardBackground(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark

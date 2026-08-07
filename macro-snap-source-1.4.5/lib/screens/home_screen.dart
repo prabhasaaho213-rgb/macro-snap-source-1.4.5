@@ -161,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen>
                     const SizedBox(width: 4),
                     Text(_scansLeft >= 99 ? 'Unlimited' : '$_scansLeft',
                         style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800,
-                            color: _scansLeft > 0 ? MacroSnapTheme.neonGreen : MacroSnapTheme.neonPink)),
+                            color: _scansLeft > 0 ? MacroSnapTheme.greenText(context) : MacroSnapTheme.neonPink)),
                   ],
                 ),
               ),
@@ -219,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen>
                   const SizedBox(height: 4),
                   Text(isBest ? 'New personal best!' : 'All targets hit today!',
                       style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
-                          color: isBest ? MacroSnapTheme.neonGreen : MacroSnapTheme.textTertiary(context))),
+                          color: isBest ? MacroSnapTheme.greenText(context) : MacroSnapTheme.textTertiary(context))),
                 ],
               ),
             ),
@@ -234,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen>
                   const SizedBox(width: 4),
                   Text('+$_streak',
                       style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800,
-                          color: MacroSnapTheme.neonGreen)),
+                          color: MacroSnapTheme.greenText(context))),
                 ],
               ),
             ),
@@ -284,26 +284,36 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ],
                 ),
-                // Progress ring (Habitly style)
+                // Progress ring (Habitly style) — the ring fills the whole
+                // box (SizedBox.expand) and the % text is padded + FittedBox-
+                // scaled so it always stays INSIDE the stroke, never on it.
                 SizedBox(
                   width: 72, height: 72,
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      CircularProgressIndicator(
-                        value: progress,
-                        strokeWidth: 7,
-                        backgroundColor: isDark
-                            ? Colors.white10
-                            : const Color(0xFFE8DEFF),
-                        valueColor: const AlwaysStoppedAnimation<Color>(MacroSnapTheme.neonPink),
+                      SizedBox.expand(
+                        child: CircularProgressIndicator(
+                          value: progress,
+                          strokeWidth: 7,
+                          backgroundColor: isDark
+                              ? Colors.white10
+                              : const Color(0xFFE8DEFF),
+                          valueColor: const AlwaysStoppedAnimation<Color>(MacroSnapTheme.neonPink),
+                        ),
                       ),
-                      Text(
-                        '${(progress * 100).round()}%',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-                          fontSize: 16,
+                      Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            '${(progress * 100).round()}%',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                              fontSize: 16,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -348,7 +358,7 @@ class _HomeScreenState extends State<HomeScreen>
                     const SizedBox(width: 4),
                     Text('$remaining remaining',
                         maxLines: 1,
-                        style: const TextStyle(color: MacroSnapTheme.neonGreen, fontSize: 12, fontWeight: FontWeight.w700)),
+                        style: TextStyle(color: MacroSnapTheme.greenText(context), fontSize: 12, fontWeight: FontWeight.w700)),
                   ],
                 ),
               ],
@@ -500,7 +510,7 @@ class _HomeScreenState extends State<HomeScreen>
                     Text(days[d.weekday - 1],
                         style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
                             color: isToday
-                                ? MacroSnapTheme.neonGreen
+                                ? MacroSnapTheme.greenText(context)
                                 : (MacroSnapTheme.textTertiary(context)))),
                     const SizedBox(height: 8),
                     Container(
@@ -526,7 +536,7 @@ class _HomeScreenState extends State<HomeScreen>
                     if (dayList.isNotEmpty)
                       Text('${dayList.fold(0, (s, m) => s + m.calories)}',
                           style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600,
-                              color: MacroSnapTheme.neonGreen.withValues(alpha: 0.7))),
+                              color: MacroSnapTheme.greenText(context).withValues(alpha: 0.7))),
                   ],
                 );
               }),
@@ -621,8 +631,8 @@ class _HomeScreenState extends State<HomeScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: MacroSnapTheme.neonPill(MacroSnapTheme.neonGreen),
                 child: Text('${meals.fold(0, (s, m) => s + m.calories)} kcal',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
-                        color: MacroSnapTheme.neonGreen)),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
+                        color: MacroSnapTheme.greenText(context))),
               ),
             ],
           ),
@@ -677,13 +687,18 @@ class _HomeScreenState extends State<HomeScreen>
                           fontSize: 12, fontWeight: FontWeight.w600,
                         ),
                       ),
-                      if (m.serving.isNotEmpty) ...[
-                        Text(' · ${m.serving}',
+                      if (m.serving.isNotEmpty)
+                        Flexible(
+                          child: Text(
+                            ' · ${m.serving}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: MacroSnapTheme.textTertiary(context),
                               fontSize: 12,
-                            )),
-                      ],
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ],

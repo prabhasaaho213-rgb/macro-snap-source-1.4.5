@@ -265,7 +265,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1), borderRadius: BorderRadius.circular(20)),
-              child: Text(DietPlanService.goalLabel(p.goal), style: const TextStyle(color: MacroSnapTheme.neonGreen, fontSize: 13, fontWeight: FontWeight.w700)),
+              child: Text(DietPlanService.goalLabel(p.goal), style: TextStyle(color: MacroSnapTheme.greenText(context), fontSize: 13, fontWeight: FontWeight.w700)),
             ),
             const Spacer(),
             Text('${p.targetCalories} kcal', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
@@ -377,8 +377,10 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
           ),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Text(meal['time'] ?? '', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: MacroSnapTheme.neonGreen)),
-              const Spacer(),
+              Flexible(
+                child: Text(meal['time'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: MacroSnapTheme.greenText(context))),
+              ),
+              const SizedBox(width: 8),
               Text('${meal['calories'] ?? 0} kcal', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
             ]),
             const SizedBox(height: 4),
