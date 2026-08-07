@@ -67,7 +67,7 @@ class AddMealScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '${food.serving} Â· ${food.category}',
+                                '${food.serving} · ${food.category}',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w400,

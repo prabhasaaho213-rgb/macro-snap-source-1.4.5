@@ -268,7 +268,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               _buildFeatureRow(Icons.cloud_rounded, 'Cloud Backup',
                   'Your data stays safe across devices', isDark),
               _buildFeatureRow(Icons.photo_camera_rounded, 'Unlimited AI Scans',
-                  'Snap any meal for instant macros â€” no limits', isDark),
+                  'Snap any meal for instant macros — no limits', isDark),
               const SizedBox(height: 32),
               GlassCard(
                 child: Padding(

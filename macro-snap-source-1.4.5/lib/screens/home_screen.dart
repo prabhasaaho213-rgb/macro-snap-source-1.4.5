@@ -15,6 +15,7 @@ import 'scan_screen.dart';
 import 'settings_screen.dart';
 import 'recipe_list_screen.dart';
 import 'barcode_scan_screen.dart';
+import 'result_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -284,54 +285,33 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ],
                 ),
-                // Progress ring (Habitly style) — the ring fills the whole
-                // box (SizedBox.expand) and the % text is padded + FittedBox-
-                // scaled so it always stays INSIDE the stroke, never on it.
-                SizedBox(
-                  width: 72, height: 72,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox.expand(
-                        child: CircularProgressIndicator(
-                          value: progress,
-                          strokeWidth: 7,
-                          backgroundColor: isDark
-                              ? Colors.white10
-                              : const Color(0xFFE8DEFF),
-                          valueColor: const AlwaysStoppedAnimation<Color>(MacroSnapTheme.neonPink),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            '${(progress * 100).round()}%',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w900,
-                              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                // Progress ring (Habitly style) — animated fill: the ring
+                // and the % label count up from 0 on load and glide between
+                // values (adding a meal grows it smoothly, never a jump).
+                AnimatedProgressRing(
+                  value: progress,
+                  color: MacroSnapTheme.neonPink,
+                  backgroundColor: isDark
+                      ? Colors.white10
+                      : const Color(0xFFE8DEFF),
+                  labelStyle: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                    fontSize: 16,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 22),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 10,
-                backgroundColor: isDark
-                    ? Colors.white10
-                    : const Color(0xFFE8DEFF),
-                valueColor: const AlwaysStoppedAnimation<Color>(MacroSnapTheme.neonGreen),
-              ),
+            // Animated fill — glides up as meals are logged instead of
+            // snapping to the value.
+            AnimatedProgressBar(
+              value: progress,
+              color: MacroSnapTheme.neonGreen,
+              height: 10,
+              backgroundColor: isDark
+                  ? Colors.white10
+                  : const Color(0xFFE8DEFF),
             ),
             const SizedBox(height: 12),
             Row(
@@ -643,16 +623,23 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  /// Habitly-style mission card with emoji + check button
+  /// Habitly-style mission card with emoji + check button.
+  /// Tapping the card opens the same meal-info view shown right after a scan
+  /// (read-only detail of the logged nutrition); the bolt button deletes.
   Widget _buildMissionMealCard(MealRecord m, bool isDark) {
     final color = _mealIcon(m);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: MacroSnapTheme.habitlyCard(context),
-        child: Row(
-          children: [
+      child: GestureDetector(
+        onTap: () => Navigator.push(
+          context,
+          habitFlowRoute(ResultScreen(imagePath: '', existingMeal: m)),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: MacroSnapTheme.habitlyCard(context),
+          child: Row(
+            children: [
             // Emoji container (Habitly mission style)
             Container(
               width: 52, height: 52,
@@ -746,7 +733,8 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

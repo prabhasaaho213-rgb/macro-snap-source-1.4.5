@@ -189,6 +189,38 @@ class _HabitsTabState extends State<HabitsTab> {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           buildDefaultDragHandles: false,
+                          // The default drag proxy wraps the dragged card in
+                          // an elevated Material whose RECTANGULAR shadow
+                          // ignores the card's rounded corners (the grey box
+                          // that visually cuts into the card above). Replace
+                          // it with a transparent Material + a shadow that
+                          // follows the card's own 28px radius.
+                          proxyDecorator: (child, index, animation) {
+                            return AnimatedBuilder(
+                              animation: animation,
+                              builder: (context, _) {
+                                return Material(
+                                  type: MaterialType.transparency,
+                                  elevation: 0,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(28),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.22 * animation.value,
+                                          ),
+                                          blurRadius: 20,
+                                          offset: const Offset(0, 10),
+                                        ),
+                                      ],
+                                    ),
+                                    child: child,
+                                  ),
+                                );
+                              },
+                            );
+                          },
                           onReorderItem: (oldI, newI) {
                             // newI is already adjusted for the removal at oldI.
                             // The visible missions list is a FILTERED subset of
@@ -222,7 +254,13 @@ class _HabitsTabState extends State<HabitsTab> {
                             // requires on its direct children.
                             return KeyedSubtree(
                               key: ValueKey('habit_${h.id}'),
-                              child: _missionCard(h, isDark, index: i),
+                              child: Material(
+                                // Transparent so the framework's default
+                                // rectangular Material background is never
+                                // painted under the card during a drag.
+                                type: MaterialType.transparency,
+                                child: _missionCard(h, isDark, index: i),
+                              ),
                             );
                           }).toList(),
                         ),
@@ -382,18 +420,14 @@ class _HabitsTabState extends State<HabitsTab> {
             ],
           ),
           const SizedBox(height: 22),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 10,
-              backgroundColor: isDark
-                  ? Colors.white10
-                  : const Color(0xFFE8DEFF),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                MacroSnapTheme.neonGreen,
-              ),
-            ),
+          // Animated fill — glides up as missions are completed.
+          AnimatedProgressBar(
+            value: progress,
+            color: MacroSnapTheme.neonGreen,
+            height: 10,
+            backgroundColor: isDark
+                ? Colors.white10
+                : const Color(0xFFE8DEFF),
           ),
           const SizedBox(height: 12),
           Row(
@@ -448,44 +482,17 @@ class _HabitsTabState extends State<HabitsTab> {
   }
 
   Widget _progressRing(double progress, bool isDark) {
-    return SizedBox(
-      width: 72,
-      height: 72,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Ring fills the whole box (SizedBox.expand) so it renders at full
-          // size — without this it silently renders at CircularProgress-
-          // Indicator's 36px default inside the loose-fit Stack.
-          SizedBox.expand(
-            child: CircularProgressIndicator(
-              value: progress,
-              strokeWidth: 7,
-              backgroundColor: isDark
-                  ? Colors.white10
-                  : const Color(0xFFE8DEFF),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                MacroSnapTheme.neonPink,
-              ),
-            ),
-          ),
-          // % text stays INSIDE the stroke: padded off the ring and FittedBox-
-          // scaled down on large text scales instead of overlapping it.
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                '${(progress * 100).round()}%',
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ),
-        ],
+    // Animated fill: ring + % count up on load and glide between values.
+    return AnimatedProgressRing(
+      value: progress,
+      color: MacroSnapTheme.neonPink,
+      backgroundColor: isDark
+          ? Colors.white10
+          : const Color(0xFFE8DEFF),
+      labelStyle: TextStyle(
+        fontWeight: FontWeight.w900,
+        color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+        fontSize: 16,
       ),
     );
   }
@@ -578,19 +585,14 @@ class _HabitsTabState extends State<HabitsTab> {
           ),
           const SizedBox(height: 10),
 
-          // Progress bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 6,
-              backgroundColor: isDark
-                  ? const Color(0xFF303030)
-                  : const Color(0xFFE8DEFF),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                MacroSnapTheme.neonCyan,
-              ),
-            ),
+          // Progress bar (animated fill)
+          AnimatedProgressBar(
+            value: progress,
+            color: MacroSnapTheme.neonCyan,
+            height: 6,
+            backgroundColor: isDark
+                ? const Color(0xFF303030)
+                : const Color(0xFFE8DEFF),
           ),
         ],
       ),
@@ -716,22 +718,26 @@ class _HabitsTabState extends State<HabitsTab> {
             decoration: MacroSnapTheme.habitlyCard(context),
             child: Row(
               children: [
-                // Drag handle — emoji container (long-hold to reorder). The
-                // emoji tile's glow/blur shadow is the ONLY thing that smears
-                // during a swipe, so it gets its own RepaintBoundary right
-                // here — isolating this tile rather than the whole card.
-                ReorderableDragStartListener(
-                  index: index,
-                  child: RepaintBoundary(
-                    child: Container(
-                      width: 52,
-                      height: 52,
-                      decoration: MacroSnapTheme.emojiContainer(h.color),
-                      child: Center(
-                        child: Text(
-                          h.emoji,
-                          style: MacroSnapTheme.emojiStyle(),
-                        ),
+                // Emoji container. Its glow/blur shadow is the ONLY thing
+                // that smears during a swipe, so it gets its own
+                // RepaintBoundary right here — isolating this tile rather
+                // than the whole card (a whole-card raster layer rendered a
+                // black rectangle on some GPUs).
+                //
+                // NOTE: NOT wrapped in a ReorderableDragStartListener — that
+                // long-press recognizer competed with the Dismissible's
+                // horizontal drag on the same surface, so slow swipes got
+                // hijacked into reorder drags (the swipe glitch). Reordering
+                // is grip-only (see the drag-grip icon below).
+                RepaintBoundary(
+                  child: Container(
+                    width: 52,
+                    height: 52,
+                    decoration: MacroSnapTheme.emojiContainer(h.color),
+                    child: Center(
+                      child: Text(
+                        h.emoji,
+                        style: MacroSnapTheme.emojiStyle(),
                       ),
                     ),
                   ),
@@ -1127,20 +1133,15 @@ class _HabitsTabState extends State<HabitsTab> {
             ],
           ),
           const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: pct,
-              minHeight: 6,
-              backgroundColor: isDark
-                  ? const Color(0xFF303030)
-                  : const Color(0xFFE8DEFF),
-              valueColor: AlwaysStoppedAnimation<Color>(
-                used >= limit
-                    ? MacroSnapTheme.neonOrange
-                    : MacroSnapTheme.neonGreen,
-              ),
-            ),
+          AnimatedProgressBar(
+            value: pct,
+            height: 6,
+            backgroundColor: isDark
+                ? const Color(0xFF303030)
+                : const Color(0xFFE8DEFF),
+            color: used >= limit
+                ? MacroSnapTheme.neonOrange
+                : MacroSnapTheme.neonGreen,
           ),
           const SizedBox(height: 10),
           Text(

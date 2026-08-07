@@ -230,7 +230,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${item.serving} Â· ${item.category}',
+                    '${item.serving} · ${item.category}',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,

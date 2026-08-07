@@ -251,10 +251,15 @@ class SpringNavDot extends StatelessWidget {
   }
 }
 
-// ─── PULSING ENTRANCE for rings & progress bars ───────────────
+// ─── SMOOTH VALUE ANIMATION for rings & progress bars ────────
 
-/// Animates a value from 0 to [target] over a [duration],
-/// used for progress bars and calorie rings on first render.
+/// Animates a value toward [target] over a [duration], used for progress
+/// bars and calorie rings.
+///
+/// On first render the value fills from 0 → target. When [target] changes it
+/// tweens from the value currently on screen (even mid-flight) to the new
+/// target — progress only ever glides to its destination, it never jumps or
+/// snaps back to zero.
 class AnimatedValue extends StatefulWidget {
   final double target;
   final Widget Function(BuildContext context, double value) builder;
@@ -277,12 +282,19 @@ class _AnimatedValueState extends State<AnimatedValue>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _anim;
+  late double _from;
+  late double _to;
+
+  /// The value currently on screen (accounts for a mid-flight animation).
+  double get _displayed => _from + _anim.value * (_to - _from);
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: widget.duration);
     _anim = CurvedAnimation(parent: _controller, curve: widget.curve);
+    _from = 0;
+    _to = widget.target;
     _controller.forward();
   }
 
@@ -290,6 +302,10 @@ class _AnimatedValueState extends State<AnimatedValue>
   void didUpdateWidget(covariant AnimatedValue oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.target != widget.target) {
+      // Resume from where the bar/ring currently is and glide to the new
+      // target instead of restarting from zero (which read as a jump).
+      _from = _displayed;
+      _to = widget.target;
       _controller.forward(from: 0);
     }
   }
@@ -304,8 +320,68 @@ class _AnimatedValueState extends State<AnimatedValue>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _anim,
-      builder: (context, _) {
-        return widget.builder(context, _anim.value * widget.target);
+      builder: (context, _) => widget.builder(context, _displayed),
+    );
+  }
+}
+
+/// A circular progress ring that fills up smoothly instead of jumping.
+///
+/// Renders the ring at its full [size] (so it never silently shrinks to
+/// `CircularProgressIndicator`'s 36px default inside a loose-fit Stack) and
+/// keeps the % label inside the stroke via padding + FittedBox. Both the ring
+/// and the label are driven by the same animated value, so the percentage
+/// counts up as the ring fills.
+class AnimatedProgressRing extends StatelessWidget {
+  final double value;
+  final double size;
+  final double strokeWidth;
+  final Color color;
+  final Color backgroundColor;
+  final TextStyle? labelStyle;
+
+  const AnimatedProgressRing({
+    super.key,
+    required this.value,
+    this.size = 72,
+    this.strokeWidth = 7,
+    required this.color,
+    required this.backgroundColor,
+    this.labelStyle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedValue(
+      target: value.clamp(0.0, 1.0),
+      builder: (context, v) {
+        return SizedBox(
+          width: size,
+          height: size,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox.expand(
+                child: CircularProgressIndicator(
+                  value: v,
+                  strokeWidth: strokeWidth,
+                  backgroundColor: backgroundColor,
+                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '${(v * 100).round()}%',
+                    style: labelStyle,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
       },
     );
   }
@@ -518,66 +594,38 @@ class SkeletonPlaceholder extends StatelessWidget {
 
 // ─── ANIMATED PROGRESS BAR ────────────────────────────────────
 
-class AnimatedProgressBar extends StatefulWidget {
+/// A rounded progress bar that fills up smoothly and glides between value
+/// changes (it never resets to zero mid-way). Pass [backgroundColor] to keep
+/// a specific track color; otherwise a dark/light default is used.
+class AnimatedProgressBar extends StatelessWidget {
   final double value;
   final Color color;
+  final Color? backgroundColor;
   final double height;
 
   const AnimatedProgressBar({
     super.key,
     required this.value,
     required this.color,
+    this.backgroundColor,
     this.height = 8,
   });
 
   @override
-  State<AnimatedProgressBar> createState() => _AnimatedProgressBarState();
-}
-
-class _AnimatedProgressBarState extends State<AnimatedProgressBar>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _anim = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
-    _controller.forward();
-  }
-
-  @override
-  void didUpdateWidget(covariant AnimatedProgressBar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.value != widget.value) {
-      _controller.forward(from: 0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (context, _) {
+    return AnimatedValue(
+      target: value.clamp(0.0, 1.0),
+      duration: const Duration(milliseconds: 800),
+      builder: (context, v) {
         return ClipRRect(
-          borderRadius: BorderRadius.circular(widget.height / 2),
+          borderRadius: BorderRadius.circular(height / 2),
           child: LinearProgressIndicator(
-            value: _anim.value * widget.value,
-            minHeight: widget.height,
-            backgroundColor:
-                isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-            valueColor: AlwaysStoppedAnimation<Color>(widget.color),
+            value: v,
+            minHeight: height,
+            backgroundColor: backgroundColor ??
+                (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         );
       },

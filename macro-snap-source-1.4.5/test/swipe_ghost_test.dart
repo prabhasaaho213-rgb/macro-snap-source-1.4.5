@@ -67,6 +67,108 @@ void main() {
         reason: 'RepaintBoundary must wrap the emoji tile (swipe-ghost fix)');
   });
 
+  // ─── REORDER DRAG-PROXY FIX (rectangular grey box while dragging) ──
+  // ReorderableListView's default drag proxy paints a rectangular elevated
+  // Material/shadow that ignores the card's rounded corners. The fix wraps
+  // each item in a transparency Material and swaps in a custom proxyDecorator
+  // that draws a ROUNDED shadow instead. These tests pin both halves so a
+  // future refactor can't silently drop them.
+
+  testWidgets('mission cards sit inside a transparency Material',
+      (tester) async {
+    final store = HabitStore.instance;
+    store.habits.addAll([
+      Habit(
+          id: 'v1',
+          name: 'Morning Run',
+          emoji: '🏃',
+          colorValue: 0xFFFF007F,
+          frequency: 'Daily'),
+    ]);
+    await pumpHabitsTab(tester);
+
+    // Walk up from the Dismissible: its nearest Material ancestor must be the
+    // transparency wrapper (NOT the default opaque/rectangular Material).
+    Material? wrapper;
+    tester.element(find.byType(Dismissible).first).visitAncestorElements((el) {
+      final w = el.widget;
+      if (wrapper == null && w is Material) wrapper = w;
+      return true;
+    });
+    expect(wrapper, isNotNull);
+    expect(wrapper!.type, MaterialType.transparency,
+        reason:
+            'each reorderable item must be wrapped in a transparency Material '
+            'so the framework never paints its rectangular Material box '
+            'under the card while dragging');
+  });
+
+  testWidgets('ReorderableListView uses a custom rounded proxyDecorator',
+      (tester) async {
+    final store = HabitStore.instance;
+    store.habits.addAll([
+      Habit(
+          id: 'v1',
+          name: 'Morning Run',
+          emoji: '🏃',
+          colorValue: 0xFFFF007F,
+          frequency: 'Daily'),
+    ]);
+    await pumpHabitsTab(tester);
+
+    final reorder = tester.widget<ReorderableListView>(
+      find.byType(ReorderableListView),
+    );
+    expect(reorder.proxyDecorator, isNotNull,
+        reason:
+            'the default drag proxy paints a rectangular elevated box; the '
+            'custom proxyDecorator (transparency Material + rounded shadow) '
+            'must be set');
+  });
+
+  // ─── GESTURE-CONFLICT FIX (slow swipes were hijacked into reorders) ──
+  testWidgets('emoji tile is NOT a reorder handle — the grip is the only one',
+      (tester) async {
+    final store = HabitStore.instance;
+    store.habits.addAll([
+      Habit(
+          id: 'v1',
+          name: 'Morning Run',
+          emoji: '🏃',
+          colorValue: 0xFFFF007F,
+          frequency: 'Daily'),
+    ]);
+    await pumpHabitsTab(tester);
+
+    final emoji = find.text('🏃');
+    expect(emoji, findsOneWidget);
+
+    // A ReorderableDragStartListener on the emoji tile used a long-press
+    // drag recognizer that competed with the Dismissible's horizontal drag:
+    // slow swipes on the card got hijacked into reorder drags. The tile must
+    // NOT carry a reorder listener — only the drag-grip icon may.
+    expect(
+      find.ancestor(
+        of: emoji,
+        matching: find.byType(ReorderableDragStartListener),
+      ),
+      findsNothing,
+      reason:
+          'emoji tile must not be a reorder handle (slow-swipe glitch fix)',
+    );
+
+    final grip = find.byIcon(Icons.drag_handle_rounded);
+    expect(grip, findsOneWidget);
+    expect(
+      find.ancestor(
+        of: grip,
+        matching: find.byType(ReorderableDragStartListener),
+      ),
+      findsWidgets,
+      reason: 'the drag-grip icon must remain the reorder handle',
+    );
+  });
+
   // ─── VIBRANCY FIX VALUES ───────────────────────────────────
   test('emojiContainer tile is vividly tinted (vibrancy change)', () {
     const c = Color(0xFF00FF66);

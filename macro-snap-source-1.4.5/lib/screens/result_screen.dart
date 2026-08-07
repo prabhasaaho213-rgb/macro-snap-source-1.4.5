@@ -13,7 +13,12 @@ import '../widgets/gradient_button.dart';
 class ResultScreen extends StatefulWidget {
   final String imagePath;
 
-  const ResultScreen({super.key, required this.imagePath});
+  /// When set, the screen renders as a read-only detail view for an
+  /// already-logged meal (no photo, no AI analysis, no edit/log actions) —
+  /// the same nutrition layout shown right after a scan.
+  final MealRecord? existingMeal;
+
+  const ResultScreen({super.key, required this.imagePath, this.existingMeal});
 
   @override
   State<ResultScreen> createState() => _ResultScreenState();
@@ -44,8 +49,32 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic));
 
-    _analyze();
-    _animateStages();
+    final existing = widget.existingMeal;
+    if (existing != null) {
+      // View mode: render the logged meal's stored nutrition directly —
+      // nothing to analyze and no scan counted.
+      _result = NutritionResult(
+        dishes: [
+          DishItem(
+            name: existing.name,
+            portionDescription: existing.serving,
+            caloriesPer100g: existing.calories,
+            proteinPer100g: existing.protein,
+            carbsPer100g: existing.carbs,
+            fatsPer100g: existing.fats,
+            fiberPer100g: existing.fiber,
+          ),
+        ],
+        description: existing.serving,
+        confidence: 1.0,
+        grams: 100,
+      );
+      _isAnalyzing = false;
+      _animController.forward();
+    } else {
+      _analyze();
+      _animateStages();
+    }
   }
 
   void _animateStages() {
@@ -122,6 +151,42 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
       final r = _result;
       if (r != null) _result = r.withGrams(g);
     });
+  }
+
+  /// View-mode header tile: a branded placeholder filling the same slot the
+  /// scanned screen uses for the food photo (logged meals don't keep the
+  /// original image).
+  Widget _buildMealPlaceholder() {
+    return Container(
+      height: 180,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            MacroSnapTheme.neonGreen.withValues(alpha: 0.35),
+            MacroSnapTheme.neonGreen.withValues(alpha: 0.08),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Center(
+        child: Container(
+          width: 96,
+          height: 96,
+          decoration: BoxDecoration(
+            color: MacroSnapTheme.neonGreen.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.restaurant_rounded,
+            color: MacroSnapTheme.greenText(context),
+            size: 44,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildGramAdjuster(bool isDark) {
@@ -297,7 +362,15 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
           onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
         ),
         title: Text(
-          _isAnalyzing ? 'Analyzing...' : _error != null ? 'Error' : 'Results',
+          _isAnalyzing
+              ? 'Analyzing...'
+              : _error != null
+                  ? 'Error'
+                  : widget.existingMeal != null
+                      ? widget.existingMeal!.name
+                      : 'Results',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontWeight: FontWeight.w700,
             color: isDark ? Colors.white : const Color(0xFF1A1A1A),
@@ -502,21 +575,25 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
         children: [
           FadeTransition(
             opacity: _fadeAnim,
-            child: Hero(
-              tag: 'food_image_${widget.imagePath}',
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: Image.file(
-                  File(widget.imagePath),
-                  height: 220,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
+            child: widget.existingMeal == null
+                ? Hero(
+                    tag: 'food_image_${widget.imagePath}',
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Image.file(
+                        File(widget.imagePath),
+                        height: 220,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  )
+                : _buildMealPlaceholder(),
           ),
           const SizedBox(height: 12),
-          _buildGramAdjuster(isDark),
+          // View mode: the logged meal's totals are the source of truth, so
+          // there's no gram slider to rescale them.
+          if (widget.existingMeal == null) _buildGramAdjuster(isDark),
           if (hasMultiDish) ...[
             const SizedBox(height: 8),
             Row(
@@ -607,8 +684,13 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                               color: MacroSnapTheme.neonGreen.withValues(alpha:  0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            child: const Icon(Icons.auto_awesome_rounded,
-                                color: MacroSnapTheme.neonGreen, size: 24),
+                            child: Icon(
+                              widget.existingMeal == null
+                                  ? Icons.auto_awesome_rounded
+                                  : Icons.description_outlined,
+                              color: MacroSnapTheme.neonGreen,
+                              size: 24,
+                            ),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
@@ -616,7 +698,9 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'AI Breakdown (${r.dishes.length} item${r.dishes.length > 1 ? 's' : ''})',
+                                  widget.existingMeal == null
+                                      ? 'AI Breakdown (${r.dishes.length} item${r.dishes.length > 1 ? 's' : ''})'
+                                      : 'Meal Description',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
@@ -625,7 +709,9 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  '${(r.confidence * 100).round()}% confidence Â· ${r.description}',
+                                  widget.existingMeal == null
+                                      ? '${(r.confidence * 100).round()}% confidence · ${r.description}'
+                                      : r.description,
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w400,
@@ -641,7 +727,10 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                   ),
                 ],
                 const SizedBox(height: 16),
-                Row(
+                // View mode: the meal is already logged, so edit/log actions
+                // don't apply — the close (X) button dismisses the screen.
+                if (widget.existingMeal == null)
+                  Row(
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
@@ -775,7 +864,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     return Column(
       children: [
         Text(
-          value > 0 ? '${value.toStringAsFixed(1)}g' : 'â€”',
+          value > 0 ? '${value.toStringAsFixed(1)}g' : '—',
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: color),
         ),
         Text(label,

@@ -9,6 +9,7 @@ import '../services/subscription_service.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/app_text_field.dart';
 import '../widgets/gradient_button.dart';
+import '../widgets/animations.dart';
 import 'subscription_screen.dart';
 
 class DietPlanScreen extends StatefulWidget {
@@ -325,7 +326,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
               ...((_aiPlan!['plan'] as Map)['tips'] as List).map((tip) => Padding(
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('ðŸ’¡ ', style: TextStyle(fontSize: 12, color: MacroSnapTheme.textTertiary(context))),
+                  Text('💡 ', style: TextStyle(fontSize: 12, color: MacroSnapTheme.textTertiary(context))),
                   Expanded(child: Text('$tip', style: TextStyle(fontSize: 12, color: MacroSnapTheme.textTertiary(context)))),
                 ]),
               )),
@@ -436,10 +437,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
         Text('$current / $target', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
       ]),
       const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: LinearProgressIndicator(value: ratio, minHeight: 8, backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0), valueColor: AlwaysStoppedAnimation<Color>(color)),
-        ),
+        AnimatedProgressBar(value: ratio, color: color, height: 8),
     ]);
   }
 

@@ -172,7 +172,7 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                     fontSize: 18, fontWeight: FontWeight.w700,
                     color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                 const SizedBox(height: 6),
-                Text('${recipe.servings} servings Â· ${recipe.perServingCalories.toStringAsFixed(0)} cal/serving',
+                Text('${recipe.servings} servings · ${recipe.perServingCalories.toStringAsFixed(0)} cal/serving',
                     overflow: TextOverflow.ellipsis, maxLines: 1,
                     style: TextStyle(fontSize: 13,
                         color: MacroSnapTheme.textTertiary(context))),
