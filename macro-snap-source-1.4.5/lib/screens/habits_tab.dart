@@ -664,14 +664,24 @@ class _HabitsTabState extends State<HabitsTab> {
           if (direction == DismissDirection.startToEnd) {
             // Swipe right → COMPLETE today's task (explicit: swiping right
             // again on an already-completed card stays completed, it never
-            // un-completes). Mutate NOW so the state is correct, but persist
-            // AFTER the Dismissible snaps back.
-            h.completedDates.add(dateKey(DateTime.now()));
-            h.skippedDates.remove(dateKey(DateTime.now()));
+            // un-completes). IDEMPOTENT: guard the add — completedDates is a
+            // List, so an unguarded add stacks a duplicate of today per swipe,
+            // and each duplicate later needs its own left swipe to undo.
+            // Mutate NOW so the state is correct, but persist AFTER the
+            // Dismissible snaps back.
+            final key = dateKey(DateTime.now());
+            if (!h.completedDates.contains(key)) {
+              h.completedDates.add(key);
+            }
+            h.skippedDates.remove(key);
           } else {
             // Swipe left → UN-COMPLETE today's task. This is NOT a streak
             // reset: previous days' history and skipped marks stay intact.
-            h.completedDates.remove(dateKey(DateTime.now()));
+            // Remove EVERY occurrence of today (also flushes duplicate entries
+            // stacked by older builds) so ONE swipe always fully undoes,
+            // no matter how many times it was completed.
+            final key = dateKey(DateTime.now());
+            h.completedDates.removeWhere((k) => k == key);
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

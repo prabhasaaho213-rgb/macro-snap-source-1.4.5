@@ -193,4 +193,54 @@ void main() {
     h.toggle(DateTime.now());
     expect(store.todayCompleted, 0);
   });
+
+  // ─── WIDGET TEST: repeated right swipes must not need repeated left swipes ─
+  testWidgets('swipe right twice then left once fully un-completes', (tester) async {
+    final store = HabitStore.instance;
+    store.habits.add(Habit(
+      id: 'v1',
+      name: 'Morning Run',
+      emoji: '🏃',
+      colorValue: 0xFFFF007F,
+      frequency: 'Daily',
+    ));
+
+    await pumpHabitsTab(tester);
+
+    final habit = store.habits.first;
+    final today = dateKey(DateTime.now());
+
+    // Completes a swipe gesture and lets the Dismissible snap-back (200ms) and
+    // the deferred 350ms persist both fire. NOTE: pumpAndSettle would time out
+    // here — the hero card's 🔥 StreakFlame loops forever by design.
+    Future<void> doSwipe(Offset offset) async {
+      await tester.drag(find.byType(Dismissible).first, offset);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 700));
+    }
+
+    // Swipe right TWICE → completes, but must NOT stack duplicate date entries
+    // (an unguarded add made each right swipe create a copy of today, so undo
+    // needed one left swipe per copy).
+    await doSwipe(const Offset(500, 0));
+    await doSwipe(const Offset(500, 0));
+    expect(
+      habit.completedDates.where((k) => k == today).length,
+      1,
+      reason: 'repeated right swipes must not stack duplicate dates',
+    );
+
+    // Swipe left ONCE → fully un-completes (removeWhere clears every copy,
+    // including legacy duplicates saved by older builds).
+    await doSwipe(const Offset(-500, 0));
+    expect(
+      habit.completedDates.where((k) => k == today),
+      isEmpty,
+      reason: 'one left swipe must fully undo, no matter how many right swipes',
+    );
+
+    // Let the "not completed" SnackBar auto-dismiss so no timers leak.
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pump(const Duration(milliseconds: 500));
+  });
 }
