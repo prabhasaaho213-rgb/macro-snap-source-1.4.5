@@ -625,7 +625,10 @@ class _HabitsTabState extends State<HabitsTab> {
     return Container(
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(24),
+        // Matches the card's 28px radius — the Dismissible also clips the
+        // whole tile (background + foreground) so no square edges ever poke
+        // out past the rounded card while swiping.
+        borderRadius: BorderRadius.circular(28),
       ),
       alignment: rightSwipe ? Alignment.centerRight : Alignment.centerLeft,
       padding: EdgeInsets.symmetric(horizontal: 28, vertical: 0),
@@ -668,7 +671,13 @@ class _HabitsTabState extends State<HabitsTab> {
     final done = h.isCompleted(DateTime.now());
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Dismissible(
+      // Clip the whole swipe tile to the card's rounded shape: the reveal
+      // background is drawn edge-to-edge behind the card, so without a clip
+      // its square corners show past the card's rounded corners while
+      // swiping. 28px matches habitlyCard()/habitlyHeroCard().
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: Dismissible(
         key: ValueKey('dismiss_${h.id}'),
         direction: DismissDirection.horizontal,
         background: _swipeActionBackground(rightSwipe: true),
@@ -841,6 +850,7 @@ class _HabitsTabState extends State<HabitsTab> {
               ],
             ),
           ),
+        ),
         ),
       ),
     );

@@ -126,6 +126,40 @@ void main() {
             'must be set');
   });
 
+  // ─── SWIPE-BACKGROUND CORNER FIX (square reveal edges behind the card) ──
+  // The Dismissible's reveal background is drawn edge-to-edge behind the
+  // rounded card, so without a clip its square corners show past the card's
+  // 28px corners while swiping. The fix wraps the whole Dismissible
+  // (background + foreground) in a ClipRRect matching the card radius.
+  testWidgets('swipe tile is clipped to the card radius', (tester) async {
+    final store = HabitStore.instance;
+    store.habits.addAll([
+      Habit(
+          id: 'v1',
+          name: 'Morning Run',
+          emoji: '🏃',
+          colorValue: 0xFFFF007F,
+          frequency: 'Daily'),
+    ]);
+    await pumpHabitsTab(tester);
+
+    final dismissible = find.byType(Dismissible).first;
+    final clip = find.ancestor(
+      of: dismissible,
+      matching: find.byType(ClipRRect),
+    );
+    expect(clip, findsOneWidget,
+        reason:
+            'the Dismissible (background + card) must sit inside a ClipRRect '
+            'so the reveal background never paints square corners past the '
+            'rounded card');
+    final clipWidget = tester.widget<ClipRRect>(clip.first);
+    expect(clipWidget.borderRadius, BorderRadius.circular(28),
+        reason:
+            'clip radius must match habitlyCard()/habitlyHeroCard() 28px '
+            'corners');
+  });
+
   // ─── GESTURE-CONFLICT FIX (slow swipes were hijacked into reorders) ──
   testWidgets('emoji tile is NOT a reorder handle — the grip is the only one',
       (tester) async {

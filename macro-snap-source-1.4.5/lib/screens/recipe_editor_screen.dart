@@ -232,37 +232,44 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
 
   Widget _buildIngredientTile(int index, bool isDark) {
     final ing = _ingredients[index];
-    return Dismissible(
-      key: ValueKey('${ing.name}_$index'),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        decoration: BoxDecoration(
-          color: MacroSnapTheme.neonPink,
-          borderRadius: BorderRadius.circular(16),
+    // GlassCard uses a 24px radius in light mode and 28px in dark mode, so the
+    // clip must match per-theme — otherwise the delete background's square
+    // corners poke out past the rounded card while swiping.
+    final radius = isDark ? 28.0 : 24.0;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: Dismissible(
+        key: ValueKey('${ing.name}_$index'),
+        direction: DismissDirection.endToStart,
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 20),
+          decoration: BoxDecoration(
+            color: MacroSnapTheme.neonPink,
+            borderRadius: BorderRadius.circular(radius),
+          ),
+          child: const Icon(Icons.delete_rounded, color: Colors.black),
         ),
-        child: const Icon(Icons.delete_rounded, color: Colors.black),
-      ),
-      onDismissed: (_) => setState(() => _ingredients.removeAt(index)),
-      child: GlassCard(
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(ing.name, style: TextStyle(fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
-                  Text('${ing.grams.toInt()}g · ${ing.caloriesPer100g.toInt()} cal/100g',
-                      style: TextStyle(fontSize: 12,
-                          color: MacroSnapTheme.textTertiary(context))),
-                ],
+        onDismissed: (_) => setState(() => _ingredients.removeAt(index)),
+        child: GlassCard(
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(ing.name, style: TextStyle(fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+                    Text('${ing.grams.toInt()}g · ${ing.caloriesPer100g.toInt()} cal/100g',
+                        style: TextStyle(fontSize: 12,
+                            color: MacroSnapTheme.textTertiary(context))),
+                  ],
+                ),
               ),
-            ),
-            Text('${ing.calories.toStringAsFixed(0)} kcal',
-                style: TextStyle(fontWeight: FontWeight.w700, color: MacroSnapTheme.greenText(context))),
-          ],
+              Text('${ing.calories.toStringAsFixed(0)} kcal',
+                  style: TextStyle(fontWeight: FontWeight.w700, color: MacroSnapTheme.greenText(context))),
+            ],
+          ),
         ),
       ),
     );
