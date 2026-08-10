@@ -5,6 +5,7 @@ import '../core/theme.dart';
 import '../services/rate_us_service.dart';
 import '../services/subscription_service.dart';
 import '../services/sync_status_service.dart';
+import '../widgets/notification_prompt.dart';
 import 'home_screen.dart';
 import 'habits_tab.dart';
 import 'scan_screen.dart';
@@ -25,8 +26,10 @@ class _MainShellState extends State<MainShell> {
     super.initState();
     _currentIndex = shellTabIndex.value;
     shellTabIndex.addListener(_onShellTabChanged);
+    // Launch prompts, ordered so dialogs never stack: subscription upsell
+    // first, then the notification-permission ask (mascot) if still denied.
     WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _maybeShowSubscription(),
+      (_) => _maybeShowLaunchPrompts(),
     );
     // Prompt for a Play Store rating after a few launches (best-effort).
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -49,6 +52,14 @@ class _MainShellState extends State<MainShell> {
   void dispose() {
     shellTabIndex.removeListener(_onShellTabChanged);
     super.dispose();
+  }
+
+  Future<void> _maybeShowLaunchPrompts() async {
+    await _maybeShowSubscription();
+    // Notification permission ask — only if the user denied it.
+    if (mounted) {
+      await maybeShowNotificationPrompt(context);
+    }
   }
 
   Future<void> _maybeShowSubscription() async {
@@ -75,115 +86,122 @@ class _MainShellState extends State<MainShell> {
       backgroundColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Sparkle icon
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [MacroSnapTheme.neonGreen, Color(0xFF00CC52)],
-              ),
-            ),
-            child: const Icon(
-              Icons.auto_awesome_rounded,
-              color: Colors.black,
-              size: 28,
-            ),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            'Unlock MacroSnap Pro',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          // Feature rows
-          _proFeature(
-            Icons.photo_camera_rounded,
-            'Unlimited AI food scans',
-            isDark,
-          ),
-          const SizedBox(height: 12),
-          _proFeature(
-            Icons.favorite_rounded,
-            'Unlimited habit tracking',
-            isDark,
-          ),
-          const SizedBox(height: 12),
-          _proFeature(
-            Icons.cloud_upload_rounded,
-            'Cloud backup & restore',
-            isDark,
-          ),
-          const SizedBox(height: 12),
-          _proFeature(
-            Icons.insights_rounded,
-            'Weekly auto-insights & trends',
-            isDark,
-          ),
-
-          const SizedBox(height: 24),
-
-          // Price & CTA
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: MacroSnapTheme.neonGreen,
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+      // Scrollable so large system fonts can never overflow the dialog.
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Sparkle icon
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [MacroSnapTheme.neonGreen, Color(0xFF00CC52)],
                 ),
               ),
-              onPressed: () {
-                Navigator.of(dialogCtx).pop();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-                );
-              },
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.lock_rounded, size: 18),
-                  SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      'SUBSCRIBE - ₹29/mo · AUTO-RENEWS',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontWeight: FontWeight.w900),
-                    ),
-                  ),
-                ],
+              child: const Icon(
+                Icons.auto_awesome_rounded,
+                color: Colors.black,
+                size: 28,
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-
-          // Dismiss
-          TextButton(
-            onPressed: () => Navigator.of(dialogCtx).pop(),
-            child: Text(
-              'Not now',
+            const SizedBox(height: 18),
+            Text(
+              'Unlock MacroSnap Pro',
               style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: MacroSnapTheme.textTertiary(context),
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: isDark ? Colors.white : const Color(0xFF1A1A1A),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 14),
+
+            // Feature rows
+            _proFeature(
+              Icons.photo_camera_rounded,
+              'Unlimited AI food scans',
+              isDark,
+            ),
+            const SizedBox(height: 12),
+            _proFeature(
+              Icons.favorite_rounded,
+              'Unlimited habit tracking',
+              isDark,
+            ),
+            const SizedBox(height: 12),
+            _proFeature(
+              Icons.cloud_upload_rounded,
+              'Cloud backup & restore',
+              isDark,
+            ),
+            const SizedBox(height: 12),
+            _proFeature(
+              Icons.insights_rounded,
+              'Weekly auto-insights & trends',
+              isDark,
+            ),
+
+            const SizedBox(height: 24),
+
+            // Price & CTA
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: MacroSnapTheme.neonGreen,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(dialogCtx).pop();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const SubscriptionScreen(),
+                    ),
+                  );
+                },
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.lock_rounded, size: 18),
+                    SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        // Short label so it fits fully on narrow screens — no
+                        // wrapping or truncation of the CTA.
+                        'SUBSCRIBE · ₹29/mo',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // Dismiss
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: Text(
+                'Not now',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: MacroSnapTheme.textTertiary(context),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

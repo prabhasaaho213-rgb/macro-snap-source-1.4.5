@@ -478,6 +478,9 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
                 vertical: 18,
               ),
             ),
+            // isExpanded: the selected label ellipsizes instead of overflowing
+            // the form at large system font scales.
+            isExpanded: true,
             items: const [
               DropdownMenuItem(value: Gender.male, child: Text('Male')),
               DropdownMenuItem(value: Gender.female, child: Text('Female')),
@@ -506,6 +509,9 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
                 vertical: 18,
               ),
             ),
+            // isExpanded: the selected label ellipsizes instead of overflowing
+            // the form at large system font scales.
+            isExpanded: true,
             items: Goal.values
                 .map(
                   (g) => DropdownMenuItem(
@@ -538,6 +544,7 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
                 vertical: 18,
               ),
             ),
+            isExpanded: true,
             items: ActivityLevel.values
                 .map(
                   (a) => DropdownMenuItem(

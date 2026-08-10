@@ -1,9 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../core/theme.dart';
 import '../models/meal_record.dart';
 import '../services/barcode_db.dart';
 import '../services/meal_store.dart';
+import '../widgets/celebration.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_button.dart';
 
@@ -24,33 +25,39 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
     if (barcode == null) return;
     final food = BarcodeDb.lookup(barcode);
     if (food != null && mounted) {
-      setState(() { _found = food; _scanning = false; });
+      setState(() {
+        _found = food;
+        _scanning = false;
+      });
     } else if (mounted) {
       // Barcode not in DB — show manual entry
-      setState(() { _found = null; _scanning = false; });
+      setState(() {
+        _found = null;
+        _scanning = false;
+      });
       _showManualEntry(barcode);
     }
   }
 
-  void _log() {
+  Future<void> _log() async {
     if (_found == null) return;
-    MealStore.instance.add(MealRecord(
-      id: 'barcode_${DateTime.now().millisecondsSinceEpoch}',
-      date: DateTime.now(),
-      name: _found!.name,
-      category: _found!.brand,
-      calories: (_found!.caloriesPer100g).round(),
-      protein: _found!.proteinPer100g,
-      carbs: _found!.carbsPer100g,
-      fats: _found!.fatsPer100g,
-      fiber: _found!.fiberPer100g,
-      serving: '100g',
-    ));
+    MealStore.instance.add(
+      MealRecord(
+        id: 'barcode_${DateTime.now().millisecondsSinceEpoch}',
+        date: DateTime.now(),
+        name: _found!.name,
+        category: _found!.brand,
+        calories: (_found!.caloriesPer100g).round(),
+        protein: _found!.proteinPer100g,
+        carbs: _found!.carbsPer100g,
+        fats: _found!.fatsPer100g,
+        fiber: _found!.fiberPer100g,
+        serving: '100g',
+      ),
+    );
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Logged!'), behavior: SnackBarBehavior.floating),
-      );
-      Navigator.pop(context);
+      await showCelebration(context, message: 'Logged!');
+      if (mounted) Navigator.pop(context);
     }
   }
 
@@ -67,15 +74,19 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         return AlertDialog(
           backgroundColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           title: const Text('Product Not Found'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Barcode not in our database. Enter nutrition manually:',
-                    style: TextStyle(fontSize: 13)),
+                const Text(
+                  'Barcode not in our database. Enter nutrition manually:',
+                  style: TextStyle(fontSize: 13),
+                ),
                 const SizedBox(height: 14),
                 TextField(
                   controller: nameCtrl,
@@ -98,35 +109,41 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    Expanded(child: TextField(
-                      controller: proCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Protein (g)',
-                        border: OutlineInputBorder(),
-                        isDense: true,
+                    Expanded(
+                      child: TextField(
+                        controller: proCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Protein (g)',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
                       ),
-                    )),
+                    ),
                     const SizedBox(width: 8),
-                    Expanded(child: TextField(
-                      controller: carbCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Carbs (g)',
-                        border: OutlineInputBorder(),
-                        isDense: true,
+                    Expanded(
+                      child: TextField(
+                        controller: carbCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Carbs (g)',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
                       ),
-                    )),
+                    ),
                     const SizedBox(width: 8),
-                    Expanded(child: TextField(
-                      controller: fatCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Fats (g)',
-                        border: OutlineInputBorder(),
-                        isDense: true,
+                    Expanded(
+                      child: TextField(
+                        controller: fatCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Fats (g)',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
                       ),
-                    )),
+                    ),
                   ],
                 ),
               ],
@@ -173,9 +190,13 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Scan Barcode',
-            style: TextStyle(fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+        title: Text(
+          'Scan Barcode',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+          ),
+        ),
       ),
       body: _found != null ? _buildResult(isDark) : _buildScanner(isDark),
     );
@@ -194,8 +215,11 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Center(
-              child: Icon(Icons.qr_code_scanner_rounded,
-                  size: 80, color: Colors.white.withValues(alpha:  0.3)),
+              child: Icon(
+                Icons.qr_code_scanner_rounded,
+                size: 80,
+                color: Colors.white.withValues(alpha: 0.3),
+              ),
             ),
           ),
         ),
@@ -203,13 +227,21 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
           bottom: 80,
           left: 0,
           right: 0,
-          child: Text('Point camera at barcode',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white70, fontSize: 16,
-                fontWeight: FontWeight.w500,
-                shadows: [Shadow(blurRadius: 10, color: Colors.black.withValues(alpha:  0.5))],
-              )),
+          child: Text(
+            'Point camera at barcode',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              shadows: [
+                Shadow(
+                  blurRadius: 10,
+                  color: Colors.black.withValues(alpha: 0.5),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );
@@ -225,27 +257,74 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
             child: Column(
               children: [
                 Container(
-                  width: 64, height: 64,
+                  width: 64,
+                  height: 64,
                   decoration: BoxDecoration(
-                    color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
+                    color: MacroSnapTheme.neonGreen.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Icon(Icons.check_circle_rounded,
-                      color: MacroSnapTheme.neonGreen, size: 36),
+                  child: const Icon(
+                    Icons.check_circle_rounded,
+                    color: MacroSnapTheme.neonGreen,
+                    size: 36,
+                  ),
                 ),
                 const SizedBox(height: 16),
-                Text(f.name, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+                Text(
+                  f.name,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(f.brand, style: TextStyle(fontSize: 14,
-                    color: MacroSnapTheme.textTertiary(context))),
+                Text(
+                  f.brand,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: MacroSnapTheme.textTertiary(context),
+                  ),
+                ),
                 const Divider(height: 32),
-                _row('Calories', '${f.caloriesPer100g} kcal', MacroSnapTheme.macroCalories, isDark),
-                _row('Protein', '${f.proteinPer100g.toStringAsFixed(1)}g', MacroSnapTheme.macroProtein, isDark),
-                _row('Carbs', '${f.carbsPer100g.toStringAsFixed(1)}g', MacroSnapTheme.macroCalories, isDark),
-                _row('Fats', '${f.fatsPer100g.toStringAsFixed(1)}g', MacroSnapTheme.macroFats, isDark),
-                if (f.fiberPer100g > 0) _row('Fiber', '${f.fiberPer100g.toStringAsFixed(1)}g', MacroSnapTheme.greenText(context), isDark),
-                if (f.sugarPer100g > 0) _row('Sugar', '${f.sugarPer100g.toStringAsFixed(1)}g', const Color(0xFFDB2777), isDark),
+                _row(
+                  'Calories',
+                  '${f.caloriesPer100g} kcal',
+                  MacroSnapTheme.macroCalories,
+                  isDark,
+                ),
+                _row(
+                  'Protein',
+                  '${f.proteinPer100g.toStringAsFixed(1)}g',
+                  MacroSnapTheme.macroProtein,
+                  isDark,
+                ),
+                _row(
+                  'Carbs',
+                  '${f.carbsPer100g.toStringAsFixed(1)}g',
+                  MacroSnapTheme.macroCalories,
+                  isDark,
+                ),
+                _row(
+                  'Fats',
+                  '${f.fatsPer100g.toStringAsFixed(1)}g',
+                  MacroSnapTheme.macroFats,
+                  isDark,
+                ),
+                if (f.fiberPer100g > 0)
+                  _row(
+                    'Fiber',
+                    '${f.fiberPer100g.toStringAsFixed(1)}g',
+                    MacroSnapTheme.greenText(context),
+                    isDark,
+                  ),
+                if (f.sugarPer100g > 0)
+                  _row(
+                    'Sugar',
+                    '${f.sugarPer100g.toStringAsFixed(1)}g',
+                    const Color(0xFFDB2777),
+                    isDark,
+                  ),
               ],
             ),
           ),
@@ -253,23 +332,31 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
           Row(
             children: [
               Expanded(
-                child: GradientButton(
-                  label: 'Log It',
-                  onPressed: _log,
-                ),
+                child: GradientButton(label: 'Log It', onPressed: _log),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
-                  onPressed: () => setState(() { _found = null; _scanning = true; }),
+                  onPressed: () => setState(() {
+                    _found = null;
+                    _scanning = true;
+                  }),
                   style: FilledButton.styleFrom(
-                    backgroundColor: isDark ? MacroSnapTheme.cardDark : const Color(0xFFCBD5E1),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    backgroundColor: isDark
+                        ? MacroSnapTheme.cardDark
+                        : const Color(0xFFCBD5E1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child: Text('Scan Again',
-                      style: TextStyle(fontWeight: FontWeight.w700,
-                          color: MacroSnapTheme.textPrimaryMuted(context))),
+                  child: Text(
+                    'Scan Again',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: MacroSnapTheme.textPrimaryMuted(context),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -284,13 +371,28 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
           const SizedBox(width: 12),
-          Text(label, style: TextStyle(fontSize: 14,
-              color: MacroSnapTheme.textPrimaryMuted(context))),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              color: MacroSnapTheme.textPrimaryMuted(context),
+            ),
+          ),
           const Spacer(),
-          Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+            ),
+          ),
         ],
       ),
     );

@@ -64,6 +64,11 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
       _error = '';
     });
     try {
+      // Clear any cached Google session first so the account chooser ALWAYS
+      // appears — never silently reuse the last signed-in account.
+      try {
+        await _googleSignIn.signOut();
+      } catch (_) {}
       final googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         if (mounted) setState(() => _loading = false);
@@ -141,12 +146,12 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
               children: [
                 SizedBox(height: screenHeight * 0.06),
                 // Animated mascot — the app's "face", greeting the user with
-                // their saved look (or the default character before a profile
-                // exists). Tap it for a happy reaction.
+                // a wave and their saved look (or the default character
+                // before a profile exists). Tap it for a happy reaction.
                 MascotWidget(
                   size: 110,
                   profile: DietPlanService.instance.profile,
-                  mood: MascotMood.happy,
+                  mood: MascotMood.wave,
                 ),
                 const SizedBox(height: 20),
                 Text(
@@ -211,14 +216,19 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
                                       ),
                                     ),
                                     const SizedBox(width: 12),
-                                    Text(
-                                      'Log in with Google',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                        color: isDark
-                                            ? Colors.white
-                                            : const Color(0xFF1A1A1A),
+                                    Flexible(
+                                      child: Text(
+                                        'Log in with Google',
+                                        maxLines: 1,
+                                        softWrap: false,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: isDark
+                                              ? Colors.white
+                                              : const Color(0xFF1A1A1A),
+                                        ),
                                       ),
                                     ),
                                   ],

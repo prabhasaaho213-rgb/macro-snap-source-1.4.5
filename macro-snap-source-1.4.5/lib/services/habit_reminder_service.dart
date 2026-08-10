@@ -59,12 +59,20 @@ class HabitReminderService {
     );
   }
 
-  static Future<void> schedule(Habit h, FlutterLocalNotificationsPlugin notifications) async {
+  static Future<void> schedule(
+    Habit h,
+    FlutterLocalNotificationsPlugin notifications,
+  ) async {
     if (!h.reminderEnabled) return;
 
     final now = tz.TZDateTime.now(tz.local);
     var when = tz.TZDateTime(
-      tz.local, now.year, now.month, now.day, h.reminderHour, h.reminderMinute,
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      h.reminderHour,
+      h.reminderMinute,
     );
     if (when.isBefore(now)) when = when.add(const Duration(days: 1));
 
@@ -73,7 +81,10 @@ class HabitReminderService {
 
   /// Schedule a one-off reminder 10 minutes from now (used by the Snooze
   /// action on the notification itself).
-  static Future<void> snooze(Habit h, FlutterLocalNotificationsPlugin notifications) async {
+  static Future<void> snooze(
+    Habit h,
+    FlutterLocalNotificationsPlugin notifications,
+  ) async {
     final when = tz.TZDateTime.now(tz.local).add(const Duration(minutes: 10));
     await notifications.zonedSchedule(
       snoozeId(h),
@@ -88,13 +99,19 @@ class HabitReminderService {
     );
   }
 
-  static Future<void> cancel(Habit h, FlutterLocalNotificationsPlugin notifications) async {
+  static Future<void> cancel(
+    Habit h,
+    FlutterLocalNotificationsPlugin notifications,
+  ) async {
     await notifications.cancel(notificationId(h));
     await notifications.cancel(snoozeId(h));
   }
 
   /// Cancel just the one-off snoozed reminder (keeps the daily one).
-  static Future<void> cancelSnooze(Habit h, FlutterLocalNotificationsPlugin notifications) async {
+  static Future<void> cancelSnooze(
+    Habit h,
+    FlutterLocalNotificationsPlugin notifications,
+  ) async {
     await notifications.cancel(snoozeId(h));
   }
 
@@ -102,12 +119,20 @@ class HabitReminderService {
   /// schedule and re-creating it starting tomorrow (at the same time, still
   /// repeating daily). Used after the habit is marked done today so it never
   /// re-reminds the same day while future days stay intact.
-  static Future<void> rescheduleTomorrow(Habit h, FlutterLocalNotificationsPlugin notifications) async {
+  static Future<void> rescheduleTomorrow(
+    Habit h,
+    FlutterLocalNotificationsPlugin notifications,
+  ) async {
     if (!h.reminderEnabled) return;
     await notifications.cancel(notificationId(h));
     final now = tz.TZDateTime.now(tz.local);
     final tomorrow = tz.TZDateTime(
-      tz.local, now.year, now.month, now.day + 1, h.reminderHour, h.reminderMinute,
+      tz.local,
+      now.year,
+      now.month,
+      now.day + 1,
+      h.reminderHour,
+      h.reminderMinute,
     );
     await _scheduleDailyAt(h, tomorrow, notifications);
   }
@@ -122,19 +147,30 @@ class HabitReminderService {
 /// instance. Errors are swallowed so a failure here can never crash launch.
 @pragma('vm:entry-point')
 Future<void> handleHabitReminderActionBackground(
-    NotificationResponse response) async {
+  NotificationResponse response,
+) async {
   final actionId = response.actionId;
   final habitId = response.payload;
   if (habitId == null || habitId.isEmpty) return;
 
   try {
     tz_data.initializeTimeZones();
-    final plugin = FlutterLocalNotificationsPlugin();
-    await plugin.initialize(const InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-    ));
-
     final prefs = await SharedPreferences.getInstance();
+    // Match the main isolate: tz.local must be the device timezone or the
+    // snoozed reminder fires at the wrong wall-clock time.
+    final savedTz = prefs.getString('device_timezone_name');
+    if (savedTz != null && savedTz.isNotEmpty) {
+      try {
+        tz.setLocalLocation(tz.getLocation(savedTz));
+      } catch (_) {}
+    }
+    final plugin = FlutterLocalNotificationsPlugin();
+    await plugin.initialize(
+      const InitializationSettings(
+        android: AndroidInitializationSettings('@drawable/ic_notification'),
+      ),
+    );
+
     final raw = prefs.getString('habits');
     if (raw == null || raw.isEmpty) return;
     final decoded = jsonDecode(raw);
@@ -158,7 +194,9 @@ Future<void> handleHabitReminderActionBackground(
       }
       habits[index] = habit;
       await prefs.setString(
-          'habits', jsonEncode(habits.map((h) => h.toJson()).toList()));
+        'habits',
+        jsonEncode(habits.map((h) => h.toJson()).toList()),
+      );
       // Mark done from the shade: clear the snoozed one-off AND push today's
       // upcoming daily reminder to tomorrow so it never fires again today.
       await plugin.cancel(HabitReminderService.snoozeId(habit));

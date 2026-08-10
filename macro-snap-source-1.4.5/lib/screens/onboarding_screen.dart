@@ -13,7 +13,10 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _pageController = PageController();
-  int _currentPage = 0;
+  // Drives the dots / buttons WITHOUT rebuilding the PageView. Rebuilding the
+  // PageView from setState() mid-swipe re-lays-out the pages and makes the
+  // text flicker during the transition.
+  final ValueNotifier<int> _pageNotifier = ValueNotifier<int>(0);
 
   static const _pages = [
     _OnboardingPageData(
@@ -48,6 +51,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void dispose() {
     _pageController.dispose();
+    _pageNotifier.dispose();
     super.dispose();
   }
 
@@ -73,100 +77,104 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Skip button
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (_currentPage < _pages.length - 1)
-                    TextButton(
-                      onPressed: _completeOnboarding,
-                      child: Text(
-                        'Skip',
-                        style: TextStyle(
-                          color: MacroSnapTheme.textTertiary(context),
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
+            // Skip button (rebuilds alone — the PageView stays untouched).
+            ValueListenableBuilder<int>(
+              valueListenable: _pageNotifier,
+              builder: (context, page, _) => Padding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (page < _pages.length - 1)
+                      TextButton(
+                        onPressed: _completeOnboarding,
+                        child: Text(
+                          'Skip',
+                          style: TextStyle(
+                            color: MacroSnapTheme.textTertiary(context),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
                         ),
-                      ),
-                    )
-                  else
-                    const SizedBox.shrink(),
-                ],
+                      )
+                    else
+                      const SizedBox.shrink(),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 20),
 
-            // PageView
+            // PageView — never rebuilt on page change (no flicker).
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
-                onPageChanged: (i) => setState(() => _currentPage = i),
+                onPageChanged: (i) => _pageNotifier.value = i,
                 itemCount: _pages.length,
                 itemBuilder: (_, i) => _buildPage(context, _pages[i], isDark),
               ),
             ),
 
-            // Bottom section
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 36),
-              child: Column(
-                children: [
-                  // Progress dots
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_pages.length, (i) {
-                      final isActive = i == _currentPage;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: isActive ? 28 : 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? _pages[_currentPage].color
-                              : (isDark
-                                    ? Colors.white10
-                                    : const Color(0xFFE2E8F0)),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 32),
+            // Bottom section (dots + CTA) — rebuilds alone.
+            ValueListenableBuilder<int>(
+              valueListenable: _pageNotifier,
+              builder: (context, page, _) => Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 36),
+                child: Column(
+                  children: [
+                    // Progress dots
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(_pages.length, (i) {
+                        final isActive = i == page;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: isActive ? 28 : 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? _pages[page].color
+                                : (isDark
+                                      ? Colors.white10
+                                      : const Color(0xFFE2E8F0)),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 32),
 
-                  // Next / Get Started button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: FilledButton(
-                      onPressed: _currentPage == _pages.length - 1
-                          ? _completeOnboarding
-                          : () => _pageController.nextPage(
-                              duration: const Duration(milliseconds: 400),
-                              curve: Curves.easeOutCubic,
-                            ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: _pages[_currentPage].color,
-                        foregroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
+                    // Next / Get Started button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: FilledButton(
+                        onPressed: page == _pages.length - 1
+                            ? _completeOnboarding
+                            : () => _pageController.nextPage(
+                                duration: const Duration(milliseconds: 400),
+                                curve: Curves.easeOutCubic,
+                              ),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _pages[page].color,
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        _currentPage == _pages.length - 1
-                            ? 'GET STARTED'
-                            : 'NEXT',
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.5,
+                        child: Text(
+                          page == _pages.length - 1 ? 'GET STARTED' : 'NEXT',
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],

@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/theme.dart';
 import '../widgets/glass_card.dart';
@@ -59,7 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   bool get _isGuest => _phone.isEmpty || _phone.startsWith('guest_');
   String _phone = '';
-  String get _packageVersion => '1.4.51';
+  String get _packageVersion => '1.4.52';
 
   Future<void> _upgradeFromGuest() async {
     final phone = await Navigator.push<String>(
@@ -75,7 +76,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setState(() => _phone = phone);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account upgraded! Your data is now linked to your Google account.')),
+          const SnackBar(
+            content: Text(
+              'Account upgraded! Your data is now linked to your Google account.',
+            ),
+          ),
         );
       }
     }
@@ -90,10 +95,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: const Text('Log Out'),
         content: const Text('Are you sure you want to log out?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: MacroSnapTheme.neonPink),
+            style: FilledButton.styleFrom(
+              backgroundColor: MacroSnapTheme.neonPink,
+            ),
             child: const Text('Log Out'),
           ),
         ],
@@ -102,6 +112,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (confirmed != true) return;
     try {
       await FirebaseAuth.instance.signOut();
+    } catch (_) {}
+    // Also clear the GoogleSignIn session so the cached account doesn't
+    // silently auto-select on the next login — the user must pick again.
+    try {
+      await GoogleSignIn().signOut();
     } catch (_) {}
     final prefs = await SharedPreferences.getInstance();
     // Only clear auth/session keys — preserve subscription, habits, meals, settings
@@ -130,8 +145,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Your feedback helps us improve MacroSnap!',
-                style: TextStyle(fontSize: 13)),
+            const Text(
+              'Your feedback helps us improve MacroSnap!',
+              style: TextStyle(fontSize: 13),
+            ),
             const SizedBox(height: 14),
             TextField(
               controller: ctrl,
@@ -145,13 +162,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () async {
               final msg = ctrl.text.trim();
               if (msg.isEmpty) return;
               final uri = Uri.parse(
-                'mailto:macrosnap7@gmail.com?subject=MacroSnap Feedback&body=${Uri.encodeComponent(msg)}'
+                'mailto:macrosnap7@gmail.com?subject=MacroSnap Feedback&body=${Uri.encodeComponent(msg)}',
               );
               if (await canLaunchUrl(uri)) {
                 await launchUrl(uri);
@@ -180,7 +200,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? MacroSnapTheme.cardDark : Colors.white,
+            ? MacroSnapTheme.cardDark
+            : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Edit Name'),
         content: TextField(
@@ -194,7 +215,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           textCapitalization: TextCapitalization.words,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
             child: const Text('Save'),
@@ -215,9 +239,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? MacroSnapTheme.surfaceDark : MacroSnapTheme.surfaceLight,
+      backgroundColor: isDark
+          ? MacroSnapTheme.surfaceDark
+          : MacroSnapTheme.surfaceLight,
       appBar: AppBar(
-        title: Text('Settings', style: TextStyle(fontWeight: FontWeight.w800, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+        title: Text(
+          'Settings',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
@@ -250,87 +282,269 @@ class _SettingsScreenState extends State<SettingsScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [MacroSnapTheme.neonGreen, Color(0xFF00CC52)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                gradient: const LinearGradient(
+                  colors: [MacroSnapTheme.neonGreen, Color(0xFF00CC52)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(24),
               ),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(children: [
-                  Container(
-                    width: 56, height: 56,
-                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.35), borderRadius: BorderRadius.circular(16)),
-                    child: Center(child: Text(_name.isNotEmpty ? _name[0].toUpperCase() : 'U',
-                        style: const TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.w700))),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(child: GestureDetector(
-                    onTap: _editName,
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Row(
-                        children: [
-                          Flexible(
-                            child: Text(_name.isNotEmpty ? _name : 'User', overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.w800)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.35),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Center(
+                          child: Text(
+                            _name.isNotEmpty ? _name[0].toUpperCase() : 'U',
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                          const SizedBox(width: 6),
-                          const Icon(Icons.edit_rounded, color: Colors.black, size: 16),
-                        ],
+                        ),
                       ),
-                      if (_email.isNotEmpty) Text(_email, style: const TextStyle(color: Colors.black, fontSize: 13)),
-                    ]),
-                  )),
-                ]),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(20),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: _editName,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      _name.isNotEmpty ? _name : 'User',
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Icon(
+                                    Icons.edit_rounded,
+                                    color: Colors.black,
+                                    size: 16,
+                                  ),
+                                ],
+                              ),
+                              if (_email.isNotEmpty)
+                                Text(
+                                  _email,
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  child: Text(_isAdmin ? 'Lifetime Pro' : (_subscribed ? 'Pro Member' : 'Free User'),
-                      style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w700)),
-                ),
-              ]),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      _isAdmin
+                          ? 'Lifetime Pro'
+                          : (_subscribed ? 'Pro Member' : 'Free User'),
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 20),
             // Settings list card
             GlassCard(
               padding: const EdgeInsets.all(16),
-              child: Column(children: [
-                AnimatedEntrance(delayMs: 50, child: _settingTile(Icons.subscriptions_rounded, _isAdmin ? 'My Subscription' : (_subscribed ? 'Manage Subscription' : 'Upgrade to Pro'), _isAdmin ? 'Lifetime Pro · free forever' : (_subscribed && _subscribedDate != null ? 'Subscribed since ${_subscribedDate!.substring(0, 10)}' : 'Unlock AI meal plans & more'), () {
-                  Navigator.push(context, habitFlowRoute(const SubscriptionScreen()));
-                }, isDark)),
-                const Divider(height: 24),
-                AnimatedEntrance(delayMs: 100, child: _settingTile(Icons.cloud_upload_rounded, 'Cloud Backup', _syncing ? 'Syncing...' : (_lastSync.isNotEmpty ? 'Last sync: $_lastSync' : 'Never backed up'), () => _showBackupDialog(isDark), isDark)),
-                const Divider(height: 24),
-                AnimatedEntrance(delayMs: 220, child: _settingTile(Icons.info_outline_rounded, 'App Version', _packageVersion, null, isDark)),
-                const Divider(height: 24),
-                AnimatedEntrance(delayMs: 250, child: _settingTile(Icons.mail_outline_rounded, 'Contact Support', 'macrosnap7@gmail.com', () async {
-                  final uri = Uri.parse('mailto:macrosnap7@gmail.com');
-                  if (await canLaunchUrl(uri)) await launchUrl(uri);
-                }, isDark)),
-                const Divider(height: 24),
-                AnimatedEntrance(delayMs: 260, child: _settingTile(Icons.star_rounded, 'Rate Us', 'Love MacroSnap? Leave a 5-star review', () => RateUsService.rateNowFromSettings(), isDark)),
-                const Divider(height: 24),
-                if (_isGuest)
-                  AnimatedEntrance(delayMs: 270, child: _settingTile(Icons.person_add_rounded, 'Save Your Account', 'Link Google to keep your data permanently', _upgradeFromGuest, isDark)),
-                if (_isGuest) const Divider(height: 24),
-                AnimatedEntrance(delayMs: 280, child: _settingTile(Icons.privacy_tip_outlined, 'Privacy Policy', 'How we handle your data', () async {
-                  final uri = Uri.parse('https://prabhasaaho213-rgb.github.io/macro-snap-source-1.4.5/');
-                  if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
-                }, isDark)),
-                const Divider(height: 24),
-                AnimatedEntrance(delayMs: 300, child: _settingTile(Icons.delete_forever_outlined, 'Delete Account', 'Permanently delete your data', () async {
-                  final uri = Uri.parse('https://prabhasaaho213-rgb.github.io/macro-snap-source-1.4.5/delete-account.html');
-                  if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
-                }, isDark)),
-                const Divider(height: 24),
-                AnimatedEntrance(delayMs: 300, child: _settingTile(Icons.feedback_rounded, 'Send Feedback', 'Help us improve MacroSnap', () => _sendFeedback(isDark), isDark)),
-                const Divider(height: 24),
-                AnimatedEntrance(delayMs: 320, child: _settingTile(Icons.logout_rounded, 'Log Out', 'Sign out and return to login', () => _logout(context, isDark), isDark)),
-              ]),
+              child: Column(
+                children: [
+                  AnimatedEntrance(
+                    delayMs: 50,
+                    child: _settingTile(
+                      Icons.subscriptions_rounded,
+                      _isAdmin
+                          ? 'My Subscription'
+                          : (_subscribed
+                                ? 'Manage Subscription'
+                                : 'Upgrade to Pro'),
+                      _isAdmin
+                          ? 'Lifetime Pro · free forever'
+                          : (_subscribed && _subscribedDate != null
+                                ? 'Subscribed since ${_subscribedDate!.substring(0, 10)}'
+                                : 'Unlock AI meal plans & more'),
+                      () {
+                        Navigator.push(
+                          context,
+                          habitFlowRoute(const SubscriptionScreen()),
+                        );
+                      },
+                      isDark,
+                    ),
+                  ),
+                  const Divider(height: 24),
+                  AnimatedEntrance(
+                    delayMs: 100,
+                    child: _settingTile(
+                      Icons.cloud_upload_rounded,
+                      'Cloud Backup',
+                      _syncing
+                          ? 'Syncing...'
+                          : (_lastSync.isNotEmpty
+                                ? 'Last sync: $_lastSync'
+                                : 'Never backed up'),
+                      () => _showBackupDialog(isDark),
+                      isDark,
+                    ),
+                  ),
+                  const Divider(height: 24),
+                  AnimatedEntrance(
+                    delayMs: 220,
+                    child: _settingTile(
+                      Icons.info_outline_rounded,
+                      'App Version',
+                      _packageVersion,
+                      null,
+                      isDark,
+                    ),
+                  ),
+                  const Divider(height: 24),
+                  AnimatedEntrance(
+                    delayMs: 250,
+                    child: _settingTile(
+                      Icons.mail_outline_rounded,
+                      'Contact Support',
+                      'macrosnap7@gmail.com',
+                      () async {
+                        final uri = Uri.parse('mailto:macrosnap7@gmail.com');
+                        if (await canLaunchUrl(uri)) await launchUrl(uri);
+                      },
+                      isDark,
+                    ),
+                  ),
+                  const Divider(height: 24),
+                  AnimatedEntrance(
+                    delayMs: 260,
+                    child: _settingTile(
+                      Icons.star_rounded,
+                      'Rate Us',
+                      'Love MacroSnap? Leave a 5-star review',
+                      () => RateUsService.rateNowFromSettings(),
+                      isDark,
+                    ),
+                  ),
+                  const Divider(height: 24),
+                  if (_isGuest)
+                    AnimatedEntrance(
+                      delayMs: 270,
+                      child: _settingTile(
+                        Icons.person_add_rounded,
+                        'Save Your Account',
+                        'Link Google to keep your data permanently',
+                        _upgradeFromGuest,
+                        isDark,
+                      ),
+                    ),
+                  if (_isGuest) const Divider(height: 24),
+                  AnimatedEntrance(
+                    delayMs: 280,
+                    child: _settingTile(
+                      Icons.privacy_tip_outlined,
+                      'Privacy Policy',
+                      'How we handle your data',
+                      () async {
+                        final uri = Uri.parse(
+                          'https://prabhasaaho213-rgb.github.io/macro-snap-source-1.4.5/',
+                        );
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(
+                            uri,
+                            mode: LaunchMode.externalApplication,
+                          );
+                        }
+                      },
+                      isDark,
+                    ),
+                  ),
+                  const Divider(height: 24),
+                  AnimatedEntrance(
+                    delayMs: 300,
+                    child: _settingTile(
+                      Icons.delete_forever_outlined,
+                      'Delete Account',
+                      'Permanently delete your data',
+                      () async {
+                        final uri = Uri.parse(
+                          'https://prabhasaaho213-rgb.github.io/macro-snap-source-1.4.5/delete-account.html',
+                        );
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(
+                            uri,
+                            mode: LaunchMode.externalApplication,
+                          );
+                        }
+                      },
+                      isDark,
+                    ),
+                  ),
+                  const Divider(height: 24),
+                  AnimatedEntrance(
+                    delayMs: 300,
+                    child: _settingTile(
+                      Icons.feedback_rounded,
+                      'Send Feedback',
+                      'Help us improve MacroSnap',
+                      () => _sendFeedback(isDark),
+                      isDark,
+                    ),
+                  ),
+                  const Divider(height: 24),
+                  AnimatedEntrance(
+                    delayMs: 320,
+                    child: _settingTile(
+                      Icons.logout_rounded,
+                      'Log Out',
+                      'Sign out and return to login',
+                      () => _logout(context, isDark),
+                      isDark,
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 20),
-            Text('Made with ❤️ in India', style: TextStyle(fontSize: 12, color: MacroSnapTheme.textQuaternary(context))),
+            Text(
+              'Made with ❤️ in India',
+              style: TextStyle(
+                fontSize: 12,
+                color: MacroSnapTheme.textQuaternary(context),
+              ),
+            ),
           ],
         ),
       ),
@@ -342,8 +556,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   /// Full Light/Dark/System picker lives in [_showThemeDialog] (long-press).
   Future<void> _toggleTheme(bool isDark) async {
     final current = themeModeNotifier.value;
-    final effectiveDark = current == ThemeMode.dark ||
-        (current == ThemeMode.system && isDark);
+    final effectiveDark =
+        current == ThemeMode.dark || (current == ThemeMode.system && isDark);
     final next = effectiveDark ? ThemeMode.light : ThemeMode.dark;
     if (next == current) return;
     final prefs = await SharedPreferences.getInstance();
@@ -361,28 +575,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return StatefulBuilder(
           builder: (ctx, setDialogState) => AlertDialog(
             backgroundColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text('Choose Theme',
-                style: TextStyle(color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Text(
+              'Choose Theme',
+              style: TextStyle(
+                color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+              ),
+            ),
             content: RadioGroup<ThemeMode>(
               groupValue: selected,
               onChanged: (v) {
-                setDialogState(() { selected = v!; });
+                setDialogState(() {
+                  selected = v!;
+                });
               },
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                for (final mode in ThemeMode.values)
-                  RadioListTile<ThemeMode>(
-                    value: mode,
-                    title: Text(_themeModeLabel(mode),
-                        style: TextStyle(color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
-                    subtitle: Text(_themeModeSubtitle(mode),
-                        style: TextStyle(fontSize: 12, color: MacroSnapTheme.textTertiary(context))),
-                    activeColor: MacroSnapTheme.neonGreen,
-                  ),
-              ]),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final mode in ThemeMode.values)
+                    RadioListTile<ThemeMode>(
+                      value: mode,
+                      title: Text(
+                        _themeModeLabel(mode),
+                        style: TextStyle(
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      subtitle: Text(
+                        _themeModeSubtitle(mode),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: MacroSnapTheme.textTertiary(context),
+                        ),
+                      ),
+                      activeColor: MacroSnapTheme.neonGreen,
+                    ),
+                ],
+              ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel'),
+              ),
               FilledButton(
                 onPressed: () => Navigator.pop(ctx, selected),
                 child: const Text('Apply'),
@@ -401,17 +640,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   String _themeModeLabel(ThemeMode mode) {
     switch (mode) {
-      case ThemeMode.system: return 'System default';
-      case ThemeMode.light: return 'Light';
-      case ThemeMode.dark: return 'Dark';
+      case ThemeMode.system:
+        return 'System default';
+      case ThemeMode.light:
+        return 'Light';
+      case ThemeMode.dark:
+        return 'Dark';
     }
   }
 
   String _themeModeSubtitle(ThemeMode mode) {
     switch (mode) {
-      case ThemeMode.system: return 'Follow your device setting';
-      case ThemeMode.light: return 'Always light background';
-      case ThemeMode.dark: return 'Always dark background';
+      case ThemeMode.system:
+        return 'Follow your device setting';
+      case ThemeMode.light:
+        return 'Always light background';
+      case ThemeMode.dark:
+        return 'Always dark background';
     }
   }
 
@@ -435,20 +680,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             // Icon
             Container(
-              width: 64, height: 64,
+              width: 64,
+              height: 64,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: const LinearGradient(
                   colors: [MacroSnapTheme.neonGreen, Color(0xFF00CC52)],
                 ),
               ),
-              child: const Icon(Icons.cloud_upload_rounded,
-                  color: Colors.black, size: 32),
+              child: const Icon(
+                Icons.cloud_upload_rounded,
+                color: Colors.black,
+                size: 32,
+              ),
             ),
             const SizedBox(height: 18),
-            Text('Cloud Backup',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900,
-                    color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+            Text(
+              'Cloud Backup',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+              ),
+            ),
             const SizedBox(height: 8),
 
             // Status description
@@ -456,19 +710,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _syncing
                   ? 'Syncing all data...'
                   : canSync
-                      ? (_lastSync.isNotEmpty
-                          ? 'Data backed up safely'
-                          : 'Your data has never been backed up')
-                      : 'Sign in to enable cloud backup.',
+                  ? (_lastSync.isNotEmpty
+                        ? 'Data backed up safely'
+                        : 'Your data has never been backed up')
+                  : 'Sign in to enable cloud backup.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, height: 1.4,
-                  color: MacroSnapTheme.textSecondary(context)),
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.4,
+                color: MacroSnapTheme.textSecondary(context),
+              ),
             ),
 
-            if (_syncing) ...[const SizedBox(height: 16),
-              const SizedBox(width: 24, height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2,
-                      color: MacroSnapTheme.neonGreen)),
+            if (_syncing) ...[
+              const SizedBox(height: 16),
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: MacroSnapTheme.neonGreen,
+                ),
+              ),
             ],
 
             if (!_syncing && canSync) ...[
@@ -478,9 +741,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _backupRow(
                 Icons.restaurant_rounded,
                 'Meals',
-                '$mealCount meal${
-                  mealCount == 1 ? '' : 's'
-                } tracked',
+                '$mealCount meal${mealCount == 1 ? '' : 's'} tracked',
                 isDark,
               ),
               const SizedBox(height: 10),
@@ -489,9 +750,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _backupRow(
                 Icons.favorite_rounded,
                 'Habits + Water',
-                '$habitCount habit${
-                  habitCount == 1 ? '' : 's'
-                }${HabitStore.instance.waterGoal > 0 ? ' · ${HabitStore.instance.waterGoal} glasses goal' : ''}',
+                '$habitCount habit${habitCount == 1 ? '' : 's'}${HabitStore.instance.waterGoal > 0 ? ' · ${HabitStore.instance.waterGoal} glasses goal' : ''}',
                 isDark,
               ),
 
@@ -501,12 +760,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.schedule_rounded, size: 14,
-                        color: MacroSnapTheme.textTertiary(context)),
+                    Icon(
+                      Icons.schedule_rounded,
+                      size: 14,
+                      color: MacroSnapTheme.textTertiary(context),
+                    ),
                     const SizedBox(width: 6),
-                    Text('Last sync: $_lastSync',
-                        style: TextStyle(fontSize: 12,
-                            color: MacroSnapTheme.textTertiary(context))),
+                    Text(
+                      'Last sync: $_lastSync',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: MacroSnapTheme.textTertiary(context),
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -517,7 +783,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // CTA Button
             if (canSync && !_syncing)
               SizedBox(
-                width: double.infinity, height: 50,
+                width: double.infinity,
+                height: 50,
                 child: FilledButton.icon(
                   onPressed: () async {
                     setState(() => _syncing = true);
@@ -525,32 +792,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     await _performSync();
                   },
                   icon: const Icon(Icons.sync_rounded, size: 18),
-                  label: const Text('SYNC ALL DATA',
-                      style: TextStyle(fontWeight: FontWeight.w900)),
+                  label: const Text(
+                    'SYNC ALL DATA',
+                    style: TextStyle(fontWeight: FontWeight.w900),
+                  ),
                   style: FilledButton.styleFrom(
                     backgroundColor: MacroSnapTheme.neonGreen,
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                 ),
               ),
             if (!canSync)
               SizedBox(
-                width: double.infinity, height: 50,
+                width: double.infinity,
+                height: 50,
                 child: FilledButton(
                   style: FilledButton.styleFrom(
                     backgroundColor: MacroSnapTheme.neonGreen,
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                   onPressed: () {
                     Navigator.of(ctx).pop();
                     _upgradeFromGuest();
                   },
-                  child: const Text('SIGN IN TO ENABLE BACKUP',
-                      style: TextStyle(fontWeight: FontWeight.w900)),
+                  // Shortened label + ellipsis safety: fits one line even on
+                  // the narrowest dialog widths.
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Flexible(
+                        child: Text(
+                          'SIGN IN FOR BACKUP',
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
           ],
@@ -564,7 +850,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: isDark ? MacroSnapTheme.neonGreen.withValues(alpha: 0.06) : MacroSnapTheme.neonGreen.withValues(alpha: 0.06),
+        color: isDark
+            ? MacroSnapTheme.neonGreen.withValues(alpha: 0.06)
+            : MacroSnapTheme.neonGreen.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
@@ -573,7 +861,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Row(
         children: [
           Container(
-            width: 32, height: 32,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
               color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
@@ -585,17 +874,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label,
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
-                Text(detail,
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500,
-                        color: MacroSnapTheme.textTertiary(context))),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                  ),
+                ),
+                Text(
+                  detail,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: MacroSnapTheme.textTertiary(context),
+                  ),
+                ),
               ],
             ),
           ),
-          const Icon(Icons.check_circle_rounded,
-              color: MacroSnapTheme.neonGreen, size: 18),
+          const Icon(
+            Icons.check_circle_rounded,
+            color: MacroSnapTheme.neonGreen,
+            size: 18,
+          ),
         ],
       ),
     );
@@ -618,7 +920,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       // 3. Save sync timestamp
       final prefs = await SharedPreferences.getInstance();
       final now = DateTime.now();
-      final syncTime = '${now.day}/${now.month}/${now.year} ${now.hour}:${now.minute.toString().padLeft(2, '0')}';
+      final syncTime =
+          '${now.day}/${now.month}/${now.year} ${now.hour}:${now.minute.toString().padLeft(2, '0')}';
       await prefs.setString('last_sync', syncTime);
 
       if (mounted) {
@@ -628,7 +931,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ Backed up ${meals.length} meals + ${habitStore.habits.length} habits'),
+            content: Text(
+              '✅ Backed up ${meals.length} meals + ${habitStore.habits.length} habits',
+            ),
             behavior: SnackBarBehavior.floating,
             backgroundColor: MacroSnapTheme.neonGreen,
           ),
@@ -648,24 +953,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Widget _settingTile(IconData icon, String title, String subtitle, VoidCallback? onTap, bool isDark) {
+  Widget _settingTile(
+    IconData icon,
+    String title,
+    String subtitle,
+    VoidCallback? onTap,
+    bool isDark,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
-      child: Row(children: [
-        Container(
-          width: 40, height: 40,
-          decoration: BoxDecoration(color: MacroSnapTheme.neonGreen.withValues(alpha:  0.12), borderRadius: BorderRadius.circular(15)),
-          child: Icon(icon, color: MacroSnapTheme.neonGreen, size: 20),
-        ),
-        const SizedBox(width: 14),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
-          Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: MacroSnapTheme.textTertiary(context))),
-        ])),
-        if (onTap != null) Icon(Icons.chevron_right_rounded, color: MacroSnapTheme.textQuaternary(context), size: 20),
-      ]),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Icon(icon, color: MacroSnapTheme.neonGreen, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: MacroSnapTheme.textTertiary(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (onTap != null)
+            Icon(
+              Icons.chevron_right_rounded,
+              color: MacroSnapTheme.textQuaternary(context),
+              size: 20,
+            ),
+        ],
+      ),
     );
   }
 }
-

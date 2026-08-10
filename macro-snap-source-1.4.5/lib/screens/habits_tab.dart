@@ -5,6 +5,7 @@ import '../models/habit.dart';
 import '../services/habit_store.dart';
 import '../services/subscription_service.dart';
 import '../widgets/animations.dart';
+import '../widgets/celebration.dart';
 import '../widgets/consistency_map.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/streak_flame.dart';
@@ -95,12 +96,16 @@ class _HabitsTabState extends State<HabitsTab> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Habits',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
+                  Expanded(
+                    child: const Text(
+                      'Habits',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.5,
+                      ),
                     ),
                   ),
                   Row(
@@ -738,10 +743,15 @@ class _HabitsTabState extends State<HabitsTab> {
           child: GestureDetector(
             onTap: () {
               HapticFeedback.mediumImpact();
+              final wasDone = h.isCompleted(DateTime.now());
               h.toggle(DateTime.now());
               // Completion toggle only — the reminder schedule is unchanged,
               // so skip the zonedSchedule cancel+recreate churn.
               store.update(h, syncReminder: false);
+              // Confetti + mascot when the mission is COMPLETED (not undone).
+              if (!wasDone && h.isCompleted(DateTime.now())) {
+                showCelebration(context, message: 'Mission complete!');
+              }
             },
             onLongPress: () {
               HapticFeedback.heavyImpact();
@@ -1399,7 +1409,8 @@ class _HabitsTabState extends State<HabitsTab> {
               ),
               const SizedBox(height: 24),
               GradientButton(
-                label: 'Go Pro - ₹29/mo',
+                // Short label so the CTA reads fully on narrow screens.
+                label: 'GO PRO ₹29/mo',
                 onPressed: () {
                   Navigator.of(ctx).pop();
                   Navigator.push(

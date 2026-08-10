@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -66,7 +66,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
   Future<void> _checkPaymentStatus(String phone) async {
     try {
-      final res = await http.get(Uri.parse('${GeminiService.serverUrl}/payment/status/$phone'));
+      final res = await http.get(
+        Uri.parse('${GeminiService.serverUrl}/payment/status/$phone'),
+      );
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (mounted) {
@@ -85,7 +87,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     // inside SubscriptionService.activate so they aren't duplicated here and
     // in RazorpayService.
     await SubscriptionService.instance.activate();
-    final now = SubscriptionService.instance.subscribedAt ??
+    final now =
+        SubscriptionService.instance.subscribedAt ??
         DateTime.now().toIso8601String();
     if (mounted) {
       setState(() {
@@ -105,7 +108,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _checkAnim = CurvedAnimation(parent: _animController!, curve: Curves.elasticOut);
+    _checkAnim = CurvedAnimation(
+      parent: _animController!,
+      curve: Curves.elasticOut,
+    );
     _animController!.forward();
 
     showDialog(
@@ -117,47 +123,73 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           animation: _checkAnim!,
           builder: (_, _) => AlertDialog(
             backgroundColor: Theme.of(context).brightness == Brightness.dark
-                ? MacroSnapTheme.cardDark : Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                ? MacroSnapTheme.cardDark
+                : Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28),
+            ),
             content: Padding(
               padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Transform.scale(
-                  scale: _checkAnim!.value,
-                  child: Container(
-                    width: 80, height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Transform.scale(
+                    scale: _checkAnim!.value,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: MacroSnapTheme.neonGreen.withValues(alpha: 0.1),
+                      ),
+                      child: Icon(
+                        Icons.check_circle_rounded,
+                        color: MacroSnapTheme.neonGreen,
+                        size: 56,
+                      ),
                     ),
-                    child: Icon(Icons.check_circle_rounded,
-                        color: MacroSnapTheme.neonGreen, size: 56),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Text('Welcome to Pro!',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800,
-                        color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
-                const SizedBox(height: 6),
-                Text('Your subscription is now active',
+                  const SizedBox(height: 20),
+                  Text(
+                    'Welcome to Pro!',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Your subscription is now active',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14,
-                        color: MacroSnapTheme.textSecondary(context))),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity, height: 48,
-                  child: FilledButton(
-                    onPressed: () => Navigator.of(ctx).pop(),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: MacroSnapTheme.neonGreen,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: MacroSnapTheme.textSecondary(context),
                     ),
-                    child: const Text('Start Using MacroSnap',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                   ),
-                ),
-              ]),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: FilledButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: MacroSnapTheme.neonGreen,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'Start Using MacroSnap',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -167,11 +199,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
   void _showError(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: MacroSnapTheme.neonPink,
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: MacroSnapTheme.neonPink,
+      ),
+    );
   }
 
   Future<void> _payWithRazorpay() async {
@@ -202,7 +236,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
   void _startLogin() async {
     final phone = await Navigator.push<String>(
-        context, MaterialPageRoute(builder: (_) => const PhoneLoginScreen()));
+      context,
+      MaterialPageRoute(builder: (_) => const PhoneLoginScreen()),
+    );
     if (phone != null) setState(() => _phone = phone);
   }
 
@@ -212,8 +248,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded,
-              color: isDark ? Colors.white : const Color(0xFF1A1A1A), size: 20),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text('MacroSnap Pro'),
@@ -224,26 +263,41 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           child: Column(
             children: [
               Container(
-                width: 80, height: 80,
+                width: 80,
+                height: 80,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: const LinearGradient(
-                    colors: [MacroSnapTheme.neonGreen, MacroSnapTheme.neonGreen],
+                    colors: [
+                      MacroSnapTheme.neonGreen,
+                      MacroSnapTheme.neonGreen,
+                    ],
                   ),
                   boxShadow: [
                     BoxShadow(
-                        color: MacroSnapTheme.neonGreen.withValues(alpha:  0.3),
-                        blurRadius: 20, offset: const Offset(0, 6))
+                      color: MacroSnapTheme.neonGreen.withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 6),
+                    ),
                   ],
                 ),
-                child: const Icon(Icons.auto_awesome_rounded,
-                    color: Colors.black, size: 36),
+                child: const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: Colors.black,
+                  size: 36,
+                ),
               ),
               const SizedBox(height: 24),
               Text(
-                _subscribed ? (_isAdmin ? "You're a Lifetime Pro!" : "You're a Pro!") : 'Never manually calculate macros again',
+                _subscribed
+                    ? (_isAdmin ? "You're a Lifetime Pro!" : "You're a Pro!")
+                    : 'Never manually calculate macros again',
+                // Center so the headline wraps cleanly on narrow screens
+                // instead of hugging the left edge.
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 26, fontWeight: FontWeight.w800,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
                   color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                   letterSpacing: -0.5,
                 ),
@@ -251,63 +305,116 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               const SizedBox(height: 8),
               Text(
                 _subscribed
-                    ? (_isAdmin ? 'All Pro features, free forever' : 'Enjoy all features. Billed ₹29 every month.')
+                    ? (_isAdmin
+                          ? 'All Pro features, free forever'
+                          : 'Enjoy all features. Billed ₹29 every month.')
                     : 'Snap, log, track your week automatically',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w400,
-                    color: MacroSnapTheme.textTertiary(context)),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: MacroSnapTheme.textTertiary(context),
+                ),
               ),
               const SizedBox(height: 32),
-              _buildFeatureRow(Icons.local_fire_department_rounded, 'Streak Tracking',
-                  'Stay consistent with daily logging streaks', isDark),
-              _buildFeatureRow(Icons.insights_rounded, 'Weekly Auto-Insights',
-                  'See your protein gaps and trends without manual tracking', isDark),
-              _buildFeatureRow(Icons.history_rounded, 'Complete Meal History',
-                  'Review everything you ate, searchable by date', isDark),
-              _buildFeatureRow(Icons.cloud_rounded, 'Cloud Backup',
-                  'Your data stays safe across devices', isDark),
-              _buildFeatureRow(Icons.photo_camera_rounded, 'Unlimited AI Scans',
-                  'Snap any meal for instant macros — no limits', isDark),
+              _buildFeatureRow(
+                Icons.local_fire_department_rounded,
+                'Streak Tracking',
+                'Stay consistent with daily logging streaks',
+                isDark,
+              ),
+              _buildFeatureRow(
+                Icons.insights_rounded,
+                'Weekly Auto-Insights',
+                'See your protein gaps and trends without manual tracking',
+                isDark,
+              ),
+              _buildFeatureRow(
+                Icons.history_rounded,
+                'Complete Meal History',
+                'Review everything you ate, searchable by date',
+                isDark,
+              ),
+              _buildFeatureRow(
+                Icons.cloud_rounded,
+                'Cloud Backup',
+                'Your data stays safe across devices',
+                isDark,
+              ),
+              _buildFeatureRow(
+                Icons.photo_camera_rounded,
+                'Unlimited AI Scans',
+                'Snap any meal for instant macros — no limits',
+                isDark,
+              ),
               const SizedBox(height: 32),
               GlassCard(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('\u20B9',
-                              style: TextStyle(fontSize: 24,
-                                  fontWeight: FontWeight.w700,
-                                  color: MacroSnapTheme.greenText(context))),
-                          const SizedBox(width: 2),
-                          Text('29',
-                              style: TextStyle(fontSize: 56,
-                                  fontWeight: FontWeight.w800,
-                                  color: isDark ? Colors.white
-                                      : MacroSnapTheme.cardDark,
-                                  letterSpacing: -2, height: 1)),
-                          const SizedBox(width: 4),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: Text('/ month',
-                                style: TextStyle(fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: MacroSnapTheme.textTertiary(context))),
-                          ),
-                        ],
+                      // FittedBox: at large system font scales the fixed-size
+                      // price glyphs would otherwise overflow the card width;
+                      // scale the whole price line down as one unit instead.
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '\u20B9',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w700,
+                                color: MacroSnapTheme.greenText(context),
+                              ),
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              '29',
+                              style: TextStyle(
+                                fontSize: 56,
+                                fontWeight: FontWeight.w800,
+                                color: isDark
+                                    ? Colors.white
+                                    : MacroSnapTheme.cardDark,
+                                letterSpacing: -2,
+                                height: 1,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Text(
+                                '/ month',
+                                maxLines: 1,
+                                softWrap: false,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: MacroSnapTheme.textTertiary(context),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         _subscribed && _subscribedDate != null
-                            ? (_isAdmin ? 'Lifetime \u2022 Free forever' : 'Auto-renews monthly \u2022 Cancel anytime')
+                            ? (_isAdmin
+                                  ? 'Lifetime \u2022 Free forever'
+                                  : 'Auto-renews monthly \u2022 Cancel anytime')
                             : 'Auto-renews ₹29/month \u2022 Cancel anytime',
-                        style: TextStyle(fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: MacroSnapTheme.greenText(context).withValues(alpha: 0.8)),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: MacroSnapTheme.greenText(
+                            context,
+                          ).withValues(alpha: 0.8),
+                        ),
                       ),
                     ],
                   ),
@@ -320,14 +427,22 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.check_circle,
-                          color: MacroSnapTheme.neonGreen, size: 16),
+                      Icon(
+                        Icons.check_circle,
+                        color: MacroSnapTheme.neonGreen,
+                        size: 16,
+                      ),
                       const SizedBox(width: 6),
                       Flexible(
-                        child: Text('Logged in as $_phone',
-                            maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 13,
-                                color: MacroSnapTheme.textSecondary(context))),
+                        child: Text(
+                          'Logged in as $_phone',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: MacroSnapTheme.textSecondary(context),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -353,69 +468,102 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       color: isDark ? MacroSnapTheme.cardDark : Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: MacroSnapTheme.borderSubtle(context)),
+                        color: MacroSnapTheme.borderSubtle(context),
+                      ),
                     ),
-                    child: Column(children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 44, height: 44,
-                            decoration: BoxDecoration(
-                              color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
-                              borderRadius: BorderRadius.circular(14),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: MacroSnapTheme.neonGreen.withValues(
+                                  alpha: 0.1,
+                                ),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Icon(
+                                Icons.credit_card_rounded,
+                                color: MacroSnapTheme.neonGreen,
+                                size: 22,
+                              ),
                             ),
-                            child: const Icon(Icons.credit_card_rounded,
-                                color: MacroSnapTheme.neonGreen, size: 22),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Pay Online (Razorpay)',
-                                    style: TextStyle(fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                        color: isDark ? Colors.white
-                                            : MacroSnapTheme.cardDark)),
-                                Text('UPI, Card, Netbanking, Wallet',
-                                    style: TextStyle(fontSize: 13,
-                                        color: MacroSnapTheme.textTertiary(context))),
-                              ],
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Pay Online (Razorpay)',
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: isDark
+                                          ? Colors.white
+                                          : MacroSnapTheme.cardDark,
+                                    ),
+                                  ),
+                                  Text(
+                                    'UPI, Card, Netbanking, Wallet',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: MacroSnapTheme.textTertiary(
+                                        context,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        GradientButton(
+                          label: 'Pay ₹29 & Subscribe',
+                          icon: Icons.lock_rounded,
+                          loading: _submitting,
+                          onPressed: _payWithRazorpay,
+                          height: 52,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Secure payment • Auto-renews ₹29/month • Cancel anytime',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: MacroSnapTheme.textTertiary(context),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      GradientButton(
-                        label: 'Pay ₹29 & Subscribe',
-                        icon: Icons.lock_rounded,
-                        loading: _submitting,
-                        onPressed: _payWithRazorpay,
-                        height: 52,
-                      ),
-                      const SizedBox(height: 8),
-                      Text('Secure payment • Auto-renews ₹29/month • Cancel anytime',
-                          style: TextStyle(fontSize: 12,
-                              color: MacroSnapTheme.textTertiary(context))),
-                    ]),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 8),
                 ],
               ],
               if (_subscribed) ...[
                 SizedBox(
-                  width: double.infinity, height: 56,
+                  width: double.infinity,
+                  height: 56,
                   child: FilledButton(
                     onPressed: null,
                     style: FilledButton.styleFrom(
-                      backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                      backgroundColor: isDark
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFCBD5E1),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18)),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
                     ),
-                    child: Text(_isAdmin ? 'Lifetime Pro \u2713' : 'Subscribed \u2713',
-                        style: TextStyle(
-                            color: MacroSnapTheme.textSecondary(context),
-                            fontSize: 16, fontWeight: FontWeight.w700)),
+                    child: Text(
+                      _isAdmin ? 'Lifetime Pro \u2713' : 'Subscribed \u2713',
+                      style: TextStyle(
+                        color: MacroSnapTheme.textSecondary(context),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
                 if (!_isAdmin) ...[
@@ -429,56 +577,82 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         _subscribedDate = null;
                       });
                     },
-                    child: const Text('Cancel Subscription',
-                        style: TextStyle(color: MacroSnapTheme.neonPink)),
+                    child: const Text(
+                      'Cancel Subscription',
+                      style: TextStyle(color: MacroSnapTheme.neonPink),
+                    ),
                   ),
                 ],
               ],
               const SizedBox(height: 16),
-              Text('Cancel anytime. No questions asked.',
-                  style: TextStyle(fontSize: 13,
-                      color: MacroSnapTheme.textTertiary(context))),
+              Text(
+                'Cancel anytime. No questions asked.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: MacroSnapTheme.textTertiary(context),
+                ),
+              ),
               const SizedBox(height: 24),
               GestureDetector(
-                onTap: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const ReferralScreen())),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ReferralScreen()),
+                ),
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: MacroSnapTheme.neonGreen.withValues(alpha:  0.06),
+                    color: MacroSnapTheme.neonGreen.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: MacroSnapTheme.neonGreen.withValues(alpha:  0.15)),
+                      color: MacroSnapTheme.neonGreen.withValues(alpha: 0.15),
+                    ),
                   ),
                   child: Row(
                     children: [
                       Container(
-                        width: 44, height: 44,
+                        width: 44,
+                        height: 44,
                         decoration: BoxDecoration(
-                          color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
+                          color: MacroSnapTheme.neonGreen.withValues(
+                            alpha: 0.1,
+                          ),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Icon(Icons.emoji_events_rounded,
-                            color: MacroSnapTheme.neonGreen, size: 22),
+                        child: const Icon(
+                          Icons.emoji_events_rounded,
+                          color: MacroSnapTheme.neonGreen,
+                          size: 22,
+                        ),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Refer a Friend',
-                                style: TextStyle(fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    color: isDark ? Colors.white
-                                        : MacroSnapTheme.cardDark)),
-                            Text('Both get Pro free for a month',
-                                style: TextStyle(fontSize: 13,
-                                    color: MacroSnapTheme.textTertiary(context))),
+                            Text(
+                              'Refer a Friend',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: isDark
+                                    ? Colors.white
+                                    : MacroSnapTheme.cardDark,
+                              ),
+                            ),
+                            Text(
+                              'Both get Pro free for a month',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: MacroSnapTheme.textTertiary(context),
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      Icon(Icons.chevron_right_rounded,
-                          color: MacroSnapTheme.textTertiary(context)),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: MacroSnapTheme.textTertiary(context),
+                      ),
                     ],
                   ),
                 ),
@@ -492,16 +666,22 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
   }
 
   Widget _buildFeatureRow(
-      IconData icon, String title, String subtitle, bool isDark) {
+    IconData icon,
+    String title,
+    String subtitle,
+    bool isDark,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: Row(
         children: [
           Container(
-            width: 44, height: 44,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-                color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
-                borderRadius: BorderRadius.circular(14)),
+              color: MacroSnapTheme.neonGreen.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(14),
+            ),
             child: Icon(icon, color: MacroSnapTheme.neonGreen, size: 22),
           ),
           const SizedBox(width: 14),
@@ -509,20 +689,32 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
-                Text(subtitle,
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w400,
-                        color: MacroSnapTheme.textTertiary(context))),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    color: MacroSnapTheme.textTertiary(context),
+                  ),
+                ),
               ],
             ),
           ),
-          Icon(Icons.check_circle_rounded,
-              color: MacroSnapTheme.neonGreen, size: 22),
+          Icon(
+            Icons.check_circle_rounded,
+            color: MacroSnapTheme.neonGreen,
+            size: 22,
+          ),
         ],
       ),
     );
   }
 }
-

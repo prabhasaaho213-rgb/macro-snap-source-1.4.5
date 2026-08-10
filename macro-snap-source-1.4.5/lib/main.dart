@@ -30,57 +30,70 @@ Future<void> main() async {
     // debug so developers still see uncaught errors loudly during dev.
     return kReleaseMode;
   };
+  await runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
 
-  await runZonedGuarded(() async {
-    WidgetsFlutterBinding.ensureInitialized();
+      // ── Failure-tolerant startup ────────────────────────────────
+      // Every step below is guarded so a corrupted local file, an
+      // unreachable backend, or a plugin failure can NEVER leave the user
+      // stuck on a black splash screen. If something fails we log it and
+      // keep going — the app must always open.
+      try {
+        await Firebase.initializeApp();
+        debugPrint('✅ Firebase initialized successfully');
+      } catch (e) {
+        debugPrint('❌ Firebase initialization FAILED: $e');
+        // App continues but Firebase features (auth, etc.) will not work
+      }
+      await _guard(() => GeminiService.init(), 'GeminiService.init');
+      try {
+        RazorpayService.init();
+      } catch (e) {
+        debugPrint('❌ RazorpayService.init failed: $e');
+      }
+      await _guard(
+        () => SubscriptionService.instance.load(),
+        'SubscriptionService.load',
+      );
+      // Verify the paid subscription against the backend Postgres database —
+      // the source of truth — so paying users get Pro restored on
+      // reinstall/device change even before opening the subscription screen.
+      // (Fire-and-forget.)
+      unawaited(SubscriptionService.instance.verifyServerSubscription());
+      await _guard(
+        () => NotificationService().init(),
+        'NotificationService.init',
+      );
+      // Schedule daily reminders for ALL users (free + pro). Fire-and-forget
+      // BUT error-guarded: a bare `try/catch` here would not catch async
+      // plugin errors, and an unhandled async error before runApp() would
+      // kill the isolate — the exact "app won't open" bug we're eliminating.
+      unawaited(
+        _guard(() async {
+          await NotificationService().scheduleDailyReminder();
+          await NotificationService().scheduleStreakReminder();
+        }, 'NotificationService reminders'),
+      );
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
 
-    // ── Failure-tolerant startup ────────────────────────────────
-    // Every step below is guarded so a corrupted local file, an
-    // unreachable backend, or a plugin failure can NEVER leave the user
-    // stuck on a black splash screen. If something fails we log it and
-    // keep going — the app must always open.
-    try {
-      await Firebase.initializeApp();
-      debugPrint('✅ Firebase initialized successfully');
-    } catch (e) {
-      debugPrint('❌ Firebase initialization FAILED: $e');
-      // App continues but Firebase features (auth, etc.) will not work
-    }
-    await _guard(() => GeminiService.init(), 'GeminiService.init');
-    try {
-      RazorpayService.init();
-    } catch (e) {
-      debugPrint('❌ RazorpayService.init failed: $e');
-    }
-    await _guard(
-        () => SubscriptionService.instance.load(), 'SubscriptionService.load');
-    // Verify the paid subscription against the backend Postgres database —
-    // the source of truth — so paying users get Pro restored on
-    // reinstall/device change even before opening the subscription screen.
-    // (Fire-and-forget.)
-    unawaited(SubscriptionService.instance.verifyServerSubscription());
-    await _guard(
-        () => NotificationService().init(), 'NotificationService.init');
-    // Schedule daily reminders for ALL users (free + pro). Fire-and-forget
-    // BUT error-guarded: a bare `try/catch` here would not catch async
-    // plugin errors, and an unhandled async error before runApp() would
-    // kill the isolate — the exact "app won't open" bug we're eliminating.
-    unawaited(_guard(() async {
-      await NotificationService().scheduleDailyReminder();
-      await NotificationService().scheduleStreakReminder();
-    }, 'NotificationService reminders'));
-    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+      // Local data loads fast; cloud restore merges in the background so a
+      // slow or sleeping backend never delays the first frame.
+      await _guard(() => MealStore.instance.load(), 'MealStore.load');
+      await _guard(
+        () => DietPlanService.instance.load(),
+        'DietPlanService.load',
+      );
+      await _guard(() => HabitStore.instance.load(), 'HabitStore.load');
 
-    // Local data loads fast; cloud restore merges in the background so a
-    // slow or sleeping backend never delays the first frame.
-    await _guard(() => MealStore.instance.load(), 'MealStore.load');
-    await _guard(() => DietPlanService.instance.load(), 'DietPlanService.load');
-    await _guard(() => HabitStore.instance.load(), 'HabitStore.load');
-
-    runApp(const MacroSnapApp());
-  }, (error, stack) {
-    debugPrint('❌ Uncaught zone error: $error\n$stack');
-  });
+      runApp(const MacroSnapApp());
+    },
+    (error, stack) {
+      debugPrint('❌ Uncaught zone error: $error\n$stack');
+    },
+  );
 }
 
 /// Runs a single startup step, swallowing any error so one failure can

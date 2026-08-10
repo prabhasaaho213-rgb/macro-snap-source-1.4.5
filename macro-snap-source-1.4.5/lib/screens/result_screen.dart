@@ -8,6 +8,7 @@ import '../services/gemini_service.dart';
 import '../services/meal_store.dart';
 import '../services/scan_gate.dart';
 import '../widgets/animations.dart';
+import '../widgets/celebration.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/mascot.dart';
@@ -606,26 +607,13 @@ class _ResultScreenState extends State<ResultScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color:
-                    (isNoUrl
-                            ? MacroSnapTheme.macroCalories
-                            : MacroSnapTheme.macroProtein)
-                        .withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(
-                isNoUrl ? Icons.cloud_off_rounded : Icons.error_outline_rounded,
-                color: isNoUrl
-                    ? MacroSnapTheme.macroCalories
-                    : MacroSnapTheme.macroProtein,
-                size: 32,
-              ),
+            // The mascot shows a sympathetic, encouraging face on failures.
+            MascotWidget(
+              size: 88,
+              profile: DietPlanService.instance.profile,
+              mood: MascotMood.sad,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
             Text(
               isNoUrl ? 'Server Not Set' : 'Analysis Failed',
               style: TextStyle(
@@ -919,7 +907,7 @@ class _ResultScreenState extends State<ResultScreen>
                         flex: 2,
                         child: GradientButton(
                           label: 'Log This Meal',
-                          onPressed: () {
+                          onPressed: () async {
                             final combinedName = hasMultiDish
                                 ? r.dishes.map((d) => d.name).join(', ')
                                 : r.dishes.first.name;
@@ -937,23 +925,18 @@ class _ResultScreenState extends State<ResultScreen>
                                 serving: r.description,
                               ),
                             );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  hasMultiDish
-                                      ? '${r.dishes.length} dishes logged!'
-                                      : 'Meal logged!',
-                                ),
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
-                            Navigator.of(
+                            // Confetti + mascot celebration, then back home.
+                            await showCelebration(
                               context,
-                            ).popUntil((route) => route.isFirst);
+                              message: hasMultiDish
+                                  ? '${r.dishes.length} dishes logged!'
+                                  : 'Meal logged!',
+                            );
+                            if (mounted) {
+                              Navigator.of(
+                                context,
+                              ).popUntil((route) => route.isFirst);
+                            }
                           },
                         ),
                       ),

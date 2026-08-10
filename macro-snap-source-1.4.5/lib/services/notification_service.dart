@@ -1,7 +1,10 @@
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_nav.dart';
 import '../models/habit.dart';
 import 'habit_reminder_service.dart';
@@ -12,16 +15,32 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._();
 
-  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
   bool _initialized = false;
+
+  /// The name of the device timezone (e.g. "Asia/Kolkata"), persisted so the
+  /// background isolate (which re-creates everything from scratch) can set
+  /// `tz.local` correctly for snooze scheduling.
+  static const _keyTz = 'device_timezone_name';
 
   Future<void> init() async {
     if (_initialized) return;
     try {
       await Permission.notification.request();
       tz_data.initializeTimeZones();
+      // CRITICAL: without this, tz.local stays UTC and every scheduled
+      // reminder fires at the wrong wall-clock time (e.g. 5.5h late in IST).
+      final tzName = (await FlutterTimezone.getLocalTimezone()).identifier;
+      tz.setLocalLocation(tz.getLocation(tzName));
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_keyTz, tzName);
+      } catch (_) {}
 
-      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const androidSettings = AndroidInitializationSettings(
+        '@drawable/ic_notification',
+      );
       const iosSettings = DarwinInitializationSettings(
         requestAlertPermission: true,
         requestBadgePermission: true,
@@ -38,11 +57,11 @@ class NotificationService {
         onDidReceiveBackgroundNotificationResponse:
             handleHabitReminderActionBackground,
       );
-    } catch (_) {
+      _initialized = true;
+    } catch (e) {
       // Ignore notification initialization failures; app should still run.
+      debugPrint('❌ NotificationService.init failed: $e');
     }
-
-    _initialized = true;
   }
 
   /// Handles taps and action buttons on notifications.
@@ -107,7 +126,7 @@ class NotificationService {
           channelDescription: 'Payment & subscription notifications',
           importance: Importance.high,
           priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+          icon: '@drawable/ic_notification',
         ),
         iOS: DarwinNotificationDetails(),
       ),
@@ -146,7 +165,13 @@ class NotificationService {
   Future<void> scheduleWeeklySummary() async {
     final now = DateTime.now();
     final daysUntilSunday = 7 - now.weekday;
-    var sunday = DateTime(now.year, now.month, now.day + daysUntilSunday, 19, 0);
+    var sunday = DateTime(
+      now.year,
+      now.month,
+      now.day + daysUntilSunday,
+      19,
+      0,
+    );
     if (sunday.isBefore(now)) {
       sunday = sunday.add(const Duration(days: 7));
     }

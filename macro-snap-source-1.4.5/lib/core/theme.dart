@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.system);
+final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(
+  ThemeMode.system,
+);
 
 /// MacroSnap dark neon theme — Pop UPI inspired bold & vibrant aesthetic
 class MacroSnapTheme {
@@ -17,12 +18,16 @@ class MacroSnapTheme {
   // ─── Semantic Macro Color Aliases ──────────────────────────
   /// Calories → amber/orange energy
   static const Color macroCalories = neonOrange;
+
   /// Protein → pink/rose
   static const Color macroProtein = neonPink;
+
   /// Carbs → yellow
   static const Color macroCarbs = neonYellow;
+
   /// Fats → cyan
   static const Color macroFats = neonCyan;
+
   /// Fiber → green
   static const Color macroFiber = neonGreen;
 
@@ -34,44 +39,54 @@ class MacroSnapTheme {
   /// Primary text color, slightly muted (body text, descriptions)
   static Color textPrimaryMuted(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-          ? Colors.white70
-          : const Color(0xFF475569);
+      ? Colors.white70
+      : const Color(0xFF475569);
+
   /// Secondary text color (subtle, for metadata/descriptions)
   static Color textSecondary(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-          ? Colors.white.withValues(alpha: 0.64)
-          : const Color(0xFF64748B);
+      ? Colors.white.withValues(alpha: 0.64)
+      : const Color(0xFF64748B);
+
   /// Tertiary text color (very subtle, for hints/placeholders)
   static Color textTertiary(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-          ? Colors.white.withValues(alpha: 0.52)
-          : const Color(0xFF94A3B8);
+      ? Colors.white.withValues(alpha: 0.52)
+      : const Color(0xFF94A3B8);
+
   /// Quaternary text color (barely visible, decorative)
   static Color textQuaternary(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-          ? Colors.white38
-          : const Color(0xFFCBD5E1);
+      ? Colors.white38
+      : const Color(0xFFCBD5E1);
 
   /// Green used for TEXT (not fills/icons). Neon green (#00FF66) has terrible
   /// contrast on white/light cards, so light mode swaps it for a darker,
   /// readable green while dark mode keeps the bright neon accent.
   static Color greenText(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-          ? neonGreen
-          : const Color(0xFF008A43);
+      ? neonGreen
+      : const Color(0xFF008A43);
+
   /// Card background color (themed)
   static Color cardBackground(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-          ? cardDark
-          : Colors.white;
+      Theme.of(context).brightness == Brightness.dark ? cardDark : Colors.white;
+
   /// Subtle border color
   static Color borderSubtle(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-          ? Colors.white10
-          : const Color(0xFFE2E8F0);
+      ? Colors.white10
+      : const Color(0xFFE2E8F0);
 
   /// Convenience: list of all macro colors for cycling
-  static const List<Color> macroColors = [neonPink, neonOrange, neonCyan, neonGreen, neonPurple, neonYellow];
+  static const List<Color> macroColors = [
+    neonPink,
+    neonOrange,
+    neonCyan,
+    neonGreen,
+    neonPurple,
+    neonYellow,
+  ];
 
   // ─── Background & Surface Colors ───────────────────────────
   static const Color surfaceDark = Color(0xFF07070A);
@@ -141,10 +156,7 @@ class MacroSnapTheme {
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [
-          color.withValues(alpha: 0.55),
-          color.withValues(alpha: 0.26),
-        ],
+        colors: [color.withValues(alpha: 0.55), color.withValues(alpha: 0.26)],
       ),
       borderRadius: BorderRadius.circular(16),
       border: Border.all(color: color.withValues(alpha: 0.65), width: 1.4),
@@ -185,13 +197,38 @@ class MacroSnapTheme {
       filled: true,
       fillColor: bg,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: border)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: neonGreen, width: 2)),
-      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: neonPink, width: 1.5)),
-      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: neonPink, width: 2)),
-      labelStyle: TextStyle(fontSize: 14, color: dark ? Colors.white.withValues(alpha: 0.64) : const Color(0xFF94A3B8)),
-      hintStyle: TextStyle(fontSize: 14, color: dark ? Colors.white.withValues(alpha: 0.4) : const Color(0xFFCBD5E1)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: border),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: neonGreen, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: neonPink, width: 1.5),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: neonPink, width: 2),
+      ),
+      labelStyle: TextStyle(
+        fontSize: 14,
+        color: dark
+            ? Colors.white.withValues(alpha: 0.64)
+            : const Color(0xFF94A3B8),
+      ),
+      hintStyle: TextStyle(
+        fontSize: 14,
+        color: dark
+            ? Colors.white.withValues(alpha: 0.4)
+            : const Color(0xFFCBD5E1),
+      ),
     );
   }
 
@@ -213,7 +250,9 @@ class MacroSnapTheme {
         style: FilledButton.styleFrom(
           backgroundColor: neonGreen,
           foregroundColor: Colors.black,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
         ),
@@ -224,23 +263,70 @@ class MacroSnapTheme {
           textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
-      textTheme: GoogleFonts.interTextTheme().copyWith(
-        displayLarge: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1),
-        displayMedium: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -0.5),
-        headlineLarge: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w800),
-        headlineMedium: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800),
-        titleLarge: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
-        titleMedium: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
-        bodyLarge: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w500),
-        bodyMedium: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
-        labelLarge: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700),
-      ),
+      // Inter is bundled as an asset (assets/fonts/Inter.ttf) — referenced
+      // directly so there is no runtime font fetch. The variable font covers
+      // every weight the theme uses.
+      textTheme: ThemeData.light().textTheme
+          .apply(fontFamily: 'Inter')
+          .copyWith(
+            displayLarge: const TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1,
+              fontFamily: 'Inter',
+            ),
+            displayMedium: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
+              fontFamily: 'Inter',
+            ),
+            headlineLarge: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'Inter',
+            ),
+            headlineMedium: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              fontFamily: 'Inter',
+            ),
+            titleLarge: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Inter',
+            ),
+            titleMedium: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Inter',
+            ),
+            bodyLarge: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Inter',
+            ),
+            bodyMedium: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              fontFamily: 'Inter',
+            ),
+            labelLarge: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Inter',
+            ),
+          ),
       appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: true,
         backgroundColor: Colors.transparent,
         foregroundColor: Color(0xFF1A1A1A),
-        titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A1A1A)),
+        titleTextStyle: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: Color(0xFF1A1A1A),
+        ),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -276,7 +362,9 @@ class MacroSnapTheme {
         style: FilledButton.styleFrom(
           backgroundColor: neonGreen,
           foregroundColor: Colors.black,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
         ),
@@ -287,23 +375,76 @@ class MacroSnapTheme {
           textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
-      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
-        displayLarge: GoogleFonts.inter(fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1, color: Colors.white),
-        displayMedium: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -0.5, color: Colors.white),
-        headlineLarge: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w800, color: Colors.white),
-        headlineMedium: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
-        titleLarge: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
-        titleMedium: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
-        bodyLarge: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.white70),
-        bodyMedium: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white70),
-        labelLarge: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white),
-      ),
+      textTheme: ThemeData.dark().textTheme
+          .apply(fontFamily: 'Inter')
+          .copyWith(
+            displayLarge: const TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1,
+              color: Colors.white,
+              fontFamily: 'Inter',
+            ),
+            displayMedium: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
+              color: Colors.white,
+              fontFamily: 'Inter',
+            ),
+            headlineLarge: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              fontFamily: 'Inter',
+            ),
+            headlineMedium: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              fontFamily: 'Inter',
+            ),
+            titleLarge: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              fontFamily: 'Inter',
+            ),
+            titleMedium: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              fontFamily: 'Inter',
+            ),
+            bodyLarge: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.white70,
+              fontFamily: 'Inter',
+            ),
+            bodyMedium: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.white70,
+              fontFamily: 'Inter',
+            ),
+            labelLarge: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              fontFamily: 'Inter',
+            ),
+          ),
       appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: true,
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
-        titleTextStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+        titleTextStyle: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+        ),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -323,22 +464,24 @@ class MacroSnapTheme {
   // ─── Glass Decoration (unified) ────────────────────────────
   static BoxDecoration glassDecoration(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return isDark ? habitlyCard(context) : BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [Color(0xFFFFFFFF), Color(0xFFF4EFFF)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      borderRadius: BorderRadius.circular(24),
-      border: Border.all(color: const Color(0xFFC8BEFF)),
-      boxShadow: [
-        BoxShadow(
-          color: neonGreen.withValues(alpha: 0.08),
-          blurRadius: 30,
-          offset: const Offset(0, 8),
-        ),
-      ],
-    );
+    return isDark
+        ? habitlyCard(context)
+        : BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFFFFFF), Color(0xFFF4EFFF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFFC8BEFF)),
+            boxShadow: [
+              BoxShadow(
+                color: neonGreen.withValues(alpha: 0.08),
+                blurRadius: 30,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          );
   }
 
   static BoxDecoration glassShine(BuildContext context) {
@@ -363,7 +506,9 @@ class MacroSnapTheme {
       ),
       borderRadius: BorderRadius.circular(28),
       border: Border.all(
-        color: isDark ? const Color(0xFF353550) : Colors.black.withValues(alpha: 0.04),
+        color: isDark
+            ? const Color(0xFF353550)
+            : Colors.black.withValues(alpha: 0.04),
       ),
     );
   }

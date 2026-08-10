@@ -10,6 +10,7 @@ import '../models/diet_profile.dart';
 import '../services/share_service.dart';
 
 import '../widgets/animations.dart';
+import '../widgets/celebration.dart';
 import '../widgets/mascot.dart';
 import 'diet_plan_screen.dart';
 import 'scan_screen.dart';
@@ -60,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen>
     await DietPlanService.instance.load();
     final prefs = await SharedPreferences.getInstance();
     final name = prefs.getString('name') ?? '';
-    await MealStreakService.checkAndUpdate();
+    final streakCheck = await MealStreakService.checkAndUpdate();
     final streak = await MealStreakService.getCurrent();
     final best = await MealStreakService.getBest();
     final scans = await ScanGate.getScansRemaining();
@@ -73,6 +74,16 @@ class _HomeScreenState extends State<HomeScreen>
         _scansLeft = scans;
       });
       _animController.forward();
+      // Zenkai Boost: the user broke a 3+ day streak and just came back —
+      // celebrate the recovery with the hero mascot. Small delay so the
+      // moment lands after the home screen settles in.
+      if (streakCheck.status == StreakCheck.zenkaiBoost) {
+        Future.delayed(const Duration(milliseconds: 650), () {
+          if (mounted) {
+            showZenkaiBoost(context, brokenStreak: streakCheck.brokenStreak);
+          }
+        });
+      }
     }
   }
 
@@ -165,11 +176,12 @@ class _HomeScreenState extends State<HomeScreen>
       child: Row(
         children: [
           // The app's animated mascot — greets the user with their saved
-          // character (gender, skin tone, build) when one exists.
+          // character (gender, skin tone, build). A 7+ day streak powers
+          // it up into hero mode (golden spiky hair + fiery aura).
           MascotWidget(
             size: 46,
             profile: DietPlanService.instance.profile,
-            mood: MascotMood.happy,
+            mood: _streak >= 7 ? MascotMood.powerUp : MascotMood.happy,
             headOnly: true,
           ),
           const SizedBox(width: 12),

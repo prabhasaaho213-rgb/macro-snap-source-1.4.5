@@ -1,7 +1,7 @@
 name: macro_snap
 description: "Snap a photo, get your macros instantly."
 publish_to: 'none'
-version: 1.4.51+64
+version: 1.4.52+65
 
 environment:
   sdk: ^3.12.2
@@ -14,7 +14,6 @@ dependencies:
   http: ^1.2.0
   image_picker: ^1.1.2
   fl_chart: ^0.70.2
-  google_fonts: ^6.2.1
   path_provider: ^2.1.2
   uuid: ^4.5.1
   google_mlkit_image_labeling: ^0.14.2
@@ -33,6 +32,7 @@ dependencies:
   google_sign_in: ^6.3.0
   jni: 1.0.2
   cloud_firestore: ^6.8.0
+  flutter_timezone: ^5.1.0
 
 dev_dependencies:
   flutter_test:
@@ -45,3 +45,11 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # Inter is bundled so text renders with the real font from the very first
+  # frame. Without it, google_fonts fetches Inter over the network at runtime
+  # and every text on screen visibly swaps from the fallback font (flicker),
+  # most noticeable on the first screen shown — the onboarding tabs.
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter.ttf
