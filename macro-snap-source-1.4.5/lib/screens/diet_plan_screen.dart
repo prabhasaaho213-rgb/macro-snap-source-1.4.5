@@ -767,18 +767,24 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
                 (_aiPlan!['plan'] as Map)['water'] != null) ...[
               const SizedBox(height: 8),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.water_drop,
-                    size: 16,
-                    color: MacroSnapTheme.macroFats,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Icon(
+                      Icons.water_drop,
+                      size: 16,
+                      color: MacroSnapTheme.macroFats,
+                    ),
                   ),
                   const SizedBox(width: 6),
-                  Text(
-                    '${_aiPlan!['plan']['water']}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: MacroSnapTheme.textTertiary(context),
+                  Expanded(
+                    child: Text(
+                      '${_aiPlan!['plan']['water']}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: MacroSnapTheme.textTertiary(context),
+                      ),
                     ),
                   ),
                 ],

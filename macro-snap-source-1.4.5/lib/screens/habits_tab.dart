@@ -247,26 +247,35 @@ class _HabitsTabState extends State<HabitsTab> {
                             // store.habits (not paused + due today), so reorder
                             // the visible habits and splice them back into the
                             // full list, keeping hidden habits in place.
-                            final h = active[oldI];
-                            final reordered = List<Habit>.from(active)
-                              ..removeAt(oldI)
-                              ..insert(newI, h);
-                            final reorderedIds = reordered
-                                .map((x) => x.id)
-                                .toSet();
-                            final merged = <Habit>[];
-                            var vi = 0;
-                            for (final habit in store.habits) {
-                              if (reorderedIds.contains(habit.id)) {
-                                merged.add(reordered[vi++]);
-                              } else {
-                                merged.add(habit);
+                            // Persist AFTER the drop animation (~300ms) finishes:
+                            // mutating mid-slide notifies the tab and rebuilds
+                            // the list while the card is still moving, which
+                            // re-rasterizes the cards and reads as a text
+                            // flicker right after the reorder. (Same defer the
+                            // swipe path uses.)
+                            Future.delayed(const Duration(milliseconds: 350),
+                                () {
+                              final h = active[oldI];
+                              final reordered = List<Habit>.from(active)
+                                ..removeAt(oldI)
+                                ..insert(newI, h);
+                              final reorderedIds = reordered
+                                  .map((x) => x.id)
+                                  .toSet();
+                              final merged = <Habit>[];
+                              var vi = 0;
+                              for (final habit in store.habits) {
+                                if (reorderedIds.contains(habit.id)) {
+                                  merged.add(reordered[vi++]);
+                                } else {
+                                  merged.add(habit);
+                                }
                               }
-                            }
-                            store.habits
-                              ..clear()
-                              ..addAll(merged);
-                            store.save();
+                              store.habits
+                                ..clear()
+                                ..addAll(merged);
+                              store.save();
+                            });
                           },
                           children: active.asMap().entries.map((entry) {
                             final i = entry.key;
@@ -457,13 +466,13 @@ class _HabitsTabState extends State<HabitsTab> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
+              Expanded(
                 child: Text(
                   total == 0
                       ? 'Create your first habit'
                       : '$completed of $total missions complete',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  // Allow wrapping — single-line ellipsis hid the tail of the
+                  // count on narrow screens ("4 of 4 mission…").
                   style: TextStyle(
                     color: isDark
                         ? Colors.white70

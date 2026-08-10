@@ -278,8 +278,10 @@ class _MascotPainter extends CustomPainter {
   Color get _skin => kMascotSkinTones[skinTone] ?? kMascotSkinTones['medium']!;
   Color get _hair => const Color(0xFF2B2118);
 
-  /// Original martial-arts gi: orange top, deep blue undershirt/belt/bands.
-  Color get _giOrange => const Color(0xFFFF8C1A);
+  /// Original martial-arts gi: classic hero orange top, deep blue
+  /// undershirt/belt/bands (the "mini Goku" palette).
+  Color get _giOrange => const Color(0xFFFF8A00);
+  Color get _giOrangeLight => const Color(0xFFFFA733);
   Color get _giBlue => const Color(0xFF2456C8);
   Color get _cheek => const Color(0xFFFF8A8A);
 
@@ -450,7 +452,8 @@ class _MascotPainter extends CustomPainter {
     final paint = paintOverride ?? (Paint()..color = _hair);
     final hairPath = Path();
     if (gender == Gender.female) {
-      // Long hair: sides framing the face + a little bow on top.
+      // Long hair: sides framing the face + a hero ponytail (bun + tail)
+      // on top instead of a bow, so she matches the martial-arts look.
       final side = Path()
         ..moveTo(c.dx - r * 0.92, c.dy - r * 0.5)
         ..quadraticBezierTo(
@@ -502,36 +505,36 @@ class _MascotPainter extends CustomPainter {
         )
         ..close();
       canvas.drawPath(hairPath, paint);
-      // Bow
-      final bowPaint = Paint()..color = const Color(0xFFFF4D8D);
-      final bow = Path()
-        ..moveTo(c.dx, c.dy - r * 0.98)
+      // Ponytail: tight bun on top + a tail sweeping back — a martial-arts
+      // look instead of the old bow, so she matches the hero style.
+      final bunPaint = Paint()..color = _hair;
+      canvas.drawCircle(
+        Offset(c.dx + r * 0.10, c.dy - r * 0.98),
+        r * 0.16,
+        bunPaint,
+      );
+      final tail = Path()
+        ..moveTo(c.dx + r * 0.22, c.dy - r * 0.96)
         ..quadraticBezierTo(
-          c.dx - r * 0.28,
-          c.dy - r * 1.25,
-          c.dx - r * 0.34,
-          c.dy - r * 0.92,
+          c.dx + r * 0.62,
+          c.dy - r * 1.18,
+          c.dx + r * 0.95,
+          c.dy - r * 0.72,
         )
         ..quadraticBezierTo(
-          c.dx - r * 0.14,
-          c.dy - r * 0.78,
-          c.dx,
-          c.dy - r * 0.92,
+          c.dx + r * 0.78,
+          c.dy - r * 0.55,
+          c.dx + r * 0.60,
+          c.dy - r * 0.60,
         )
         ..quadraticBezierTo(
-          c.dx + r * 0.14,
-          c.dy - r * 0.78,
-          c.dx + r * 0.34,
-          c.dy - r * 0.92,
-        )
-        ..quadraticBezierTo(
-          c.dx + r * 0.28,
-          c.dy - r * 1.25,
-          c.dx,
-          c.dy - r * 0.98,
+          c.dx + r * 0.45,
+          c.dy - r * 0.85,
+          c.dx + r * 0.22,
+          c.dy - r * 0.96,
         )
         ..close();
-      canvas.drawPath(bow, bowPaint);
+      canvas.drawPath(tail, paint);
     } else {
       // Spiky dark hero crop — an original anime-style look.
       _drawSpikyDarkHair(canvas, c, r, paintOverride);
@@ -563,7 +566,9 @@ class _MascotPainter extends CustomPainter {
     }
   }
 
-  /// Original spiky dark hair for the default hero look.
+  /// Original spiky dark hair for the default hero look — tall, sharp
+  /// anime spikes with a forward-swept bang (the signature "mini Goku"
+  /// silhouette, drawn from scratch so it stays original).
   void _drawSpikyDarkHair(
     Canvas canvas,
     Offset c,
@@ -571,48 +576,52 @@ class _MascotPainter extends CustomPainter {
     Paint? paintOverride,
   ]) {
     final paint = paintOverride ?? (Paint()..color = _hair);
-    // Cap covering the crown.
-    final cap = Path()
-      ..moveTo(c.dx - r * 0.95, c.dy - r * 0.34)
-      ..quadraticBezierTo(
-        c.dx,
-        c.dy - r * 1.02,
-        c.dx + r * 0.95,
-        c.dy - r * 0.34,
-      )
-      ..quadraticBezierTo(
-        c.dx + r * 0.6,
-        c.dy - r * 0.78,
-        c.dx,
-        c.dy - r * 0.72,
-      )
-      ..quadraticBezierTo(
-        c.dx - r * 0.6,
-        c.dy - r * 0.78,
-        c.dx - r * 0.95,
-        c.dy - r * 0.34,
-      )
-      ..close();
-    canvas.drawPath(cap, paint);
-    // Upward-pointing spikes around the crown.
-    const spikes = 7;
+    // Tall spikes fanning over the crown (left → right), each one a sharp
+    // triangle that leans outward for that wind-swept hero look.
+    const spikes = 9;
     for (var i = 0; i < spikes; i++) {
-      final a = math.pi * (1.10 + 0.80 * i / (spikes - 1));
-      final base = r * 0.92;
-      final tip = r * (1.22 + 0.08 * math.sin(i * 1.7));
+      final a = math.pi * (1.08 + 0.84 * i / (spikes - 1));
+      final base = r * 0.94;
+      // Taller at the center, slightly shorter at the sides; a little
+      // per-spike jitter keeps it organic, not geometric.
+      final centerBias = 1.0 - 0.30 * (0.5 - (i / (spikes - 1) - 0.5)).abs() * 2;
+      final tip = r * (1.42 + 0.12 * math.sin(i * 1.7)) * centerBias;
+      // Wider at the base for chunkier, more readable spikes.
+      final halfBase = r * (0.13 + 0.04 * math.sin(i * 2.3));
       final p = Path()
-        ..moveTo(
-          c.dx + math.cos(a - 0.11) * base,
-          c.dy + math.sin(a - 0.11) * base,
-        )
+        ..moveTo(c.dx + math.cos(a - halfBase / base) * base,
+            c.dy + math.sin(a - halfBase / base) * base)
         ..lineTo(c.dx + math.cos(a) * tip, c.dy + math.sin(a) * tip)
-        ..lineTo(
-          c.dx + math.cos(a + 0.11) * base,
-          c.dy + math.sin(a + 0.11) * base,
-        )
+        ..lineTo(c.dx + math.cos(a + halfBase / base) * base,
+            c.dy + math.sin(a + halfBase / base) * base)
         ..close();
       canvas.drawPath(p, paint);
     }
+    // Forward-swept bang: three sharp strands falling over the forehead
+    // (left, center, right) — the unmistakable hero fringe.
+    final bang = Path()
+      ..moveTo(c.dx - r * 0.78, c.dy - r * 0.30)
+      ..lineTo(c.dx - r * 0.52, c.dy + r * 0.18)
+      ..lineTo(c.dx - r * 0.30, c.dy - r * 0.16)
+      ..lineTo(c.dx - r * 0.10, c.dy + r * 0.30)
+      ..lineTo(c.dx + r * 0.08, c.dy - r * 0.10)
+      ..lineTo(c.dx + r * 0.30, c.dy + r * 0.20)
+      ..lineTo(c.dx + r * 0.55, c.dy - r * 0.14)
+      ..lineTo(c.dx + r * 0.72, c.dy + r * 0.02)
+      ..quadraticBezierTo(
+        c.dx + r * 0.86,
+        c.dy - r * 0.24,
+        c.dx + r * 0.76,
+        c.dy - r * 0.42,
+      )
+      ..quadraticBezierTo(
+        c.dx,
+        c.dy - r * 0.92,
+        c.dx - r * 0.76,
+        c.dy - r * 0.42,
+      )
+      ..close();
+    canvas.drawPath(bang, paint);
   }
 
   void _drawFace(Canvas canvas, Offset c, double r) {
@@ -746,7 +755,7 @@ class _MascotPainter extends CustomPainter {
       final py = r * 0.06 * driftY;
       final white = Paint()..color = Colors.white;
       final pupil = Paint()..color = const Color(0xFF1C1C1E);
-      final iris = Paint()..color = const Color(0xFF3D2B1F);
+      final iris = Paint()..color = const Color(0xFF5C3A22); // warm brown (Kairo spec)
       for (final side in [-1.0, 1.0]) {
         final ec = Offset(c.dx + side * r * 0.32, c.dy - r * 0.04);
         canvas.drawCircle(ec, r * 0.13, white);
@@ -851,6 +860,22 @@ class _MascotPainter extends CustomPainter {
       )
       ..close();
     canvas.drawPath(body, gi);
+    // Gi shoulder seams — the two seams that make the jacket read as a
+    // classic hero gi rather than a plain orange torso.
+    final seam = Paint()
+      ..color = _giOrangeLight
+      ..strokeWidth = s * 0.022
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      Offset(cx - width * 0.50, top + s * 0.04),
+      Offset(cx - width * 0.34, top + s * 0.20),
+      seam,
+    );
+    canvas.drawLine(
+      Offset(cx + width * 0.50, top + s * 0.04),
+      Offset(cx + width * 0.34, top + s * 0.20),
+      seam,
+    );
     // Blue undershirt V peeking out at the collar.
     final collarV = Path()
       ..moveTo(cx - width * 0.20, top + s * 0.02)
@@ -873,6 +898,36 @@ class _MascotPainter extends CustomPainter {
     );
     // Belt knot in the middle.
     canvas.drawCircle(Offset(cx, beltY), s * 0.035, blue);
+    // Chest emblem — a small original navy spiral/sun mark on the gi
+    // (Kairo spec: newly designed, no existing anime logos).
+    final emblem = Paint()
+      ..color = _giBlue
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = s * 0.014
+      ..strokeCap = StrokeCap.round;
+    final ec = Offset(cx, top + s * 0.11);
+    canvas.drawCircle(ec, s * 0.032, emblem);
+    final spiral = Path()
+      ..moveTo(ec.dx - s * 0.008, ec.dy)
+      ..quadraticBezierTo(
+        ec.dx,
+        ec.dy - s * 0.030,
+        ec.dx + s * 0.022,
+        ec.dy - s * 0.012,
+      )
+      ..quadraticBezierTo(
+        ec.dx + s * 0.030,
+        ec.dy + s * 0.012,
+        ec.dx + s * 0.008,
+        ec.dy + s * 0.022,
+      )
+      ..quadraticBezierTo(
+        ec.dx - s * 0.012,
+        ec.dy + s * 0.024,
+        ec.dx - s * 0.018,
+        ec.dy + s * 0.006,
+      );
+    canvas.drawPath(spiral, emblem);
   }
 
   void _drawArms(Canvas canvas, double s) {
@@ -978,7 +1033,7 @@ class _MascotPainter extends CustomPainter {
         ),
         blue,
       );
-      // Boot
+      // Boot — navy high-top with a white panel (Kairo spec shoes).
       canvas.drawOval(
         Rect.fromCenter(
           center: Offset(legX, s * 0.948),
@@ -986,6 +1041,15 @@ class _MascotPainter extends CustomPainter {
           height: s * 0.07,
         ),
         blue,
+      );
+      final white = Paint()..color = Colors.white;
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(legX, s * 0.948),
+          width: s * 0.075,
+          height: s * 0.035,
+        ),
+        white,
       );
     }
   }
