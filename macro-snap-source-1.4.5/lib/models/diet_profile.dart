@@ -3,7 +3,9 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
 enum Goal { loseWeight, maintain, gainMuscle }
+
 enum ActivityLevel { sedentary, light, moderate, active, veryActive }
+
 enum Gender { male, female }
 
 class DietProfile {
@@ -15,6 +17,10 @@ class DietProfile {
   final ActivityLevel activity;
   final String avatar;
 
+  /// Named skin tone for the mascot character — one of the keys in
+  /// `kMascotSkinTones` (lib/widgets/mascot.dart).
+  final String skinTone;
+
   DietProfile({
     required this.weightKg,
     required this.heightCm,
@@ -23,12 +29,22 @@ class DietProfile {
     required this.goal,
     required this.activity,
     this.avatar = '😎',
+    this.skinTone = 'medium',
   });
 
   static const List<String> avatars = [
-    '😎', '🥳', '🤠', '🤓',
-    '🧐', '😇', '🤩', '😋',
-    '🤪', '🦊', '🐼', '🐱',
+    '😎',
+    '🥳',
+    '🤠',
+    '🤓',
+    '🧐',
+    '😇',
+    '🤩',
+    '😋',
+    '🤪',
+    '🦊',
+    '🐼',
+    '🐱',
   ];
 
   double get bmr {
@@ -73,7 +89,8 @@ class DietProfile {
   }
 
   double get targetFats => (targetCalories * 0.25 / 9);
-  double get targetCarbs => (targetCalories - (targetProtein * 4) - (targetFats * 9)) / 4;
+  double get targetCarbs =>
+      (targetCalories - (targetProtein * 4) - (targetFats * 9)) / 4;
 
   Map<String, dynamic> toJson() => {
     'weightKg': weightKg,
@@ -83,6 +100,7 @@ class DietProfile {
     'goal': goal.name,
     'activity': activity.name,
     'avatar': avatar,
+    'skinTone': skinTone,
   };
 
   factory DietProfile.fromJson(Map<String, dynamic> json) {
@@ -107,6 +125,7 @@ class DietProfile {
         orElse: () => ActivityLevel.sedentary,
       ),
       avatar: json['avatar'] as String? ?? '😎',
+      skinTone: json['skinTone'] as String? ?? 'medium',
     );
   }
 }
@@ -140,19 +159,27 @@ class DietPlanService {
 
   static String goalLabel(Goal g) {
     switch (g) {
-      case Goal.loseWeight: return 'Weight Loss';
-      case Goal.maintain: return 'Maintain';
-      case Goal.gainMuscle: return 'Muscle Gain';
+      case Goal.loseWeight:
+        return 'Weight Loss';
+      case Goal.maintain:
+        return 'Maintain';
+      case Goal.gainMuscle:
+        return 'Muscle Gain';
     }
   }
 
   static String activityLabel(ActivityLevel a) {
     switch (a) {
-      case ActivityLevel.sedentary: return 'Sedentary (desk job)';
-      case ActivityLevel.light: return 'Light (1-2 days/week)';
-      case ActivityLevel.moderate: return 'Moderate (3-5 days/week)';
-      case ActivityLevel.active: return 'Active (6-7 days/week)';
-      case ActivityLevel.veryActive: return 'Very Active (twice/day)';
+      case ActivityLevel.sedentary:
+        return 'Sedentary (desk job)';
+      case ActivityLevel.light:
+        return 'Light (1-2 days/week)';
+      case ActivityLevel.moderate:
+        return 'Moderate (3-5 days/week)';
+      case ActivityLevel.active:
+        return 'Active (6-7 days/week)';
+      case ActivityLevel.veryActive:
+        return 'Very Active (twice/day)';
     }
   }
 }

@@ -10,10 +10,11 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/theme.dart';
+import '../models/diet_profile.dart';
 import '../services/gemini_service.dart';
 import '../services/meal_store.dart';
 import '../services/habit_store.dart';
-import '../widgets/logo_widget.dart';
+import '../widgets/mascot.dart';
 import 'main_shell.dart';
 
 class PhoneLoginScreen extends StatefulWidget {
@@ -41,6 +42,14 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
+    // Load the saved character profile so the mascot greets the user with
+    // their own look (gender, skin tone, build).
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    await DietPlanService.instance.load();
+    if (mounted) setState(() {});
   }
 
   @override
@@ -130,9 +139,15 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               children: [
-                SizedBox(height: screenHeight * 0.08),
-                // Professional app logo
-                const LogoWidget(size: 72),
+                SizedBox(height: screenHeight * 0.06),
+                // Animated mascot — the app's "face", greeting the user with
+                // their saved look (or the default character before a profile
+                // exists). Tap it for a happy reaction.
+                MascotWidget(
+                  size: 110,
+                  profile: DietPlanService.instance.profile,
+                  mood: MascotMood.happy,
+                ),
                 const SizedBox(height: 20),
                 Text(
                   'Welcome to MacroSnap',

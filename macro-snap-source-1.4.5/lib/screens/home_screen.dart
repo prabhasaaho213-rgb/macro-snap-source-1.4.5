@@ -10,6 +10,7 @@ import '../models/diet_profile.dart';
 import '../services/share_service.dart';
 
 import '../widgets/animations.dart';
+import '../widgets/mascot.dart';
 import 'diet_plan_screen.dart';
 import 'scan_screen.dart';
 import 'settings_screen.dart';
@@ -163,6 +164,15 @@ class _HomeScreenState extends State<HomeScreen>
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 4),
       child: Row(
         children: [
+          // The app's animated mascot — greets the user with their saved
+          // character (gender, skin tone, build) when one exists.
+          MascotWidget(
+            size: 46,
+            profile: DietPlanService.instance.profile,
+            mood: MascotMood.happy,
+            headOnly: true,
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
