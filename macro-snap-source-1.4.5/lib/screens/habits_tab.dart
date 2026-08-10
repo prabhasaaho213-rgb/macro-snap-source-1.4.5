@@ -175,14 +175,16 @@ class _HabitsTabState extends State<HabitsTab> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            "Today's Missions",
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                              color: isDark
-                                  ? Colors.white
-                                  : const Color(0xFF1A1A1A),
+                          Flexible(
+                            child: Text(
+                              "Today's Missions",
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF1A1A1A),
+                              ),
                             ),
                           ),
                           Text(
@@ -244,7 +246,9 @@ class _HabitsTabState extends State<HabitsTab> {
                             final reordered = List<Habit>.from(active)
                               ..removeAt(oldI)
                               ..insert(newI, h);
-                            final reorderedIds = reordered.map((x) => x.id).toSet();
+                            final reorderedIds = reordered
+                                .map((x) => x.id)
+                                .toSet();
                             final merged = <Habit>[];
                             var vi = 0;
                             for (final habit in store.habits) {
@@ -405,31 +409,34 @@ class _HabitsTabState extends State<HabitsTab> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'TODAY',
-                    style: TextStyle(
-                      color: isDark
-                          ? Colors.white70
-                          : MacroSnapTheme.textTertiary(context),
-                      fontSize: 12,
-                      letterSpacing: 1.4,
-                      fontWeight: FontWeight.w800,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'TODAY',
+                      style: TextStyle(
+                        color: isDark
+                            ? Colors.white70
+                            : MacroSnapTheme.textTertiary(context),
+                        fontSize: 12,
+                        letterSpacing: 1.4,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    'Make it count.',
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.w900,
-                      color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                    const SizedBox(height: 5),
+                    Text(
+                      'Make it count.',
+                      style: TextStyle(
+                        fontSize: 25,
+                        fontWeight: FontWeight.w900,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 12),
               _progressRing(progress, isDark),
             ],
           ),
@@ -439,9 +446,7 @@ class _HabitsTabState extends State<HabitsTab> {
             value: progress,
             color: MacroSnapTheme.neonGreen,
             height: 10,
-            backgroundColor: isDark
-                ? Colors.white10
-                : const Color(0xFFE8DEFF),
+            backgroundColor: isDark ? Colors.white10 : const Color(0xFFE8DEFF),
           ),
           const SizedBox(height: 12),
           Row(
@@ -500,9 +505,7 @@ class _HabitsTabState extends State<HabitsTab> {
     return AnimatedProgressRing(
       value: progress,
       color: MacroSnapTheme.neonPink,
-      backgroundColor: isDark
-          ? Colors.white10
-          : const Color(0xFFE8DEFF),
+      backgroundColor: isDark ? Colors.white10 : const Color(0xFFE8DEFF),
       labelStyle: TextStyle(
         fontWeight: FontWeight.w900,
         color: isDark ? Colors.white : const Color(0xFF1A1A1A),
@@ -618,9 +621,7 @@ class _HabitsTabState extends State<HabitsTab> {
     final color = rightSwipe
         ? MacroSnapTheme.neonGreen
         : MacroSnapTheme.neonOrange;
-    final icon = rightSwipe
-        ? Icons.check_circle_rounded
-        : Icons.undo_rounded;
+    final icon = rightSwipe ? Icons.check_circle_rounded : Icons.undo_rounded;
     final label = rightSwipe ? 'Complete' : 'Undo';
     return Container(
       decoration: BoxDecoration(
@@ -678,179 +679,179 @@ class _HabitsTabState extends State<HabitsTab> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
         child: Dismissible(
-        key: ValueKey('dismiss_${h.id}'),
-        direction: DismissDirection.horizontal,
-        background: _swipeActionBackground(rightSwipe: true),
-        secondaryBackground: _swipeActionBackground(rightSwipe: false),
-        confirmDismiss: (direction) async {
-          HapticFeedback.mediumImpact();
-          if (direction == DismissDirection.startToEnd) {
-            // Swipe right → COMPLETE today's task (explicit: swiping right
-            // again on an already-completed card stays completed, it never
-            // un-completes). IDEMPOTENT: guard the add — completedDates is a
-            // List, so an unguarded add stacks a duplicate of today per swipe,
-            // and each duplicate later needs its own left swipe to undo.
-            // Mutate NOW so the state is correct, but persist AFTER the
-            // Dismissible snaps back.
-            final key = dateKey(DateTime.now());
-            if (!h.completedDates.contains(key)) {
-              h.completedDates.add(key);
-            }
-            h.skippedDates.remove(key);
-          } else {
-            // Swipe left → UN-COMPLETE today's task. This is NOT a streak
-            // reset: previous days' history and skipped marks stay intact.
-            // Remove EVERY occurrence of today (also flushes duplicate entries
-            // stacked by older builds) so ONE swipe always fully undoes,
-            // no matter how many times it was completed.
-            final key = dateKey(DateTime.now());
-            h.completedDates.removeWhere((k) => k == key);
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${h.name} marked as not completed'),
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            }
-          }
-          // Persist AFTER the snap-back (~300ms) finishes. Updating mid-slide
-          // notifies the tab and rebuilds the list while the card is still
-          // moving — the emoji tile glow re-rasterizes every frame, which
-          // reads as a text/emoji flicker for a moment after swiping.
-          // syncReminder: false — toggling completion doesn't change the
-          // reminder schedule, so don't churn zonedSchedule on every swipe.
-          Future.delayed(const Duration(milliseconds: 350), () {
-            store.update(h, syncReminder: false);
-          });
-          return false; // Snap back — don't dismiss
-        },
-        // The swipe-ghost RepaintBoundary now wraps ONLY the emoji tile
-        // inside the card (see below). Rasterizing the whole gradient card
-        // into one cached layer made a black rectangle slide along with the
-        // card on some GPUs while swiping, so the card itself renders as
-        // plain widgets.
-        child: GestureDetector(
-          onTap: () {
+          key: ValueKey('dismiss_${h.id}'),
+          direction: DismissDirection.horizontal,
+          background: _swipeActionBackground(rightSwipe: true),
+          secondaryBackground: _swipeActionBackground(rightSwipe: false),
+          confirmDismiss: (direction) async {
             HapticFeedback.mediumImpact();
-            h.toggle(DateTime.now());
-            // Completion toggle only — the reminder schedule is unchanged,
-            // so skip the zonedSchedule cancel+recreate churn.
-            store.update(h, syncReminder: false);
-          },
-          onLongPress: () {
-            HapticFeedback.heavyImpact();
-            _showHabitActions(context, h, isDark);
-          },
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: MacroSnapTheme.habitlyCard(context),
-            child: Row(
-              children: [
-                // Emoji container. Its glow/blur shadow is the ONLY thing
-                // that smears during a swipe, so it gets its own
-                // RepaintBoundary right here — isolating this tile rather
-                // than the whole card (a whole-card raster layer rendered a
-                // black rectangle on some GPUs).
-                //
-                // NOTE: NOT wrapped in a ReorderableDragStartListener — that
-                // long-press recognizer competed with the Dismissible's
-                // horizontal drag on the same surface, so slow swipes got
-                // hijacked into reorder drags (the swipe glitch). Reordering
-                // is grip-only (see the drag-grip icon below).
-                RepaintBoundary(
-                  child: Container(
-                    width: 52,
-                    height: 52,
-                    decoration: MacroSnapTheme.emojiContainer(h.color),
-                    child: Center(
-                      child: Text(
-                        h.emoji,
-                        style: MacroSnapTheme.emojiStyle(),
-                      ),
+            if (direction == DismissDirection.startToEnd) {
+              // Swipe right → COMPLETE today's task (explicit: swiping right
+              // again on an already-completed card stays completed, it never
+              // un-completes). IDEMPOTENT: guard the add — completedDates is a
+              // List, so an unguarded add stacks a duplicate of today per swipe,
+              // and each duplicate later needs its own left swipe to undo.
+              // Mutate NOW so the state is correct, but persist AFTER the
+              // Dismissible snaps back.
+              final key = dateKey(DateTime.now());
+              if (!h.completedDates.contains(key)) {
+                h.completedDates.add(key);
+              }
+              h.skippedDates.remove(key);
+            } else {
+              // Swipe left → UN-COMPLETE today's task. This is NOT a streak
+              // reset: previous days' history and skipped marks stay intact.
+              // Remove EVERY occurrence of today (also flushes duplicate entries
+              // stacked by older builds) so ONE swipe always fully undoes,
+              // no matter how many times it was completed.
+              final key = dateKey(DateTime.now());
+              h.completedDates.removeWhere((k) => k == key);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${h.name} marked as not completed'),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    duration: const Duration(seconds: 2),
                   ),
-                ),
-                const SizedBox(width: 13),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        h.name,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          decoration: done
-                              ? TextDecoration.lineThrough
-                              : null,
-                          color: done
-                              ? (MacroSnapTheme.textTertiary(context))
-                              : (isDark
-                                    ? Colors.white
-                                    : const Color(0xFF1A1A1A)),
+                );
+              }
+            }
+            // Persist AFTER the snap-back (~300ms) finishes. Updating mid-slide
+            // notifies the tab and rebuilds the list while the card is still
+            // moving — the emoji tile glow re-rasterizes every frame, which
+            // reads as a text/emoji flicker for a moment after swiping.
+            // syncReminder: false — toggling completion doesn't change the
+            // reminder schedule, so don't churn zonedSchedule on every swipe.
+            Future.delayed(const Duration(milliseconds: 350), () {
+              store.update(h, syncReminder: false);
+            });
+            return false; // Snap back — don't dismiss
+          },
+          // The swipe-ghost RepaintBoundary now wraps ONLY the emoji tile
+          // inside the card (see below). Rasterizing the whole gradient card
+          // into one cached layer made a black rectangle slide along with the
+          // card on some GPUs while swiping, so the card itself renders as
+          // plain widgets.
+          child: GestureDetector(
+            onTap: () {
+              HapticFeedback.mediumImpact();
+              h.toggle(DateTime.now());
+              // Completion toggle only — the reminder schedule is unchanged,
+              // so skip the zonedSchedule cancel+recreate churn.
+              store.update(h, syncReminder: false);
+            },
+            onLongPress: () {
+              HapticFeedback.heavyImpact();
+              _showHabitActions(context, h, isDark);
+            },
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: MacroSnapTheme.habitlyCard(context),
+              child: Row(
+                children: [
+                  // Emoji container. Its glow/blur shadow is the ONLY thing
+                  // that smears during a swipe, so it gets its own
+                  // RepaintBoundary right here — isolating this tile rather
+                  // than the whole card (a whole-card raster layer rendered a
+                  // black rectangle on some GPUs).
+                  //
+                  // NOTE: NOT wrapped in a ReorderableDragStartListener — that
+                  // long-press recognizer competed with the Dismissible's
+                  // horizontal drag on the same surface, so slow swipes got
+                  // hijacked into reorder drags (the swipe glitch). Reordering
+                  // is grip-only (see the drag-grip icon below).
+                  RepaintBoundary(
+                    child: Container(
+                      width: 52,
+                      height: 52,
+                      decoration: MacroSnapTheme.emojiContainer(h.color),
+                      child: Center(
+                        child: Text(
+                          h.emoji,
+                          style: MacroSnapTheme.emojiStyle(),
                         ),
                       ),
-                      const SizedBox(height: 5),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.local_fire_department_rounded,
-                            color: MacroSnapTheme.neonPink,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${h.currentStreak()} · ${h.frequency}',
-                            style: TextStyle(
-                              color: MacroSnapTheme.textSecondary(context),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 4),
-                // Check/Bolt status indicator
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: done
-                        ? MacroSnapTheme.neonGreen
-                        : MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    done ? Icons.check_rounded : Icons.bolt_rounded,
-                    color: done ? Colors.black : MacroSnapTheme.neonGreen,
-                    size: 27,
-                  ),
-                ),
-                // Drag grip icon
-                ReorderableDragStartListener(
-                  index: index,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 6),
-                    child: Icon(
-                      Icons.drag_handle_rounded,
-                      color: MacroSnapTheme.textQuaternary(context),
-                      size: 28,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 13),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          h.name,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            decoration: done
+                                ? TextDecoration.lineThrough
+                                : null,
+                            color: done
+                                ? (MacroSnapTheme.textTertiary(context))
+                                : (isDark
+                                      ? Colors.white
+                                      : const Color(0xFF1A1A1A)),
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.local_fire_department_rounded,
+                              color: MacroSnapTheme.neonPink,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${h.currentStreak()} · ${h.frequency}',
+                              style: TextStyle(
+                                color: MacroSnapTheme.textSecondary(context),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  // Check/Bolt status indicator
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: done
+                          ? MacroSnapTheme.neonGreen
+                          : MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      done ? Icons.check_rounded : Icons.bolt_rounded,
+                      color: done ? Colors.black : MacroSnapTheme.neonGreen,
+                      size: 27,
+                    ),
+                  ),
+                  // Drag grip icon
+                  ReorderableDragStartListener(
+                    index: index,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 6),
+                      child: Icon(
+                        Icons.drag_handle_rounded,
+                        color: MacroSnapTheme.textQuaternary(context),
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
         ),
       ),
     );
@@ -1259,26 +1260,30 @@ class _HabitsTabState extends State<HabitsTab> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: isDark
+                              ? Colors.white
+                              : const Color(0xFF1A1A1A),
+                        ),
                       ),
-                    ),
-                    Text(
-                      '$count/${habitNames.length} habits completed',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: MacroSnapTheme.textTertiary(context),
+                      Text(
+                        '$count/${habitNames.length} habits completed',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: MacroSnapTheme.textTertiary(context),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -1325,14 +1330,16 @@ class _HabitsTabState extends State<HabitsTab> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Text(
-                        name,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: isDark
-                              ? Colors.white
-                              : const Color(0xFF1A1A1A),
+                      Expanded(
+                        child: Text(
+                          name,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF1A1A1A),
+                          ),
                         ),
                       ),
                     ],
@@ -1566,10 +1573,7 @@ class _HabitsTabState extends State<HabitsTab> {
                       (e) => ChoiceChip(
                         // Flat style — no drop shadow under the glyph, which
                         // previously rendered as a ghost reflection on the chip.
-                        label: Text(
-                          e,
-                          style: const TextStyle(fontSize: 20),
-                        ),
+                        label: Text(e, style: const TextStyle(fontSize: 20)),
                         selected: emoji == e,
                         onSelected: (_) => setModalState(() => emoji = e),
                       ),

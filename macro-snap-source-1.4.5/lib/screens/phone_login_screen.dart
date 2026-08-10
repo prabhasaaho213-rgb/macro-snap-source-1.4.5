@@ -37,8 +37,10 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
   @override
   void initState() {
     super.initState();
-    _shakeController =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    _shakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
   }
 
   @override
@@ -96,7 +98,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
           Navigator.pop(context, email);
         } else {
           Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (_) => const MainShell()));
+            context,
+            MaterialPageRoute(builder: (_) => const MainShell()),
+          );
         }
       }
       // Pull in cloud backup for the newly active account in the background
@@ -132,16 +136,18 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
                 const SizedBox(height: 20),
                 Text(
                   'Welcome to MacroSnap',
+                  textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                        color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-                      ),
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   'Snap a photo, get your macros',
+                  textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: MacroSnapTheme.textTertiary(context),
-                      ),
+                    color: MacroSnapTheme.textTertiary(context),
+                  ),
                 ),
                 SizedBox(height: screenHeight * 0.05),
 
@@ -155,7 +161,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+                          color: Colors.black.withValues(
+                            alpha: isDark ? 0.3 : 0.06,
+                          ),
                           blurRadius: 12,
                           offset: const Offset(0, 3),
                         ),
@@ -171,7 +179,10 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
                               ? const SizedBox(
                                   width: 22,
                                   height: 22,
-                                  child: CircularProgressIndicator(strokeWidth: 2.5))
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
                               : Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -179,8 +190,10 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
                                       'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
                                       width: 22,
                                       height: 22,
-                                      errorBuilder: (_, _, _) =>
-                                          const Icon(Icons.g_mobiledata, size: 26),
+                                      errorBuilder: (_, _, _) => const Icon(
+                                        Icons.g_mobiledata,
+                                        size: 26,
+                                      ),
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
@@ -209,14 +222,18 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
                     builder: (context, child) {
                       return Transform.translate(
                         offset: Offset(
-                            sin(_shakeController.value * 4 * 3.14) * 6, 0),
+                          sin(_shakeController.value * 4 * 3.14) * 6,
+                          0,
+                        ),
                         child: child,
                       );
                     },
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
-                          vertical: 12, horizontal: 16),
+                        vertical: 12,
+                        horizontal: 16,
+                      ),
                       decoration: BoxDecoration(
                         color: isDark
                             ? MacroSnapTheme.neonPink.withValues(alpha: 0.15)
@@ -225,11 +242,13 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline,
-                              size: 18,
-                              color: isDark
-                                  ? MacroSnapTheme.neonPink
-                                  : const Color(0xFFDC2626)),
+                          Icon(
+                            Icons.error_outline,
+                            size: 18,
+                            color: isDark
+                                ? MacroSnapTheme.neonPink
+                                : const Color(0xFFDC2626),
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -278,9 +297,13 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
                         recognizer: TapGestureRecognizer()
                           ..onTap = () async {
                             final uri = Uri.parse(
-                                'https://raw.githubusercontent.com/prabhasaaho213-rgb/macro-snap-source-1.4.5/master/PRIVACY_POLICY.md');
+                              'https://raw.githubusercontent.com/prabhasaaho213-rgb/macro-snap-source-1.4.5/master/PRIVACY_POLICY.md',
+                            );
                             if (await canLaunchUrl(uri)) {
-                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              await launchUrl(
+                                uri,
+                                mode: LaunchMode.externalApplication,
+                              );
                             }
                           },
                       ),

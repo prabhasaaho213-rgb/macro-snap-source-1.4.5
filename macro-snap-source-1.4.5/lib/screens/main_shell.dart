@@ -25,7 +25,9 @@ class _MainShellState extends State<MainShell> {
     super.initState();
     _currentIndex = shellTabIndex.value;
     shellTabIndex.addListener(_onShellTabChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowSubscription());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _maybeShowSubscription(),
+    );
     // Prompt for a Play Store rating after a few launches (best-effort).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       RateUsService.onAppLaunch(context);
@@ -78,56 +80,93 @@ class _MainShellState extends State<MainShell> {
         children: [
           // Sparkle icon
           Container(
-            width: 56, height: 56,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: const LinearGradient(
                 colors: [MacroSnapTheme.neonGreen, Color(0xFF00CC52)],
               ),
             ),
-            child: const Icon(Icons.auto_awesome_rounded,
-                color: Colors.black, size: 28),
+            child: const Icon(
+              Icons.auto_awesome_rounded,
+              color: Colors.black,
+              size: 28,
+            ),
           ),
           const SizedBox(height: 18),
-          Text('Unlock MacroSnap Pro',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900,
-                  color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+          Text(
+            'Unlock MacroSnap Pro',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+            ),
+          ),
           const SizedBox(height: 14),
 
           // Feature rows
-          _proFeature(Icons.photo_camera_rounded, 'Unlimited AI food scans', isDark),
+          _proFeature(
+            Icons.photo_camera_rounded,
+            'Unlimited AI food scans',
+            isDark,
+          ),
           const SizedBox(height: 12),
-          _proFeature(Icons.favorite_rounded, 'Unlimited habit tracking', isDark),
+          _proFeature(
+            Icons.favorite_rounded,
+            'Unlimited habit tracking',
+            isDark,
+          ),
           const SizedBox(height: 12),
-          _proFeature(Icons.cloud_upload_rounded, 'Cloud backup & restore', isDark),
+          _proFeature(
+            Icons.cloud_upload_rounded,
+            'Cloud backup & restore',
+            isDark,
+          ),
           const SizedBox(height: 12),
-          _proFeature(Icons.insights_rounded, 'Weekly auto-insights & trends', isDark),
+          _proFeature(
+            Icons.insights_rounded,
+            'Weekly auto-insights & trends',
+            isDark,
+          ),
 
           const SizedBox(height: 24),
 
           // Price & CTA
           SizedBox(
-            width: double.infinity, height: 50,
+            width: double.infinity,
+            height: 50,
             child: FilledButton(
               style: FilledButton.styleFrom(
                 backgroundColor: MacroSnapTheme.neonGreen,
                 foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               onPressed: () {
                 Navigator.of(dialogCtx).pop();
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
-              },                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.lock_rounded, size: 18),
-                      SizedBox(width: 8),
-                      Text('SUBSCRIBE - ₹29/mo · AUTO-RENEWS',
-                          style: TextStyle(fontWeight: FontWeight.w900)),
-                    ],
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+                );
+              },
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.lock_rounded, size: 18),
+                  SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      'SUBSCRIBE - ₹29/mo · AUTO-RENEWS',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontWeight: FontWeight.w900),
+                    ),
                   ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -135,11 +174,14 @@ class _MainShellState extends State<MainShell> {
           // Dismiss
           TextButton(
             onPressed: () => Navigator.of(dialogCtx).pop(),
-            child: Text('Not now',
-                style: TextStyle(
-                  fontSize: 14, fontWeight: FontWeight.w700,
-                  color: MacroSnapTheme.textTertiary(context),
-                )),
+            child: Text(
+              'Not now',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: MacroSnapTheme.textTertiary(context),
+              ),
+            ),
           ),
         ],
       ),
@@ -150,7 +192,8 @@ class _MainShellState extends State<MainShell> {
     return Row(
       children: [
         Container(
-          width: 28, height: 28,
+          width: 28,
+          height: 28,
           decoration: BoxDecoration(
             color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(8),
@@ -158,9 +201,16 @@ class _MainShellState extends State<MainShell> {
           child: Icon(icon, color: MacroSnapTheme.neonGreen, size: 14),
         ),
         const SizedBox(width: 12),
-        Text(label,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -306,7 +356,9 @@ class _MainShellState extends State<MainShell> {
         color: isDark ? const Color(0xFF17171D) : Colors.white,
         border: Border(
           top: BorderSide(
-            color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.black.withValues(alpha: 0.04),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.06)
+                : Colors.black.withValues(alpha: 0.04),
             width: 0.5,
           ),
         ),
@@ -336,7 +388,6 @@ class _MainShellState extends State<MainShell> {
                 isSelected: _currentIndex == 2,
                 onTap: () => _goToTab(2),
               ),
-
             ],
           ),
         ),
@@ -373,17 +424,22 @@ class _NavItem extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: isSelected
-                ? const LinearGradient(colors: [MacroSnapTheme.neonGreen, Color(0xFF00CC52)])
+                ? const LinearGradient(
+                    colors: [MacroSnapTheme.neonGreen, Color(0xFF00CC52)],
+                  )
                 : LinearGradient(
                     colors: [
-                      (isDark ? Colors.white : MacroSnapTheme.neonGreen).withValues(alpha: 0.1),
-                      (isDark ? Colors.white : MacroSnapTheme.neonGreen).withValues(alpha: 0.05),
+                      (isDark ? Colors.white : MacroSnapTheme.neonGreen)
+                          .withValues(alpha: 0.1),
+                      (isDark ? Colors.white : MacroSnapTheme.neonGreen)
+                          .withValues(alpha: 0.05),
                     ],
                   ),
             border: Border.all(
               color: isSelected
                   ? MacroSnapTheme.neonGreen
-                  : (isDark ? Colors.white : MacroSnapTheme.neonGreen).withValues(alpha: 0.2),
+                  : (isDark ? Colors.white : MacroSnapTheme.neonGreen)
+                        .withValues(alpha: 0.2),
               width: 1.5,
             ),
           ),
@@ -391,7 +447,9 @@ class _NavItem extends StatelessWidget {
             icon,
             color: isSelected
                 ? Colors.black
-                : (isDark ? Colors.white54 : MacroSnapTheme.neonGreen.withValues(alpha: 0.6)),
+                : (isDark
+                      ? Colors.white54
+                      : MacroSnapTheme.neonGreen.withValues(alpha: 0.6)),
             size: 24,
           ),
         ),
@@ -405,7 +463,9 @@ class _NavItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? (isDark ? MacroSnapTheme.neonGreen.withValues(alpha: 0.15) : MacroSnapTheme.neonGreen.withValues(alpha: 0.1))
+              ? (isDark
+                    ? MacroSnapTheme.neonGreen.withValues(alpha: 0.15)
+                    : MacroSnapTheme.neonGreen.withValues(alpha: 0.1))
               : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
@@ -436,4 +496,3 @@ class _NavItem extends StatelessWidget {
     );
   }
 }
-

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../core/theme.dart';
 import '../models/meal_record.dart';
 import '../models/recipe.dart';
@@ -43,33 +43,43 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
           decoration: const InputDecoration(labelText: 'Servings eaten'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, int.tryParse(servingsCtrl.text) ?? 1),
-              child: const Text('Log')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(ctx, int.tryParse(servingsCtrl.text) ?? 1),
+            child: const Text('Log'),
+          ),
         ],
       ),
     );
     if (servings == null || servings <= 0) return;
 
-    MealStore.instance.add(MealRecord(
-      id: '${recipe.id}_${DateTime.now().millisecondsSinceEpoch}',
-      date: DateTime.now(),
-      name: recipe.name,
-      category: 'Recipe',
-      calories: (recipe.perServingCalories * servings).round(),
-      protein: recipe.perServingProtein * servings,
-      carbs: recipe.perServingCarbs * servings,
-      fats: recipe.perServingFats * servings,
-      fiber: recipe.perServingFiber * servings,
-      serving: '$servings serving(s) of ${recipe.name}',
-    ));
+    MealStore.instance.add(
+      MealRecord(
+        id: '${recipe.id}_${DateTime.now().millisecondsSinceEpoch}',
+        date: DateTime.now(),
+        name: recipe.name,
+        category: 'Recipe',
+        calories: (recipe.perServingCalories * servings).round(),
+        protein: recipe.perServingProtein * servings,
+        carbs: recipe.perServingCarbs * servings,
+        fats: recipe.perServingFats * servings,
+        fiber: recipe.perServingFiber * servings,
+        serving: '$servings serving(s) of ${recipe.name}',
+      ),
+    );
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('${recipe.name} logged!'),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     }
@@ -82,35 +92,57 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('My Recipes', style: TextStyle(fontWeight: FontWeight.w700,
-            color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+        title: Text(
+          'My Recipes',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           final result = await Navigator.push<bool>(
-            context, MaterialPageRoute(builder: (_) => const RecipeEditorScreen()));
+            context,
+            MaterialPageRoute(builder: (_) => const RecipeEditorScreen()),
+          );
           if (result == true) _onChanged();
         },
         backgroundColor: MacroSnapTheme.neonGreen,
         icon: const Icon(Icons.add_rounded, color: Colors.black),
-        label: const Text('New Recipe', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+        label: const Text(
+          'New Recipe',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
+        ),
       ),
       body: recipes.isEmpty
           ? Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.menu_book_rounded, size: 64,
-                      color: MacroSnapTheme.borderSubtle(context)),
+                  Icon(
+                    Icons.menu_book_rounded,
+                    size: 64,
+                    color: MacroSnapTheme.borderSubtle(context),
+                  ),
                   const SizedBox(height: 16),
-                  Text('No recipes yet',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600,
-                          color: MacroSnapTheme.textTertiary(context))),
+                  Text(
+                    'No recipes yet',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: MacroSnapTheme.textTertiary(context),
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  Text('Add your family recipes\nand log them anytime',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14,
-                          color: MacroSnapTheme.textQuaternary(context))),
+                  Text(
+                    'Add your family recipes and log them anytime',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: MacroSnapTheme.textQuaternary(context),
+                    ),
+                  ),
                 ],
               ),
             )
@@ -130,8 +162,11 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
           borderRadius: BorderRadius.circular(20),
           onTap: () async {
             final result = await Navigator.push<bool>(
-              context, MaterialPageRoute(
-                builder: (_) => RecipeEditorScreen(recipeId: recipe.id)));
+              context,
+              MaterialPageRoute(
+                builder: (_) => RecipeEditorScreen(recipeId: recipe.id),
+              ),
+            );
             if (result == true) _onChanged();
           },
           child: Padding(
@@ -142,14 +177,24 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: MacroSnapTheme.neonGreen.withValues(alpha:  0.1),
+                        color: MacroSnapTheme.neonGreen.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Text(recipe.ingredients.length == 1 ? '1 Ingredient' : '${recipe.ingredients.length} Ingredients',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
-                              color: MacroSnapTheme.greenText(context))),
+                      child: Text(
+                        recipe.ingredients.length == 1
+                            ? '1 Ingredient'
+                            : '${recipe.ingredients.length} Ingredients',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: MacroSnapTheme.greenText(context),
+                        ),
+                      ),
                     ),
                     const Spacer(),
                     PopupMenuButton<String>(
@@ -160,30 +205,60 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
                         }
                       },
                       itemBuilder: (_) => [
-                        const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Text('Delete'),
+                        ),
                       ],
-                      icon: Icon(Icons.more_vert_rounded, size: 20,
-                          color: MacroSnapTheme.textTertiary(context)),
+                      icon: Icon(
+                        Icons.more_vert_rounded,
+                        size: 20,
+                        color: MacroSnapTheme.textTertiary(context),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 10),
-                Text(recipe.name, overflow: TextOverflow.ellipsis, maxLines: 1, style: TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+                Text(
+                  recipe.name,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text('${recipe.servings} servings · ${recipe.perServingCalories.toStringAsFixed(0)} cal/serving',
-                    overflow: TextOverflow.ellipsis, maxLines: 1,
-                    style: TextStyle(fontSize: 13,
-                        color: MacroSnapTheme.textTertiary(context))),
+                Text(
+                  '${recipe.servings} servings · ${recipe.perServingCalories.toStringAsFixed(0)} cal/serving',
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: MacroSnapTheme.textTertiary(context),
+                  ),
+                ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    _miniMacro('P', recipe.perServingProtein, MacroSnapTheme.macroProtein),
+                    _miniMacro(
+                      'P',
+                      recipe.perServingProtein,
+                      MacroSnapTheme.macroProtein,
+                    ),
                     const SizedBox(width: 12),
-                    _miniMacro('C', recipe.perServingCarbs, MacroSnapTheme.macroCalories),
+                    _miniMacro(
+                      'C',
+                      recipe.perServingCarbs,
+                      MacroSnapTheme.macroCalories,
+                    ),
                     const SizedBox(width: 12),
-                    _miniMacro('F', recipe.perServingFats, MacroSnapTheme.macroFats),
+                    _miniMacro(
+                      'F',
+                      recipe.perServingFats,
+                      MacroSnapTheme.macroFats,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -205,10 +280,20 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
   Widget _miniMacro(String label, double value, Color color) {
     return Row(
       children: [
-        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
         const SizedBox(width: 4),
-        Text('$label ${value.toStringAsFixed(1)}g',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+        Text(
+          '$label ${value.toStringAsFixed(1)}g',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
       ],
     );
   }

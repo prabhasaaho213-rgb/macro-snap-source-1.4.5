@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../core/theme.dart';
@@ -24,7 +24,8 @@ class ResultScreen extends StatefulWidget {
   State<ResultScreen> createState() => _ResultScreenState();
 }
 
-class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderStateMixin {
+class _ResultScreenState extends State<ResultScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
@@ -34,7 +35,8 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
   int _grams = 100;
   bool _showPerDish = false;
   String _analysisStage = 'Analyzing your meal...';
-  String _analysisSub = 'Our AI is identifying each dish\nand calculating nutrition';
+  String _analysisSub =
+      'Our AI is identifying each dish\nand calculating nutrition';
 
   @override
   void initState() {
@@ -44,10 +46,10 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
       duration: const Duration(milliseconds: 1000),
     );
     _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic));
+    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
+        );
 
     final existing = widget.existingMeal;
     if (existing != null) {
@@ -82,7 +84,8 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
       if (mounted && _isAnalyzing) {
         setState(() {
           _analysisStage = 'Still working...';
-          _analysisSub = 'Food identification may take a moment\nfor complex dishes';
+          _analysisSub =
+              'Food identification may take a moment\nfor complex dishes';
         });
       }
     });
@@ -102,7 +105,10 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     // offline guess.
     if (!GeminiService.hasServerUrl) {
       if (mounted) {
-        setState(() { _error = 'no_url'; _isAnalyzing = false; });
+        setState(() {
+          _error = 'no_url';
+          _isAnalyzing = false;
+        });
       }
       return;
     }
@@ -117,7 +123,10 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
       // Re-check after the async count — the screen may have been
       // closed while the count was being persisted.
       if (!mounted) return;
-      setState(() { _result = result; _isAnalyzing = false; });
+      setState(() {
+        _result = result;
+        _isAnalyzing = false;
+      });
       _animController.forward();
     } catch (e) {
       // Scan limit reached is not a recognition failure — show the clear
@@ -133,7 +142,8 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
       }
       if (mounted) {
         setState(() {
-          _error = 'AI analysis failed: '
+          _error =
+              'AI analysis failed: '
               '${e.toString().replaceFirst('Exception: ', '')}';
           _isAnalyzing = false;
         });
@@ -195,13 +205,23 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [
-            Icon(Icons.scale_rounded, size: 18,
-                color: MacroSnapTheme.textTertiary(context)),
+            Icon(
+              Icons.scale_rounded,
+              size: 18,
+              color: MacroSnapTheme.textTertiary(context),
+            ),
             const SizedBox(width: 8),
             Flexible(
-              child: Text('Total Serving', maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
-                      color: MacroSnapTheme.textSecondary(context))),
+              child: Text(
+                'Total Serving',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: MacroSnapTheme.textSecondary(context),
+                ),
+              ),
             ),
             const Spacer(),
             GestureDetector(
@@ -209,30 +229,48 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: MacroSnapTheme.neonGreen.withValues(alpha:  0.12),
+                  color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.remove_rounded, size: 18, color: MacroSnapTheme.neonGreen),
+                child: const Icon(
+                  Icons.remove_rounded,
+                  size: 18,
+                  color: MacroSnapTheme.neonGreen,
+                ),
               ),
             ),
             const SizedBox(width: 12),
-            Text('$_grams',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800,
-                    color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
+            Text(
+              '$_grams',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+              ),
+            ),
             const SizedBox(width: 4),
-            Text('g',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500,
-                    color: MacroSnapTheme.textTertiary(context))),
+            Text(
+              'g',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: MacroSnapTheme.textTertiary(context),
+              ),
+            ),
             const SizedBox(width: 12),
             GestureDetector(
               onTap: () => _setGrams(_grams <= 975 ? _grams + 25 : 1000),
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: MacroSnapTheme.neonGreen.withValues(alpha:  0.12),
+                  color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.add_rounded, size: 18, color: MacroSnapTheme.neonGreen),
+                child: const Icon(
+                  Icons.add_rounded,
+                  size: 18,
+                  color: MacroSnapTheme.neonGreen,
+                ),
               ),
             ),
           ],
@@ -259,34 +297,59 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
             TextField(
               controller: calCtrl,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Calories (kcal)', border: OutlineInputBorder(), isDense: true),
+              decoration: const InputDecoration(
+                labelText: 'Calories (kcal)',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
             ),
             const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(child: TextField(
-                  controller: proCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Protein (g)', border: OutlineInputBorder(), isDense: true),
-                )),
+                Expanded(
+                  child: TextField(
+                    controller: proCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Protein (g)',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 8),
-                Expanded(child: TextField(
-                  controller: carbCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Carbs (g)', border: OutlineInputBorder(), isDense: true),
-                )),
+                Expanded(
+                  child: TextField(
+                    controller: carbCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Carbs (g)',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 8),
-                Expanded(child: TextField(
-                  controller: fatCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Fats (g)', border: OutlineInputBorder(), isDense: true),
-                )),
+                Expanded(
+                  child: TextField(
+                    controller: fatCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Fats (g)',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  ),
+                ),
               ],
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () {
               final cal = int.tryParse(calCtrl.text) ?? r.calories;
@@ -357,18 +420,22 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.close_rounded,
-              color: isDark ? Colors.white : const Color(0xFF1A1A1A), size: 24),
-          onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+          icon: Icon(
+            Icons.close_rounded,
+            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+            size: 24,
+          ),
+          onPressed: () =>
+              Navigator.of(context).popUntil((route) => route.isFirst),
         ),
         title: Text(
           _isAnalyzing
               ? 'Analyzing...'
               : _error != null
-                  ? 'Error'
-                  : widget.existingMeal != null
-                      ? widget.existingMeal!.name
-                      : 'Results',
+              ? 'Error'
+              : widget.existingMeal != null
+              ? widget.existingMeal!.name
+              : 'Results',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
@@ -386,8 +453,8 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
           child: _isAnalyzing
               ? _buildLoadingState(isDark)
               : _error != null
-                  ? _buildError(isDark)
-                  : _buildResults(isDark),
+              ? _buildError(isDark)
+              : _buildResults(isDark),
         ),
       ),
     );
@@ -422,19 +489,36 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const SkeletonPlaceholder(width: 100, height: 28, borderRadius: 14),
-                      const SkeletonPlaceholder(width: 100, height: 28, borderRadius: 14),
+                      const SkeletonPlaceholder(
+                        width: 100,
+                        height: 28,
+                        borderRadius: 14,
+                      ),
+                      const SkeletonPlaceholder(
+                        width: 100,
+                        height: 28,
+                        borderRadius: 14,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 24),
                   // Calories skeleton
-                  const SkeletonPlaceholder(width: 100, height: 60, borderRadius: 8),
+                  const SkeletonPlaceholder(
+                    width: 100,
+                    height: 60,
+                    borderRadius: 8,
+                  ),
                   const SizedBox(height: 16),
                   // Macro circles row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: List.generate(3, (_) =>
-                      const SkeletonPlaceholder(width: 56, height: 56, isCircle: true),
+                    children: List.generate(
+                      3,
+                      (_) => const SkeletonPlaceholder(
+                        width: 56,
+                        height: 56,
+                        isCircle: true,
+                      ),
                     ),
                   ),
                 ],
@@ -517,12 +601,18 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: (isNoUrl ? MacroSnapTheme.macroCalories : MacroSnapTheme.macroProtein).withValues(alpha:  0.1),
+                color:
+                    (isNoUrl
+                            ? MacroSnapTheme.macroCalories
+                            : MacroSnapTheme.macroProtein)
+                        .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Icon(
                 isNoUrl ? Icons.cloud_off_rounded : Icons.error_outline_rounded,
-                color: isNoUrl ? MacroSnapTheme.macroCalories : MacroSnapTheme.macroProtein,
+                color: isNoUrl
+                    ? MacroSnapTheme.macroCalories
+                    : MacroSnapTheme.macroProtein,
                 size: 32,
               ),
             ),
@@ -602,13 +692,18 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                 TextButton.icon(
                   onPressed: () => setState(() => _showPerDish = !_showPerDish),
                   icon: Icon(
-                    _showPerDish ? Icons.view_agenda_rounded : Icons.dashboard_rounded,
+                    _showPerDish
+                        ? Icons.view_agenda_rounded
+                        : Icons.dashboard_rounded,
                     size: 16,
                     color: MacroSnapTheme.neonGreen,
                   ),
                   label: Text(
                     _showPerDish ? 'Show Totals' : 'Show per Dish',
-                    style: TextStyle(fontSize: 13, color: MacroSnapTheme.greenText(context)),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: MacroSnapTheme.greenText(context),
+                    ),
                   ),
                 ),
               ],
@@ -634,13 +729,20 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                 ),
                 const SizedBox(height: 16),
                 SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.3),
-                    end: Offset.zero,
-                  ).animate(CurvedAnimation(
-                    parent: _animController,
-                    curve: const Interval(0.3, 1.0, curve: Curves.easeOutCubic),
-                  )),
+                  position:
+                      Tween<Offset>(
+                        begin: const Offset(0, 0.3),
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: _animController,
+                          curve: const Interval(
+                            0.3,
+                            1.0,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        ),
+                      ),
                   child: GlassCard(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -650,16 +752,54 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF1A1A1A),
                           ),
                         ),
                         const SizedBox(height: 16),
-                        _buildNutrientRow('Calories', r.calories, 'kcal', MacroSnapTheme.macroCalories, isDark),
-                        _buildNutrientRow('Protein', r.protein, 'g', MacroSnapTheme.macroProtein, isDark),
-                        _buildNutrientRow('Carbs', r.carbs, 'g', MacroSnapTheme.macroCalories, isDark),
-                        _buildNutrientRow('Sugar', r.sugar, 'g', const Color(0xFFDB2777), isDark),
-                        _buildNutrientRow('Fats', r.fats, 'g', MacroSnapTheme.macroFats, isDark),
-                        _buildNutrientRow('Fiber', r.fiber, 'g', MacroSnapTheme.greenText(context), isDark),
+                        _buildNutrientRow(
+                          'Calories',
+                          r.calories,
+                          'kcal',
+                          MacroSnapTheme.macroCalories,
+                          isDark,
+                        ),
+                        _buildNutrientRow(
+                          'Protein',
+                          r.protein,
+                          'g',
+                          MacroSnapTheme.macroProtein,
+                          isDark,
+                        ),
+                        _buildNutrientRow(
+                          'Carbs',
+                          r.carbs,
+                          'g',
+                          MacroSnapTheme.macroCalories,
+                          isDark,
+                        ),
+                        _buildNutrientRow(
+                          'Sugar',
+                          r.sugar,
+                          'g',
+                          const Color(0xFFDB2777),
+                          isDark,
+                        ),
+                        _buildNutrientRow(
+                          'Fats',
+                          r.fats,
+                          'g',
+                          MacroSnapTheme.macroFats,
+                          isDark,
+                        ),
+                        _buildNutrientRow(
+                          'Fiber',
+                          r.fiber,
+                          'g',
+                          MacroSnapTheme.greenText(context),
+                          isDark,
+                        ),
                       ],
                     ),
                   ),
@@ -667,13 +807,20 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                 if (r.description.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.3),
-                      end: Offset.zero,
-                    ).animate(CurvedAnimation(
-                      parent: _animController,
-                      curve: const Interval(0.5, 1.0, curve: Curves.easeOutCubic),
-                    )),
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0, 0.3),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: _animController,
+                            curve: const Interval(
+                              0.5,
+                              1.0,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          ),
+                        ),
                     child: GlassCard(
                       child: Row(
                         children: [
@@ -681,7 +828,9 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                             width: 48,
                             height: 48,
                             decoration: BoxDecoration(
-                              color: MacroSnapTheme.neonGreen.withValues(alpha:  0.12),
+                              color: MacroSnapTheme.neonGreen.withValues(
+                                alpha: 0.12,
+                              ),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Icon(
@@ -704,7 +853,9 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: isDark ? Colors.white : const Color(0xFF1A1A1A),
+                                    color: isDark
+                                        ? Colors.white
+                                        : const Color(0xFF1A1A1A),
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -731,57 +882,74 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                 // don't apply — the close (X) button dismisses the screen.
                 if (widget.existingMeal == null)
                   Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _showEditDialog(isDark, r),
-                        icon: const Icon(Icons.edit_rounded, size: 18),
-                        label: const Text('Edit', style: TextStyle(fontWeight: FontWeight.w700)),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: MacroSnapTheme.neonGreen,
-                          side: BorderSide(color: MacroSnapTheme.neonGreen.withValues(alpha: 0.4)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _showEditDialog(isDark, r),
+                          icon: const Icon(Icons.edit_rounded, size: 18),
+                          label: const Text(
+                            'Edit',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: MacroSnapTheme.neonGreen,
+                            side: BorderSide(
+                              color: MacroSnapTheme.neonGreen.withValues(
+                                alpha: 0.4,
+                              ),
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 2,
-                      child: GradientButton(
-                        label: 'Log This Meal',
-                        onPressed: () {
-                          final combinedName = hasMultiDish
-                              ? r.dishes.map((d) => d.name).join(', ')
-                              : r.dishes.first.name;
-                          MealStore.instance.add(MealRecord(
-                            id: const Uuid().v4(),
-                            date: DateTime.now(),
-                            name: combinedName,
-                            category: '',
-                            calories: r.calories,
-                            protein: r.protein,
-                            carbs: r.carbs,
-                            fats: r.fats,
-                            fiber: r.fiber,
-                            serving: r.description,
-                          ));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(hasMultiDish
-                                  ? '${r.dishes.length} dishes logged!'
-                                  : 'Meal logged!'),
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                          Navigator.of(context).popUntil((route) => route.isFirst);
-                        },
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: GradientButton(
+                          label: 'Log This Meal',
+                          onPressed: () {
+                            final combinedName = hasMultiDish
+                                ? r.dishes.map((d) => d.name).join(', ')
+                                : r.dishes.first.name;
+                            MealStore.instance.add(
+                              MealRecord(
+                                id: const Uuid().v4(),
+                                date: DateTime.now(),
+                                name: combinedName,
+                                category: '',
+                                calories: r.calories,
+                                protein: r.protein,
+                                carbs: r.carbs,
+                                fats: r.fats,
+                                fiber: r.fiber,
+                                serving: r.description,
+                              ),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  hasMultiDish
+                                      ? '${r.dishes.length} dishes logged!'
+                                      : 'Meal logged!',
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                            Navigator.of(
+                              context,
+                            ).popUntil((route) => route.isFirst);
+                          },
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
               ],
             ),
           ),
@@ -794,7 +962,11 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     final ratio = totalGrams / 100;
     final isBulk = dish.suitableFor == 'bulk';
     final isDiet = dish.suitableFor == 'diet';
-    final badgeColor = isBulk ? MacroSnapTheme.macroFats : isDiet ? MacroSnapTheme.macroProtein : MacroSnapTheme.greenText(context);
+    final badgeColor = isBulk
+        ? MacroSnapTheme.macroFats
+        : isDiet
+        ? MacroSnapTheme.macroProtein
+        : MacroSnapTheme.greenText(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: GlassCard(
@@ -807,16 +979,21 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                 children: [
                   Flexible(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: MacroSnapTheme.neonGreen.withValues(alpha:  0.12),
+                        color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
                         dish.name,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w700, color: MacroSnapTheme.greenText(context),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: MacroSnapTheme.greenText(context),
                         ),
                       ),
                     ),
@@ -824,21 +1001,33 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
                   if (dish.portionDescription.isNotEmpty) ...[
                     const SizedBox(width: 8),
                     Flexible(
-                      child: Text(dish.portionDescription,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 12, color: MacroSnapTheme.textTertiary(context))),
+                      child: Text(
+                        dish.portionDescription,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: MacroSnapTheme.textTertiary(context),
+                        ),
+                      ),
                     ),
                   ],
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
-                      color: badgeColor.withValues(alpha:  0.1),
+                      color: badgeColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       '${(dish.caloriesPer100g * ratio).round()} kcal',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: badgeColor),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: badgeColor,
+                      ),
                     ),
                   ),
                 ],
@@ -847,10 +1036,30 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildDishMacro('P', (dish.proteinPer100g * ratio), MacroSnapTheme.macroProtein, isDark),
-                  _buildDishMacro('C', (dish.carbsPer100g * ratio), MacroSnapTheme.macroCalories, isDark),
-                  _buildDishMacro('F', (dish.fatsPer100g * ratio), MacroSnapTheme.macroFats, isDark),
-                  _buildDishMacro('Fib', (dish.fiberPer100g * ratio), MacroSnapTheme.neonGreen, isDark),
+                  _buildDishMacro(
+                    'P',
+                    (dish.proteinPer100g * ratio),
+                    MacroSnapTheme.macroProtein,
+                    isDark,
+                  ),
+                  _buildDishMacro(
+                    'C',
+                    (dish.carbsPer100g * ratio),
+                    MacroSnapTheme.macroCalories,
+                    isDark,
+                  ),
+                  _buildDishMacro(
+                    'F',
+                    (dish.fatsPer100g * ratio),
+                    MacroSnapTheme.macroFats,
+                    isDark,
+                  ),
+                  _buildDishMacro(
+                    'Fib',
+                    (dish.fiberPer100g * ratio),
+                    MacroSnapTheme.neonGreen,
+                    isDark,
+                  ),
                 ],
               ),
             ],
@@ -865,11 +1074,20 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
       children: [
         Text(
           value > 0 ? '${value.toStringAsFixed(1)}g' : '—',
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: color),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
         ),
-        Text(label,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500,
-                color: MacroSnapTheme.textTertiary(context))),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: MacroSnapTheme.textTertiary(context),
+          ),
+        ),
       ],
     );
   }
@@ -877,22 +1095,28 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
   Widget _buildMealHeader(bool isDark, NutritionResult r) {
     return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: MacroSnapTheme.neonGreen.withValues(alpha:  0.12),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            r.dishes.length == 1 ? r.dishes.first.name : '${r.dishes.length} Items',
-            style: const TextStyle(
-              color: MacroSnapTheme.neonGreen,
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
+        Flexible(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              r.dishes.length == 1
+                  ? r.dishes.first.name
+                  : '${r.dishes.length} Items',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: MacroSnapTheme.neonGreen,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                height: 1.3,
+              ),
             ),
           ),
         ),
-        const Spacer(),
+        const SizedBox(width: 8),
         _buildSuitabilityBadge(isDark, r),
       ],
     );
@@ -901,13 +1125,25 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
   Widget _buildSuitabilityBadge(bool isDark, NutritionResult r) {
     final isBulk = r.suitableFor == 'bulk';
     final isDiet = r.suitableFor == 'diet';
-    final color = isBulk ? MacroSnapTheme.macroFats : isDiet ? MacroSnapTheme.macroProtein : MacroSnapTheme.greenText(context);
-    final icon = isBulk ? Icons.fitness_center_rounded : isDiet ? Icons.eco_rounded : Icons.check_circle_rounded;
-    final label = isBulk ? 'Best for Bulk' : isDiet ? 'Best for Diet' : 'Balanced';
+    final color = isBulk
+        ? MacroSnapTheme.macroFats
+        : isDiet
+        ? MacroSnapTheme.macroProtein
+        : MacroSnapTheme.greenText(context);
+    final icon = isBulk
+        ? Icons.fitness_center_rounded
+        : isDiet
+        ? Icons.eco_rounded
+        : Icons.check_circle_rounded;
+    final label = isBulk
+        ? 'Best for Bulk'
+        : isDiet
+        ? 'Best for Diet'
+        : 'Balanced';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha:  0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -959,9 +1195,24 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _buildMacroItem('Protein', '${r.protein.toInt()}g', MacroSnapTheme.macroProtein, isDark),
-        _buildMacroItem('Carbs', '${r.carbs.toInt()}g', MacroSnapTheme.macroCalories, isDark),
-        _buildMacroItem('Fats', '${r.fats.toInt()}g', MacroSnapTheme.macroFats, isDark),
+        _buildMacroItem(
+          'Protein',
+          '${r.protein.toInt()}g',
+          MacroSnapTheme.macroProtein,
+          isDark,
+        ),
+        _buildMacroItem(
+          'Carbs',
+          '${r.carbs.toInt()}g',
+          MacroSnapTheme.macroCalories,
+          isDark,
+        ),
+        _buildMacroItem(
+          'Fats',
+          '${r.fats.toInt()}g',
+          MacroSnapTheme.macroFats,
+          isDark,
+        ),
       ],
     );
   }
@@ -974,7 +1225,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
           height: 56,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: color.withValues(alpha:  0.1),
+            color: color.withValues(alpha: 0.1),
           ),
           child: Center(
             child: Text(
@@ -1000,7 +1251,13 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildNutrientRow(String label, num value, String unit, Color color, bool isDark) {
+  Widget _buildNutrientRow(
+    String label,
+    num value,
+    String unit,
+    Color color,
+    bool isDark,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
@@ -1008,10 +1265,7 @@ class _ResultScreenState extends State<ResultScreen> with SingleTickerProviderSt
           Container(
             width: 10,
             height: 10,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 12),
           Text(
