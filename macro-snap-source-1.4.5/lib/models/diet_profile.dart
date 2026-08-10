@@ -17,10 +17,6 @@ class DietProfile {
   final ActivityLevel activity;
   final String avatar;
 
-  /// Named skin tone for the mascot character — one of the keys in
-  /// `kMascotSkinTones` (lib/widgets/mascot.dart).
-  final String skinTone;
-
   DietProfile({
     required this.weightKg,
     required this.heightCm,
@@ -29,7 +25,6 @@ class DietProfile {
     required this.goal,
     required this.activity,
     this.avatar = '😎',
-    this.skinTone = 'medium',
   });
 
   static const List<String> avatars = [
@@ -100,7 +95,6 @@ class DietProfile {
     'goal': goal.name,
     'activity': activity.name,
     'avatar': avatar,
-    'skinTone': skinTone,
   };
 
   factory DietProfile.fromJson(Map<String, dynamic> json) {
@@ -125,7 +119,6 @@ class DietProfile {
         orElse: () => ActivityLevel.sedentary,
       ),
       avatar: json['avatar'] as String? ?? '😎',
-      skinTone: json['skinTone'] as String? ?? 'medium',
     );
   }
 }

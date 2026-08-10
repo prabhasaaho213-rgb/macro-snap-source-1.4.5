@@ -7,7 +7,6 @@ import '../services/gemini_service.dart';
 import '../services/meal_store.dart';
 import '../services/subscription_service.dart';
 import '../widgets/glass_card.dart';
-import '../widgets/mascot.dart';
 import '../widgets/app_text_field.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/animations.dart';
@@ -29,7 +28,6 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
   ActivityLevel _activity = ActivityLevel.sedentary;
   DietProfile? _profile;
   String _avatar = '😎';
-  String _skinTone = 'medium';
   bool _subscribed = false;
   bool _generating = false;
   Map<String, dynamic>? _aiPlan;
@@ -52,7 +50,6 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
         setState(() {
           _profile = p;
           _avatar = p.avatar;
-          _skinTone = p.skinTone;
           _weightCtrl.text = p.weightKg.toStringAsFixed(1);
           _heightCtrl.text = p.heightCm.toStringAsFixed(1);
           _ageCtrl.text = p.age.toString();
@@ -70,163 +67,6 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
     _heightCtrl.dispose();
     _ageCtrl.dispose();
     super.dispose();
-  }
-
-  void _showAvatarPicker(bool isDark) {
-    var gender = _gender;
-    var skin = _skinTone;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheetState) => Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: MacroSnapTheme.textQuaternary(context),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Your Character',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF1A1A1A),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Live preview driven by the selections below.
-              MascotWidget(
-                size: 108,
-                gender: gender,
-                skinTone: skin,
-                weightKg: double.tryParse(_weightCtrl.text) ?? 70,
-                heightCm: double.tryParse(_heightCtrl.text) ?? 170,
-                mood: MascotMood.happy,
-              ),
-              const SizedBox(height: 18),
-              // Boy / Girl
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _characterOption(
-                    '👦 Boy',
-                    gender == Gender.male,
-                    () => setSheetState(() => gender = Gender.male),
-                  ),
-                  const SizedBox(width: 10),
-                  _characterOption(
-                    '👧 Girl',
-                    gender == Gender.female,
-                    () => setSheetState(() => gender = Gender.female),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              // Skin tone
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: kMascotSkinTones.entries.map((e) {
-                  final selected = skin == e.key;
-                  return GestureDetector(
-                    onTap: () => setSheetState(() => skin = e.key),
-                    child: Container(
-                      width: 34,
-                      height: 34,
-                      margin: const EdgeInsets.symmetric(horizontal: 5),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: e.value,
-                        border: Border.all(
-                          color: selected
-                              ? MacroSnapTheme.neonGreen
-                              : (isDark ? Colors.white24 : Colors.black12),
-                          width: selected ? 3 : 1,
-                        ),
-                      ),
-                      child: selected
-                          ? const Icon(
-                              Icons.check_rounded,
-                              color: Colors.white,
-                              size: 18,
-                            )
-                          : null,
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 22),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: FilledButton(
-                  onPressed: () {
-                    setState(() {
-                      _gender = gender;
-                      _skinTone = skin;
-                    });
-                    Navigator.pop(ctx);
-                  },
-                  style: FilledButton.styleFrom(
-                    backgroundColor: MacroSnapTheme.neonGreen,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: const Text(
-                    'SAVE CHARACTER',
-                    style: TextStyle(fontWeight: FontWeight.w900),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// A selectable Boy/Girl chip used inside the character picker sheet.
-  Widget _characterOption(String label, bool selected, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected
-              ? MacroSnapTheme.neonGreen.withValues(alpha: 0.15)
-              : (Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white10
-                    : const Color(0xFFF1F5F9)),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: selected ? MacroSnapTheme.neonGreen : Colors.transparent,
-            width: 2,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: selected
-                ? MacroSnapTheme.greenText(context)
-                : MacroSnapTheme.textSecondary(context),
-          ),
-        ),
-      ),
-    );
   }
 
   void _calculate() {
@@ -250,7 +90,6 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
       goal: _goal,
       activity: _activity,
       avatar: _avatar,
-      skinTone: _skinTone,
     );
     DietPlanService.instance.save(profile);
     setState(() => _profile = profile);
@@ -323,7 +162,6 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
       _activity = ActivityLevel.moderate;
       _profile = null;
       _avatar = '😎';
-      _skinTone = 'medium';
       _aiPlan = null;
       _aiError = '';
     });
@@ -373,53 +211,6 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(
-            child: GestureDetector(
-              onTap: () => _showAvatarPicker(isDark),
-              child: Stack(
-                children: [
-                  // Animated character that mirrors the profile (gender,
-                  // skin tone, and build from weight/height) live.
-                  MascotWidget(
-                    size: 96,
-                    gender: _gender,
-                    skinTone: _skinTone,
-                    weightKg: double.tryParse(_weightCtrl.text) ?? 70,
-                    heightCm: double.tryParse(_heightCtrl.text) ?? 170,
-                    mood: MascotMood.happy,
-                  ),
-                  Positioned(
-                    right: 0,
-                    bottom: 2,
-                    child: Container(
-                      width: 26,
-                      height: 26,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: MacroSnapTheme.neonGreen,
-                      ),
-                      child: const Icon(
-                        Icons.edit_rounded,
-                        color: Colors.black,
-                        size: 14,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Center(
-            child: Text(
-              'Tap to customize your character',
-              style: TextStyle(
-                fontSize: 12,
-                color: MacroSnapTheme.textTertiary(context),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
           Text(
             'Your Details',
             style: TextStyle(

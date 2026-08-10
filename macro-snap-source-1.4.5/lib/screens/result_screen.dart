@@ -2,16 +2,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../core/theme.dart';
-import '../models/diet_profile.dart';
 import '../models/meal_record.dart';
 import '../services/gemini_service.dart';
 import '../services/meal_store.dart';
 import '../services/scan_gate.dart';
 import '../widgets/animations.dart';
-import '../widgets/celebration.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_button.dart';
-import '../widgets/mascot.dart';
 
 class ResultScreen extends StatefulWidget {
   final String imagePath;
@@ -561,13 +558,6 @@ class _ResultScreenState extends State<ResultScreen>
               child: Column(
                 children: [
                   const SizedBox(height: 12),
-                  // The mascot "thinks" while the AI identifies the meal.
-                  MascotWidget(
-                    size: 96,
-                    profile: DietPlanService.instance.profile,
-                    mood: MascotMood.thinking,
-                  ),
-                  const SizedBox(height: 6),
                   Text(
                     _analysisStage,
                     style: TextStyle(
@@ -607,11 +597,10 @@ class _ResultScreenState extends State<ResultScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // The mascot shows a sympathetic, encouraging face on failures.
-            MascotWidget(
-              size: 88,
-              profile: DietPlanService.instance.profile,
-              mood: MascotMood.sad,
+            Icon(
+              isNoUrl ? Icons.cloud_off_rounded : Icons.error_outline_rounded,
+              size: 56,
+              color: MacroSnapTheme.macroProtein,
             ),
             const SizedBox(height: 12),
             Text(
@@ -924,13 +913,6 @@ class _ResultScreenState extends State<ResultScreen>
                                 fiber: r.fiber,
                                 serving: r.description,
                               ),
-                            );
-                            // Confetti + mascot celebration, then back home.
-                            await showCelebration(
-                              context,
-                              message: hasMultiDish
-                                  ? '${r.dishes.length} dishes logged!'
-                                  : 'Meal logged!',
                             );
                             if (mounted) {
                               Navigator.of(

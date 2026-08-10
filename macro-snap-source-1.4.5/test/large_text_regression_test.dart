@@ -19,7 +19,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// scale (2x), on a narrow (320dp) and a large (430dp) phone, in BOTH light
 /// and dark mode, without a single overflow exception (RenderFlex / text
 /// overflow). Uses fixed pumps — screens contain infinitely repeating
-/// animations (mascot, streak flame), so pumpAndSettle would hang.
+/// animations (streak flame), so pumpAndSettle would hang.
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});

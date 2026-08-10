@@ -14,7 +14,7 @@ import '../models/diet_profile.dart';
 import '../services/gemini_service.dart';
 import '../services/meal_store.dart';
 import '../services/habit_store.dart';
-import '../widgets/mascot.dart';
+import '../widgets/nickname_prompt.dart';
 import 'main_shell.dart';
 
 class PhoneLoginScreen extends StatefulWidget {
@@ -42,7 +42,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
-    // Load the saved character profile so the mascot greets the user with
+    // Load the saved character profile
     // their own look (gender, skin tone, build).
     _loadProfile();
   }
@@ -96,15 +96,36 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
       final photoUrl = user.photoURL ?? googleUser.photoUrl;
 
       final prefs = await SharedPreferences.getInstance();
+      // A saved display name marks a RETURNING user on this device — they
+      // never see the nickname prompt again. Brand-new users are asked once.
+      final hadName = prefs.getString('name') != null;
+      var nickname = prefs.getString('nickname');
       await prefs.setString('phone', email);
       await prefs.setString('email', email);
       await prefs.setString('name', name);
       if (photoUrl != null) await prefs.setString('photo_url', photoUrl);
+
+      // First-time users pick a nickname once (limited to 15 characters).
+      // It's saved under 'nickname' AND mirrored to 'name' so the home
+      // greeting shows it. Skipping never blocks login — they just get
+      // asked again on a future login until they set one.
+      if (!hadName && (nickname == null || nickname.trim().isEmpty)) {
+        final chosen = mounted ? await showNicknamePrompt(context) : null;
+        if (chosen != null && chosen.trim().isNotEmpty && mounted) {
+          nickname = chosen.trim();
+          await prefs.setString('nickname', nickname);
+          await prefs.setString('name', nickname);
+        }
+      }
       try {
         await http.post(
           Uri.parse('${GeminiService.serverUrl}/register'),
           headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'phone': email, 'email': email, 'name': name}),
+          body: jsonEncode({
+            'phone': email,
+            'email': email,
+            'name': nickname ?? name,
+          }),
         );
       } catch (_) {}
       if (mounted) {
@@ -145,13 +166,18 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
             child: Column(
               children: [
                 SizedBox(height: screenHeight * 0.06),
-                // Animated mascot — the app's "face", greeting the user with
-                // a wave and their saved look (or the default character
-                // before a profile exists). Tap it for a happy reaction.
-                MascotWidget(
-                  size: 110,
-                  profile: DietPlanService.instance.profile,
-                  mood: MascotMood.wave,
+                Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: MacroSnapTheme.neonGreen.withValues(alpha: 0.15),
+                  ),
+                  child: const Icon(
+                    Icons.restaurant_rounded,
+                    size: 48,
+                    color: MacroSnapTheme.neonGreen,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 Text(

@@ -4,7 +4,6 @@ import '../models/meal_record.dart';
 import '../models/recipe.dart';
 import '../services/meal_store.dart';
 import '../services/recipe_service.dart';
-import '../widgets/celebration.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_button.dart';
 import 'recipe_editor_screen.dart';
@@ -73,9 +72,6 @@ class _RecipeListScreenState extends State<RecipeListScreen> {
       ),
     );
 
-    if (mounted) {
-      await showCelebration(context, message: '${recipe.name} logged!');
-    }
   }
 
   @override

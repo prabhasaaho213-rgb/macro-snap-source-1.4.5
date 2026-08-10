@@ -4,7 +4,6 @@ import '../core/theme.dart';
 import '../models/meal_record.dart';
 import '../services/barcode_db.dart';
 import '../services/meal_store.dart';
-import '../widgets/celebration.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/gradient_button.dart';
 
@@ -55,10 +54,7 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
         serving: '100g',
       ),
     );
-    if (mounted) {
-      await showCelebration(context, message: 'Logged!');
-      if (mounted) Navigator.pop(context);
-    }
+    if (mounted) Navigator.pop(context);
   }
 
   Future<void> _showManualEntry(String barcode) async {

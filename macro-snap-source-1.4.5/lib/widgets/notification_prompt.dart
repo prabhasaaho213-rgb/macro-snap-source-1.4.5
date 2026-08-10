@@ -3,13 +3,12 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme.dart';
 import 'gradient_button.dart';
-import 'mascot.dart';
 
 /// Days to wait before asking again after the user dismissed the prompt.
 const kNotificationPromptCooldownDays = 3;
 const _keyLastPrompt = 'notif_prompt_last_shown';
 
-/// Shows the in-app notification-permission prompt — the mascot asking to be
+/// Shows the in-app notification-permission prompt asking to be
 /// allowed to remind you. No-op when notifications are already granted (or
 /// the permission state can't be determined). After a "Not now" it waits
 /// [kNotificationPromptCooldownDays] before asking again.
@@ -119,7 +118,11 @@ class _NotificationPromptDialogState extends State<_NotificationPromptDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const MascotWidget(size: 96, mood: MascotMood.sad),
+            Icon(
+              Icons.notifications_active_rounded,
+              size: 72,
+              color: MacroSnapTheme.neonGreen,
+            ),
             const SizedBox(height: 16),
             Text(
               'Let me remind you 💬',

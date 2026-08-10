@@ -27,7 +27,12 @@ class NotificationService {
   Future<void> init() async {
     if (_initialized) return;
     try {
-      await Permission.notification.request();
+      // Request POST_NOTIFICATIONS (Android 13+). Never let a failure or
+      // denial here block plugin/channel setup — otherwise every scheduled
+      // reminder silently dies for the rest of the session.
+      try {
+        await Permission.notification.request();
+      } catch (_) {}
       tz_data.initializeTimeZones();
       // CRITICAL: without this, tz.local stays UTC and every scheduled
       // reminder fires at the wrong wall-clock time (e.g. 5.5h late in IST).
@@ -330,6 +335,33 @@ class NotificationService {
   Future<void> scheduleAllHabitReminders(List<Habit> habits) async {
     for (final h in habits) {
       await scheduleHabitReminder(h);
+    }
+  }
+
+  /// Full startup safety net: re-create every reminder so a lost alarm
+  /// (reinstall, app update, force-stop) can never silently disable
+  /// notifications. Each reminder restores independently — one failure
+  /// never blocks the others. Subscribers additionally re-arm the expiry
+  /// reminders and the weekly summary (same ids are replaced, idempotent).
+  Future<void> restoreAllReminders(
+    List<Habit> habits, {
+    String? subscribedDate,
+  }) async {
+    await _safe(scheduleDailyReminder);
+    await _safe(scheduleStreakReminder);
+    await _safe(() => scheduleAllHabitReminders(habits));
+    if (subscribedDate != null && subscribedDate.isNotEmpty) {
+      await _safe(() => scheduleExpiryReminder(subscribedDate));
+      await _safe(() => scheduleExpired(subscribedDate));
+      await _safe(scheduleWeeklySummary);
+    }
+  }
+
+  Future<void> _safe(Future<void> Function() fn) async {
+    try {
+      await fn();
+    } catch (e) {
+      debugPrint('❌ reminder restore failed: $e');
     }
   }
 }

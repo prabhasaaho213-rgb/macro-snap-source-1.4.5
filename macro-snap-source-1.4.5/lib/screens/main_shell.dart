@@ -27,7 +27,7 @@ class _MainShellState extends State<MainShell> {
     _currentIndex = shellTabIndex.value;
     shellTabIndex.addListener(_onShellTabChanged);
     // Launch prompts, ordered so dialogs never stack: subscription upsell
-    // first, then the notification-permission ask (mascot) if still denied.
+    // first, then the notification-permission ask if still denied.
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _maybeShowLaunchPrompts(),
     );

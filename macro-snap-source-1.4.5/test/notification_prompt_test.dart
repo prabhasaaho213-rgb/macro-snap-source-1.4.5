@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:macro_snap/widgets/mascot.dart';
 import 'package:macro_snap/widgets/notification_prompt.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Pins the in-app notification-permission prompt: the mascot asks to send
+/// Pins the in-app notification-permission prompt: the prompt asks to send
 /// reminders when permission is denied, "Not now" sets a cooldown, and the
 /// dialog escalates to Open Settings when the permission is permanently
-/// denied. Uses fixed pumps (the mascot's animation repeats forever).
+/// denied.
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -44,12 +43,12 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.byType(MascotWidget), findsNothing);
+    expect(find.byIcon(Icons.notifications_active_rounded), findsNothing);
     expect(find.text('Not now'), findsNothing);
   });
 
   testWidgets(
-    'denied → mascot prompt shows, Not now closes and sets cooldown',
+    'denied → prompt shows, Not now closes and sets cooldown',
     (tester) async {
       await tester.pumpWidget(
         host(statusOf: () async => PermissionStatus.denied),
@@ -58,7 +57,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.byType(MascotWidget), findsOneWidget);
+      expect(find.byIcon(Icons.notifications_active_rounded), findsOneWidget);
       expect(find.text('Let me remind you 💬'), findsOneWidget);
       expect(find.text('Allow notifications'), findsOneWidget);
 
@@ -66,7 +65,7 @@ void main() {
       await tester.pump(); // let the pop fire
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.byType(MascotWidget), findsNothing);
+      expect(find.byIcon(Icons.notifications_active_rounded), findsNothing);
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString('notif_prompt_last_shown'), isNotNull);
       expect(tester.takeException(), isNull);
@@ -90,7 +89,7 @@ void main() {
     await tester.pump(); // let the pop fire
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.byType(MascotWidget), findsNothing);
+    expect(find.byIcon(Icons.notifications_active_rounded), findsNothing);
   });
 
   testWidgets('denied twice → button flips to Open Settings and opens it', (
@@ -117,7 +116,7 @@ void main() {
     await tester.pump(); // let the pop fire
     await tester.pump(const Duration(milliseconds: 300));
     expect(settingsOpened, isTrue);
-    expect(find.byType(MascotWidget), findsNothing);
+    expect(find.byIcon(Icons.notifications_active_rounded), findsNothing);
   });
 
   testWidgets('permanently denied → shows Open Settings directly', (
@@ -154,6 +153,6 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.byType(MascotWidget), findsNothing);
+    expect(find.byIcon(Icons.notifications_active_rounded), findsNothing);
   });
 }

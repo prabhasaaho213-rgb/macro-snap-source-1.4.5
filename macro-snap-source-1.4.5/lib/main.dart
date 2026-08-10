@@ -65,16 +65,6 @@ Future<void> main() async {
         () => NotificationService().init(),
         'NotificationService.init',
       );
-      // Schedule daily reminders for ALL users (free + pro). Fire-and-forget
-      // BUT error-guarded: a bare `try/catch` here would not catch async
-      // plugin errors, and an unhandled async error before runApp() would
-      // kill the isolate — the exact "app won't open" bug we're eliminating.
-      unawaited(
-        _guard(() async {
-          await NotificationService().scheduleDailyReminder();
-          await NotificationService().scheduleStreakReminder();
-        }, 'NotificationService reminders'),
-      );
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,
       ]);
@@ -87,6 +77,17 @@ Future<void> main() async {
         'DietPlanService.load',
       );
       await _guard(() => HabitStore.instance.load(), 'HabitStore.load');
+      // Restore ALL reminders every launch — the OS drops scheduled alarms
+      // on reinstall/update/force-stop, and without this, reminders
+      // silently stop working. (Fire-and-forget, error-guarded.)
+      unawaited(
+        _guard(() async {
+          await NotificationService().restoreAllReminders(
+            HabitStore.instance.habits,
+            subscribedDate: SubscriptionService.instance.subscribedAt,
+          );
+        }, 'NotificationService reminders'),
+      );
 
       runApp(const MacroSnapApp());
     },
