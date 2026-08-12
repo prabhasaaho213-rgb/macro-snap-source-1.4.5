@@ -138,6 +138,29 @@ class NotificationService {
     );
   }
 
+  /// Sends an immediate test notification so the user (and support) can
+  /// verify the whole pipeline — permission, channel, plugin init — in one
+  /// tap. Throws with a clear message if anything is wrong; the caller
+  /// surfaces it.
+  Future<void> sendTestNotification() async {
+    if (!_initialized) await init();
+    await _plugin.show(
+      99,
+      '🔔 Test notification',
+      'If you can see this, notifications are working!',
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'macro_snap_reminder',
+          'Meal Reminders',
+          channelDescription: 'Daily reminders to log meals',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+    );
+  }
+
   Future<void> scheduleDailyReminder() async {
     final now = DateTime.now();
     var scheduledDate = DateTime(now.year, now.month, now.day, 20, 0);
