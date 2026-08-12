@@ -762,7 +762,12 @@ class _HabitsTabState extends State<HabitsTab> {
             },
             child: Container(
               padding: const EdgeInsets.all(16),
-              decoration: MacroSnapTheme.habitlyCard(context),
+              // No radius on the MOVING card: the outer ClipRRect(28) owns all
+              // rounding at the tile's true edges. If this card painted its own
+              // corners while sliding, the near-black gradient showed through
+              // the gap between the green reveal and the card mid-swipe.
+              decoration:
+                  MacroSnapTheme.habitlyCard(context, borderRadius: null),
               child: Row(
                 children: [
                   // Emoji container. Its glow/blur shadow is the ONLY thing

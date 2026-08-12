@@ -96,20 +96,31 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
       final photoUrl = user.photoURL ?? googleUser.photoUrl;
 
       final prefs = await SharedPreferences.getInstance();
-      // A saved display name marks a RETURNING user on this device — they
-      // never see the nickname prompt again. Brand-new users are asked once.
-      final hadName = prefs.getString('name') != null;
+
+      // Returning user? A saved nickname marks them — they are never asked
+      // again. When local prefs are empty (reinstall / new device), try to
+      // restore the nickname saved on the server during a previous
+      // registration so an existing user isn't re-asked on a fresh install.
       var nickname = prefs.getString('nickname');
+      if (nickname == null || nickname.trim().isEmpty) {
+        final restored = await NicknameStore.restoreFromServer(email);
+        if (restored != null && restored.trim().isNotEmpty) {
+          nickname = restored.trim();
+          await prefs.setString('nickname', nickname);
+        }
+      }
+
       await prefs.setString('phone', email);
       await prefs.setString('email', email);
-      await prefs.setString('name', name);
+      // A saved nickname must NEVER be overwritten by the Google display
+      // name — the greeting keeps the user's chosen nickname forever.
+      await NicknameStore.persistLoginName(prefs, name);
       if (photoUrl != null) await prefs.setString('photo_url', photoUrl);
 
-      // First-time users pick a nickname once (limited to 15 characters).
-      // It's saved under 'nickname' AND mirrored to 'name' so the home
-      // greeting shows it. Skipping never blocks login — they just get
-      // asked again on a future login until they set one.
-      if (!hadName && (nickname == null || nickname.trim().isEmpty)) {
+      // Brand-new users (no nickname anywhere) pick one once (limited to 15
+      // characters). Skipping never blocks login — they get asked again on
+      // a future login until they set one.
+      if (NicknameStore.shouldAskNickname(prefs)) {
         final chosen = mounted ? await showNicknamePrompt(context) : null;
         if (chosen != null && chosen.trim().isNotEmpty && mounted) {
           nickname = chosen.trim();
@@ -156,16 +167,25 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              children: [
-                SizedBox(height: screenHeight * 0.06),
+        // Center the whole page vertically on every screen size: content
+        // sits at the screen center when it fits, and scrolls instead of
+        // overflowing when it doesn't (small phones / large system fonts).
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 24,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
                 Container(
                   width: 96,
                   height: 96,
@@ -179,7 +199,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
                     color: MacroSnapTheme.neonGreen,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 Text(
                   'Welcome to MacroSnap',
                   textAlign: TextAlign.center,
@@ -195,7 +215,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
                     color: MacroSnapTheme.textTertiary(context),
                   ),
                 ),
-                SizedBox(height: screenHeight * 0.05),
+                const SizedBox(height: 24),
 
                 // Google Sign-In
                 SizedBox(
@@ -361,8 +381,10 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen>
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
               ],
+                ),
+              ),
             ),
           ),
         ),

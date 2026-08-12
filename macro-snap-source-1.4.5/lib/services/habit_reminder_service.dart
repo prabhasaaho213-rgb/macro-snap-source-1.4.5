@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -179,16 +180,25 @@ Future<void> handleHabitReminderActionBackground(
     );
 
     final raw = prefs.getString('habits');
-    if (raw == null || raw.isEmpty) return;
+    if (raw == null || raw.isEmpty) {
+      debugPrint('⚠️ Notification action: no habits saved to act on');
+      return;
+    }
     final decoded = jsonDecode(raw);
-    if (decoded is! List) return;
+    if (decoded is! List) {
+      debugPrint('⚠️ Notification action: corrupted habits data');
+      return;
+    }
 
     final habits = decoded
         .whereType<Map>()
         .map((e) => Habit.fromJson(Map<String, dynamic>.from(e)))
         .toList();
     final index = habits.indexWhere((h) => h.id == habitId);
-    if (index < 0) return;
+    if (index < 0) {
+      debugPrint('⚠️ Notification action: habit $habitId not in saved list');
+      return;
+    }
     final habit = habits[index];
 
     if (actionId == HabitReminderService.snoozeAction) {
@@ -209,7 +219,8 @@ Future<void> handleHabitReminderActionBackground(
       await plugin.cancel(HabitReminderService.snoozeId(habit));
       await HabitReminderService.rescheduleTomorrow(habit, plugin);
     }
-  } catch (_) {
+  } catch (e) {
+    debugPrint('❌ Background notification action failed: $e');
     // Never let a background action failure affect app startup.
   }
 }

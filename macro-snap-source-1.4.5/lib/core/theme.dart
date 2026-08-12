@@ -102,7 +102,10 @@ class MacroSnapTheme {
   /// light mode uses the matching light gradient (same as [habitlyCard]) so
   /// hero cards like "Calorie goal" and "Make it count" never stay dark when
   /// the app is in light theme.
-  static BoxDecoration habitlyHeroCard(BuildContext context) {
+  static BoxDecoration habitlyHeroCard(
+    BuildContext context, {
+    BorderRadius? borderRadius = const BorderRadius.all(Radius.circular(28)),
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     if (isDark) {
       return BoxDecoration(
@@ -111,7 +114,7 @@ class MacroSnapTheme {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: borderRadius,
         border: Border.all(color: const Color(0xFF353550)),
       );
     }
@@ -121,7 +124,7 @@ class MacroSnapTheme {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      borderRadius: BorderRadius.circular(28),
+      borderRadius: borderRadius,
       border: Border.all(color: const Color(0xFFC8BEFF)),
     );
   }
@@ -131,11 +134,14 @@ class MacroSnapTheme {
   /// Shares the exact same rich gradient background as the hero "Make it
   /// count" card in dark mode so every card across the app looks uniform.
   /// Light mode uses a matching light gradient to preserve readability.
-  static BoxDecoration habitlyCard(BuildContext context) {
+  static BoxDecoration habitlyCard(
+    BuildContext context, {
+    BorderRadius? borderRadius = const BorderRadius.all(Radius.circular(28)),
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     if (isDark) {
       // Identical to the hero card → uniform dark gradient cards everywhere.
-      return habitlyHeroCard(context);
+      return habitlyHeroCard(context, borderRadius: borderRadius);
     }
     return BoxDecoration(
       gradient: const LinearGradient(
@@ -143,7 +149,7 @@ class MacroSnapTheme {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      borderRadius: BorderRadius.circular(28),
+      borderRadius: borderRadius,
       border: Border.all(color: const Color(0xFFC8BEFF)),
     );
   }

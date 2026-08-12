@@ -238,47 +238,47 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 20),
 
                 // Emoji in large neon container
                 Container(
-                  width: 130,
-                  height: 130,
+                  width: 112,
+                  height: 112,
                   decoration: BoxDecoration(
                     color: page.color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(38),
+                    borderRadius: BorderRadius.circular(34),
                   ),
                   child: Center(
                     child: Text(
                       page.emoji,
-                      style: const TextStyle(fontSize: 56),
+                      style: const TextStyle(fontSize: 50),
                     ),
                   ),
                 ),
-                const SizedBox(height: 36),
+                const SizedBox(height: 24),
 
                 // Title
                 Text(
                   page.title,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 30,
+                    fontSize: 28,
                     fontWeight: FontWeight.w900,
                     color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                     letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
                 // Subtitle
                 Text(
                   page.subtitle,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w500,
                     color: MacroSnapTheme.textSecondary(context),
-                    height: 1.5,
+                    height: 1.45,
                   ),
                 ),
               ],

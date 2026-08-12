@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart' show debugPrint, visibleForTesting;
 import 'package:flutter/widgets.dart' show AppLifecycleState, WidgetsBinding, WidgetsBindingObserver;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -261,13 +262,41 @@ class NotificationService with WidgetsBindingObserver {
     return null;
   }
 
+  /// Fallback for notification actions: the in-memory store can be stale or
+  /// empty (long backgrounded session, a reload that failed) while the habit
+  /// still exists in prefs. Read the habit straight from SharedPreferences —
+  /// the same source the background isolate uses — so Mark done / Snooze
+  /// always act on the real habit.
+  Future<Habit?> _findHabitFromPrefs(String habitId) async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      final raw = p.getString('habits');
+      if (raw == null || raw.isEmpty) return null;
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return null;
+      for (final e in decoded.whereType<Map>()) {
+        final h = Habit.fromJson(Map<String, dynamic>.from(e));
+        if (h.id == habitId) return h;
+      }
+    } catch (e) {
+      debugPrint('❌ habit lookup from prefs failed: $e');
+    }
+    return null;
+  }
+
   Future<void> _snoozeHabit(String habitId) async {
     try {
       await HabitStore.instance.load();
-      final habit = _findHabit(habitId);
-      if (habit == null) return;
+      var habit = _findHabit(habitId);
+      habit ??= await _findHabitFromPrefs(habitId);
+      if (habit == null) {
+        debugPrint('⚠️ Snooze: habit $habitId not found anywhere');
+        return;
+      }
       await HabitReminderService.snooze(habit, _plugin);
-    } catch (_) {
+      debugPrint('🔔 Snoozed habit ${habit.name} for 10 minutes');
+    } catch (e) {
+      debugPrint('❌ Snooze action failed: $e');
       // Never let a notification action crash the app.
     }
   }
@@ -275,18 +304,61 @@ class NotificationService with WidgetsBindingObserver {
   Future<void> _completeHabit(String habitId) async {
     try {
       await HabitStore.instance.load();
-      final habit = _findHabit(habitId);
-      if (habit == null) return;
-      await HabitStore.instance.completeToday(habit);
+      var habit = _findHabit(habitId);
+      final fromPrefs = habit == null;
+      habit ??= await _findHabitFromPrefs(habitId);
+      if (habit == null) {
+        debugPrint('⚠️ Mark done: habit $habitId not found anywhere');
+        return;
+      }
+      if (fromPrefs) {
+        // Stale/empty store: persist the completion DIRECTLY to prefs (same
+        // as the background isolate). Routing through completeToday would
+        // serialize the empty store list over prefs and erase the habit, and
+        // push the stale list to the cloud.
+        await _persistCompletionToPrefs(habit);
+      } else {
+        await HabitStore.instance.completeToday(habit);
+      }
       // Mark done from the tap: clear the snoozed one-off AND push today's
       // upcoming daily reminder to tomorrow so it never fires again today.
       // (HabitStore.completeToday is pure data — these one-offs are the
       // notification layer's job, mirroring the background handler.)
       await cancelHabitReminderSnooze(habit);
       await rescheduleHabitReminderFromTomorrow(habit);
-    } catch (_) {
+      debugPrint('✅ Mark done: ${habit.name} completed for today');
+    } catch (e) {
+      debugPrint('❌ Mark done action failed: $e');
       // Never let a notification action crash the app.
     }
+  }
+
+  /// Completes a habit found only in prefs (the store is stale/empty) by
+  /// writing the change straight to SharedPreferences — never through the
+  /// store, whose `save()` serializes its own (empty) list.
+  Future<void> _persistCompletionToPrefs(Habit habit) async {
+    final p = await SharedPreferences.getInstance();
+    final raw = p.getString('habits');
+    if (raw == null || raw.isEmpty) return;
+    final decoded = jsonDecode(raw);
+    if (decoded is! List) return;
+    final habits = decoded
+        .whereType<Map>()
+        .map((e) => Habit.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+    final index = habits.indexWhere((h) => h.id == habit.id);
+    if (index < 0) return;
+    final saved = habits[index];
+    final key = dateKey(DateTime.now());
+    if (!saved.completedDates.contains(key)) {
+      saved.completedDates.add(key);
+      saved.skippedDates.remove(key);
+    }
+    habits[index] = saved;
+    await p.setString(
+      'habits',
+      jsonEncode(habits.map((h) => h.toJson()).toList()),
+    );
   }
 
   /// The subscriber-gated reminder ids (for tests / diagnostics).
