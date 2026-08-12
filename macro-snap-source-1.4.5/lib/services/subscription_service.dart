@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
@@ -6,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_identity.dart';
 import 'meal_store.dart';
-import 'notification_service.dart';
 import 'gemini_service.dart';
 import 'sync_status_service.dart';
 
@@ -85,20 +83,12 @@ class SubscriptionService extends ChangeNotifier {
     _subscribed = true;
     _subscribedAt = _lifetimeDate;
     notifyListeners();
-    // Post-activation side effects (pro reminders) — fire-and-forget so a
-    // cold start isn't held on the splash screen while the notification
-    // plugin schedules 5+ reminders (the admin otherwise saw a black home
-    // tab for a few seconds on launch).
-    unawaited(_scheduleReminders(_lifetimeDate));
+    // Refresh scan counts. Reminder scheduling is NOT here —
+    // NotificationService listens to this notifier and applies the plan on
+    // every state change, so a cold start can't be held up while the
+    // notification plugin schedules reminders.
     try {
       MealStore.instance.changeNotifier.value++;
-    } catch (_) {}
-  }
-
-  /// Best-effort pro-reminder scheduling; never throws.
-  Future<void> _scheduleReminders(String subscribedDate) async {
-    try {
-      await NotificationService().scheduleAllForSubscriber(subscribedDate);
     } catch (_) {}
   }
 
@@ -186,11 +176,10 @@ class SubscriptionService extends ChangeNotifier {
     _subscribedAt = now;
     notifyListeners();
 
-    // ── Post-activation side effects (best-effort, never throw) ──
-    // Schedule daily pro reminder notifications — fire-and-forget so the
-    // payment confirmation never waits on the notification plugin.
-    unawaited(_scheduleReminders(_subscribedAt ?? now));
-    // Bump the meal-store notifier so home/scan screens refresh scan counts.
+    // ── Post-activation side effect (best-effort, never throw) ──
+    // Refresh scan counts. Reminder scheduling is NOT here —
+    // NotificationService listens to this notifier and applies the plan on
+    // every state change.
     try {
       MealStore.instance.changeNotifier.value++;
     } catch (_) {}

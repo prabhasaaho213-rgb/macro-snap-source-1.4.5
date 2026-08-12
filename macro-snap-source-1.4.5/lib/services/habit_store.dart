@@ -5,13 +5,21 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/habit.dart';
 import 'meal_sync_service.dart';
-import 'notification_service.dart';
 import 'subscription_service.dart';
 
 class HabitStore extends ChangeNotifier {
   static final HabitStore _instance = HabitStore._();
   static HabitStore get instance => _instance;
   HabitStore._();
+
+  /// Fires when the habit REMINDER PLAN changes — a habit is added, edited,
+  /// toggled on/off, removed, or merged from cloud. NotificationService
+  /// listens to this and reconciles the plan (applyHabitPlan), so the store
+  /// never has to reach into the notification layer itself. Completion
+  /// toggles (swipe/tap on a mission card) do NOT fire it — they change a
+  /// date marker, not the schedule, so re-arming on every swipe would churn
+  /// zonedSchedule needlessly.
+  final ValueNotifier<int> remindersChangedNotifier = ValueNotifier(0);
 
   final List<Habit> habits = [];
   bool _loaded = false;
@@ -144,13 +152,10 @@ class HabitStore extends ChangeNotifier {
       // restoreAllReminders() at startup only sees the LOCAL list, and the
       // cloud merge lands afterwards — so after a reinstall / data clear /
       // new device, every cloud habit had reminderEnabled=true but ZERO
-      // alarms behind it. Re-arm all enabled habits here (idempotent —
-      // zonedSchedule replaces by id).
-      for (final h in habits) {
-        if (h.reminderEnabled) {
-          await NotificationService().scheduleHabitReminder(h);
-        }
-      }
+      // alarms behind it. Notify the reminder layer to reconcile the whole
+      // plan (arms every enabled habit, idempotent — zonedSchedule replaces
+      // by id, and the orphan sweep cancels anything no longer wanted).
+      remindersChangedNotifier.value++;
     } catch (_) {}
     _restoring = false;
     _cloudRestored = true;
@@ -169,38 +174,37 @@ class HabitStore extends ChangeNotifier {
     habits.add(h);
     await save();
     _syncToCloud();
-    if (h.reminderEnabled) {
-      await NotificationService().scheduleHabitReminder(h);
-    }
+    // Notify the reminder layer to reconcile the plan (arms the new habit,
+    // cancels any disabled one) — the single funnel for every plan change.
+    remindersChangedNotifier.value++;
   }
 
   Future<void> update(Habit h, {bool syncReminder = true}) async {
     await save();
     _syncToCloud();
-    // Re-sync reminder when the habit's schedule or toggle changes.
+    // Re-sync the reminder plan when the habit's schedule or toggle changes.
     // Completion toggles (swipe/tap on a mission card) pass syncReminder:
     // false so we don't cancel+recreate the daily zonedSchedule on every
     // swipe — the schedule only changes on edit.
     if (syncReminder) {
-      if (h.reminderEnabled) {
-        await NotificationService().scheduleHabitReminder(h);
-      } else {
-        await NotificationService().cancelHabitReminder(h);
-      }
+      remindersChangedNotifier.value++;
     }
   }
 
   Future<void> remove(Habit h) async {
-    await NotificationService().cancelHabitReminder(h);
     habits.removeWhere((x) => x.id == h.id);
     await save();
     _syncToCloud();
+    // Notify the reminder layer: the orphan sweep cancels this habit's
+    // alarm now that it has left the list.
+    remindersChangedNotifier.value++;
   }
 
-  /// Mark a habit as completed for today (used by the notification's
-  /// "Mark done" action), persist, sync to cloud, clear any snoozed
-  /// reminder, and push today's upcoming daily reminder to tomorrow so the
-  /// habit never re-reminds the same day.
+  /// Mark a habit as completed for today, persist and sync to cloud.
+  /// Pure data operation — it does NOT touch the reminder layer (the
+  /// notification's "Mark done" handler clears the snooze and pushes the
+  /// daily reminder to tomorrow itself; completion is a date marker, not a
+  /// schedule change, so the plan reconciliation must NOT re-arm today).
   Future<void> completeToday(Habit h) async {
     final key = dateKey(DateTime.now());
     if (!h.completedDates.contains(key)) {
@@ -209,8 +213,6 @@ class HabitStore extends ChangeNotifier {
     }
     await save();
     _syncToCloud();
-    await NotificationService().cancelHabitReminderSnooze(h);
-    await NotificationService().rescheduleHabitReminderFromTomorrow(h);
   }
 
 

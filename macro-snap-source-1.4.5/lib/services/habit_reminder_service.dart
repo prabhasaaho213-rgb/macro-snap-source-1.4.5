@@ -1,11 +1,11 @@
 import 'dart:convert';
-import 'dart:ui' show Color;
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 import '../models/habit.dart';
+import 'notification_branding.dart';
 
 class HabitReminderService {
   /// Public action ids referenced by [NotificationService] so the handler
@@ -25,22 +25,23 @@ class HabitReminderService {
   /// never collides with the daily repeating one for the same habit.
   static int snoozeId(Habit h) => (notificationId(h) + 100000) & 0x7fffffff;
 
-  static const NotificationDetails _details = NotificationDetails(
-    android: AndroidNotificationDetails(
-      'habit_reminders',
-      'Habit reminders',
+  /// Habit-reminder details, built through the shared [NotificationBranding]
+  /// factory so icon / largeIcon / brand color can never drift from the rest
+  /// of the app's notifications. The snooze + mark-done actions live here.
+  static Future<NotificationDetails> _details() async {
+    final android = await NotificationBranding.androidDetails(
+      channelId: 'habit_reminders',
+      channelName: 'Habit reminders',
       channelDescription: 'Reminders for your habits',
       importance: Importance.high,
       priority: Priority.high,
-      color: Color(0xFF059669),
-      icon: '@drawable/ic_notification',
-      largeIcon: DrawableResourceAndroidBitmap('@drawable/ic_notification_large'),
       actions: [
         AndroidNotificationAction(snoozeAction, 'Snooze 10 min'),
         AndroidNotificationAction(doneAction, 'Mark done'),
       ],
-    ),
-  );
+    );
+    return NotificationDetails(android: android);
+  }
 
   /// Shared daily-repeating schedule used by [schedule] and
   /// [rescheduleTomorrow] so the two never drift apart.
@@ -49,12 +50,13 @@ class HabitReminderService {
     tz.TZDateTime when,
     FlutterLocalNotificationsPlugin notifications,
   ) async {
+    final details = await _details();
     await notifications.zonedSchedule(
       notificationId(h),
       'Time for ${h.name} ${h.emoji}',
       'Tap to mark this habit done and keep your streak going.',
       when,
-      _details,
+      details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
       uiLocalNotificationDateInterpretation:
@@ -90,12 +92,13 @@ class HabitReminderService {
     FlutterLocalNotificationsPlugin notifications,
   ) async {
     final when = tz.TZDateTime.now(tz.local).add(const Duration(minutes: 10));
+    final details = await _details();
     await notifications.zonedSchedule(
       snoozeId(h),
       'Time for ${h.name} ${h.emoji}',
       'Tap to mark this habit done and keep your streak going.',
       when,
-      _details,
+      details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,

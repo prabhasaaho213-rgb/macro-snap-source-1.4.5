@@ -6,7 +6,6 @@ import '../core/theme.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/glass_card.dart';
 import 'phone_login_screen.dart';
-import '../services/notification_service.dart';
 import '../services/gemini_service.dart';
 import '../services/razorpay_service.dart';
 import '../services/subscription_service.dart';
@@ -570,8 +569,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   const SizedBox(height: 12),
                   TextButton(
                     onPressed: () async {
+                      // Cancelling the subscription notifies SubscriptionService
+                      // listeners; NotificationService applies the free-user
+                      // reminder plan (cancel only subscriber-gated ids — never
+                      // cancelAll, which would wipe the free daily/streak nudge
+                      // and every habit reminder too).
                       await SubscriptionService.instance.cancel();
-                      await NotificationService().cancelAll();
                       setState(() {
                         _subscribed = false;
                         _subscribedDate = null;

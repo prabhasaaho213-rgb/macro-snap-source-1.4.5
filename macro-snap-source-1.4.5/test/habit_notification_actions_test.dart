@@ -229,7 +229,7 @@ void main() {
 
   // ─── HabitStore.completeToday (in-app Mark done path) ──────
 
-  test('HabitStore.completeToday marks done, persists, and suppresses today',
+  test('HabitStore.completeToday marks done and persists (pure data, no reminders)',
       () async {
     final h = _habit();
     HabitStore.instance.habits.add(h);
@@ -240,12 +240,14 @@ void main() {
         reason: 'completeToday must mark the habit done for today');
     final raw = (await SharedPreferences.getInstance()).getString('habits')!;
     expect(raw, contains(h.id), reason: 'the completion must be persisted');
-    expect(_cancelIds(), contains(HabitReminderService.snoozeId(h)),
-        reason: 'completeToday must clear the snoozed reminder');
-    expect(_cancelIds(), contains(HabitReminderService.notificationId(h)),
-        reason: 'completeToday must suppress today\'s daily reminder');
-    expect(_calls.where((c) => c.$1 == 'zonedSchedule'), hasLength(1),
-        reason: 'the daily reminder must be re-created starting tomorrow');
+
+    // completeToday is pure data — the reminder suppression (snooze-cancel +
+    // push-to-tomorrow) is the NOTIFICATION layer's job, done by
+    // NotificationService._completeHabit / the background handler.
+    expect(_calls.where((c) => c.$1 == 'cancel'), isEmpty,
+        reason: 'completeToday must not touch reminders itself');
+    expect(_calls.where((c) => c.$1 == 'zonedSchedule'), isEmpty,
+        reason: 'completeToday must not re-schedule anything');
   });
 
   test('tz helper: dateKey returns the expected YYYY-MM-DD format', () {

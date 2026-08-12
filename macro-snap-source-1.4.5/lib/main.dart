@@ -82,10 +82,14 @@ Future<void> main() async {
       // silently stop working. (Fire-and-forget, error-guarded.)
       unawaited(
         _guard(() async {
+          debugPrint('📋 Reminder plan:\n${NotificationService.debugDescribe().join('\n')}');
           await NotificationService().restoreAllReminders(
             HabitStore.instance.habits,
             subscribedDate: SubscriptionService.instance.subscribedAt,
           );
+          // Best-effort diagnostic: plan-vs-OS mismatch visibility (e.g.
+          // "plan says 5, OS holds 0" when alarms were silently dropped).
+          await NotificationService().logPendingCount();
         }, 'NotificationService reminders'),
       );
 

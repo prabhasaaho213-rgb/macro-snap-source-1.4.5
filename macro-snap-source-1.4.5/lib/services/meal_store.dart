@@ -13,6 +13,12 @@ class MealStore {
 
   final ValueNotifier<int> changeNotifier = ValueNotifier(0);
 
+  /// Fires only when a meal is actually ADDED (not on generic refresh bumps
+  /// like subscription activation). Notification suppression listens to this
+  /// so a "scan counts changed" bump can never accidentally silence
+  /// reminders.
+  final ValueNotifier<int> mealAddedNotifier = ValueNotifier(0);
+
   List<MealRecord> _meals = [];
   bool _loaded = false;
 
@@ -88,6 +94,7 @@ class MealStore {
     // Async sync to cloud (fire-and-forget)
     MealSyncService.syncMeal(meal);
     changeNotifier.value++;
+    mealAddedNotifier.value++;
   }
 
   Future<void> remove(String id) async {

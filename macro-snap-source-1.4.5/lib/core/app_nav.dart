@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../screens/subscription_screen.dart';
 
 /// Global navigator key attached to the app so notification taps and other
 /// non-widget code can navigate when no BuildContext is available.
@@ -19,4 +20,14 @@ final ValueNotifier<int> shellTabIndex = ValueNotifier<int>(0);
 /// simply lands the user on the normal login flow instead of bypassing it.
 void openShellTab(int index) {
   shellTabIndex.value = index;
+}
+
+/// Opens the Subscription (Pro) screen from notification taps and other
+/// non-widget code where no BuildContext is available. Pushes through the
+/// global navigator key; a no-op when the navigator isn't mounted (e.g. the
+/// app is still on the login/onboarding gate).
+void openSubscriptionScreen() {
+  appNavigatorKey.currentState?.push(
+    MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+  );
 }

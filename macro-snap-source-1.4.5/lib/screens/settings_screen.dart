@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../core/theme.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/animations.dart';
@@ -13,7 +12,6 @@ import '../services/meal_sync_service.dart';
 import '../services/habit_store.dart';
 import '../services/rate_us_service.dart';
 import '../services/subscription_service.dart';
-import '../services/notification_service.dart';
 import 'subscription_screen.dart';
 import 'phone_login_screen.dart';
 
@@ -62,7 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   bool get _isGuest => _phone.isEmpty || _phone.startsWith('guest_');
   String _phone = '';
-  String get _packageVersion => '1.4.60';
+  String get _packageVersion => '1.4.61';
 
   Future<void> _upgradeFromGuest() async {
     final phone = await Navigator.push<String>(
@@ -134,120 +132,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         (route) => false,
       );
     }
-  }
-
-  /// Runs the real notification pipeline (permission → init → show) and
-  /// reports the exact result so "notifications not working" becomes a
-  /// precise, actionable message instead of a mystery.
-  Future<void> _testNotification(bool isDark) async {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Sending test notification...')),
-    );
-
-    // 1. Permission state — the #1 silent killer on Android 13+.
-    PermissionStatus status;
-    try {
-      status = await Permission.notification.status;
-    } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Could not read permission: $e')),
-      );
-      return;
-    }
-
-    if (!status.isGranted) {
-      // One more polite ask before giving up (some builds allow re-asking).
-      if (!status.isPermanentlyDenied) {
-        status = await Permission.notification.request();
-      }
-      if (!status.isGranted) {
-        if (!mounted) return;
-        await showDialog<void>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            backgroundColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: const Text('Notifications are blocked'),
-            content: Text(
-              'MacroSnap needs notification permission to send reminders. '
-              'Please enable it in system Settings${status.isPermanentlyDenied ? ' (it was denied before, so the system no longer shows the dialog)' : ''}.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Later'),
-              ),
-              FilledButton(
-                onPressed: () async {
-                  Navigator.pop(ctx);
-                  await openAppSettings();
-                },
-                child: const Text('Open Settings'),
-              ),
-            ],
-          ),
-        );
-        return;
-      }
-    }
-
-    // 2. Plugin init + immediate show — surfaces any plugin error directly.
-    try {
-      await NotificationService().sendTestNotification();
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text(
-            '✅ Test notification sent! Check your notification shade.',
-          ),
-        ),
-      );
-    } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('❌ Notification failed: $e'),
-          duration: const Duration(seconds: 5),
-        ),
-      );
-    }
-  }
-
-  /// Shows every reminder currently scheduled on the device (id, title,
-  /// payload) so "habit reminders not working" can be told apart from
-  /// "habit reminders were never scheduled". Habit reminders carry the
-  /// habit id as payload.
-  Future<void> _viewScheduledReminders(bool isDark) async {
-    if (!mounted) return;
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Reading scheduled reminders...')),
-    );
-    final list = await NotificationService().pendingReminderSummary();
-    if (!mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Scheduled Reminders'),
-        content: SingleChildScrollView(
-          child: Text(
-            list.isEmpty
-                ? 'Nothing scheduled. Habit reminders were never created — check that a habit has reminders enabled and the app restarted since.'
-                : list.join('\n'),
-            style: const TextStyle(fontSize: 13),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _sendFeedback(bool isDark) async {
@@ -546,28 +430,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'App Version',
                       _packageVersion,
                       null,
-                      isDark,
-                    ),
-                  ),
-                  const Divider(height: 24),
-                  AnimatedEntrance(
-                    delayMs: 240,
-                    child: _settingTile(
-                      Icons.notifications_active_outlined,
-                      'Test Notification',
-                      'Verify reminders work on this phone',
-                      () => _testNotification(isDark),
-                      isDark,
-                    ),
-                  ),
-                  const Divider(height: 24),
-                  AnimatedEntrance(
-                    delayMs: 245,
-                    child: _settingTile(
-                      Icons.schedule_rounded,
-                      'Scheduled Reminders',
-                      'See every alarm registered on this phone',
-                      () => _viewScheduledReminders(isDark),
                       isDark,
                     ),
                   ),
