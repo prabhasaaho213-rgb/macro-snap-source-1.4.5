@@ -31,6 +31,7 @@ class HabitReminderService {
       channelDescription: 'Reminders for your habits',
       importance: Importance.high,
       priority: Priority.high,
+      icon: '@drawable/ic_notification',
       actions: [
         AndroidNotificationAction(snoozeAction, 'Snooze 10 min'),
         AndroidNotificationAction(doneAction, 'Mark done'),
