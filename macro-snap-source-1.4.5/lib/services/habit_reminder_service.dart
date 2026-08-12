@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui' show Color;
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,7 +32,9 @@ class HabitReminderService {
       channelDescription: 'Reminders for your habits',
       importance: Importance.high,
       priority: Priority.high,
+      color: Color(0xFF059669),
       icon: '@drawable/ic_notification',
+      largeIcon: DrawableResourceAndroidBitmap('@drawable/ic_notification_large'),
       actions: [
         AndroidNotificationAction(snoozeAction, 'Snooze 10 min'),
         AndroidNotificationAction(doneAction, 'Mark done'),
@@ -48,8 +51,8 @@ class HabitReminderService {
   ) async {
     await notifications.zonedSchedule(
       notificationId(h),
-      'Habit reminder',
       'Time for ${h.name} ${h.emoji}',
+      'Tap to mark this habit done and keep your streak going.',
       when,
       _details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -89,8 +92,8 @@ class HabitReminderService {
     final when = tz.TZDateTime.now(tz.local).add(const Duration(minutes: 10));
     await notifications.zonedSchedule(
       snoozeId(h),
-      'Habit reminder',
       'Time for ${h.name} ${h.emoji}',
+      'Tap to mark this habit done and keep your streak going.',
       when,
       _details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,

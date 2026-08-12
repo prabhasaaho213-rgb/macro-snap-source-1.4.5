@@ -1,3 +1,5 @@
+import 'dart:ui' show Color;
+
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -131,7 +133,9 @@ class NotificationService {
           channelDescription: 'Payment & subscription notifications',
           importance: Importance.high,
           priority: Priority.high,
+          color: Color(0xFF059669),
           icon: '@drawable/ic_notification',
+          largeIcon: DrawableResourceAndroidBitmap('@drawable/ic_notification_large'),
         ),
         iOS: DarwinNotificationDetails(),
       ),
@@ -146,8 +150,8 @@ class NotificationService {
     if (!_initialized) await init();
     await _plugin.show(
       99,
-      '🔔 Test notification',
-      'If you can see this, notifications are working!',
+      'MacroSnap test notification',
+      'Notifications are working correctly.',
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'macro_snap_reminder',
@@ -155,7 +159,9 @@ class NotificationService {
           channelDescription: 'Daily reminders to log meals',
           importance: Importance.high,
           priority: Priority.high,
+          color: Color(0xFF059669),
           icon: '@drawable/ic_notification',
+          largeIcon: DrawableResourceAndroidBitmap('@drawable/ic_notification_large'),
         ),
         iOS: DarwinNotificationDetails(),
       ),
@@ -171,8 +177,8 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       4,
-      'Time to log your meals!',
-      'Snap a photo of what you ate today and track your macros.',
+      'Time to log your meals',
+      'Snap a photo of your meal to track calories and macros.',
       tz.TZDateTime.from(scheduledDate, tz.local),
       const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -181,7 +187,9 @@ class NotificationService {
           channelDescription: 'Daily reminders to log meals',
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
+          color: Color(0xFF059669),
           icon: '@drawable/ic_notification',
+          largeIcon: DrawableResourceAndroidBitmap('@drawable/ic_notification_large'),
         ),
         iOS: DarwinNotificationDetails(),
       ),
@@ -218,7 +226,9 @@ class NotificationService {
           channelDescription: 'Weekly nutrition summary notifications',
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
+          color: Color(0xFF059669),
           icon: '@drawable/ic_notification',
+          largeIcon: DrawableResourceAndroidBitmap('@drawable/ic_notification_large'),
         ),
         iOS: DarwinNotificationDetails(),
       ),
@@ -247,7 +257,9 @@ class NotificationService {
           channelDescription: 'Subscription expiry reminders',
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
+          color: Color(0xFF059669),
           icon: '@drawable/ic_notification',
+          largeIcon: DrawableResourceAndroidBitmap('@drawable/ic_notification_large'),
         ),
         iOS: DarwinNotificationDetails(),
       ),
@@ -276,7 +288,9 @@ class NotificationService {
           channelDescription: 'Subscription expiry reminders',
           importance: Importance.high,
           priority: Priority.high,
+          color: Color(0xFF059669),
           icon: '@drawable/ic_notification',
+          largeIcon: DrawableResourceAndroidBitmap('@drawable/ic_notification_large'),
         ),
         iOS: DarwinNotificationDetails(),
       ),
@@ -305,8 +319,8 @@ class NotificationService {
 
     await _plugin.zonedSchedule(
       6,
-      "Don't break your chain! 🔥",
-      'You haven\'t logged a meal today. Snap a photo to keep your streak alive.',
+      'Keep your streak alive',
+      'You haven\'t logged a meal today. Snap a photo to keep your streak going.',
       tz.TZDateTime.from(reminderTime, tz.local),
       const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -315,7 +329,9 @@ class NotificationService {
           channelDescription: 'Daily reminders to log meals',
           importance: Importance.high,
           priority: Priority.high,
+          color: Color(0xFF059669),
           icon: '@drawable/ic_notification',
+          largeIcon: DrawableResourceAndroidBitmap('@drawable/ic_notification_large'),
         ),
         iOS: DarwinNotificationDetails(),
       ),

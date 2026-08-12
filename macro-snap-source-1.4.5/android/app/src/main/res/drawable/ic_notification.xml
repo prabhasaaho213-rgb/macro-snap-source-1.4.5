@@ -1,14 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Dedicated notification small icon. Notification icons must be a plain
-     white silhouette; using the adaptive launcher icon here fails silently
-     on several Android versions, so notifications never appear. -->
+<!-- MacroSnap brand small icon: white "M" monogram with nutrition-leaf
+     accent. Small icons are alpha-only (white silhouette), so the mark
+     mirrors the launcher/playstore logo for instant brand recognition. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24"
+    android:viewportWidth="108"
+    android:viewportHeight="108"
     android:tint="#FFFFFF">
+    <!-- Stylized "M" letter (white silhouette) -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M12,22c1.1,0 2,-0.9 2,-2h-4c0,1.1 0.9,2 2,2zM18,16v-5c0,-3.07 -1.63,-5.64 -4.5,-6.32L13.5,4c0,-0.83 -0.67,-1.5 -1.5,-1.5s-1.5,0.67 -1.5,1.5v0.68C7.64,5.36 6,7.92 6,11v5l-2,2v1h16v-1l-2,-2z"/>
+        android:pathData="M38,68L38,40L46,50L54,40L54,68L49,68L49,50L46,54L43,50L43,68Z"/>
+    <!-- Leaf accent ring -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.45"
+        android:pathData="M62,42m-8,0a8,8 0,1 1,16 0a8,8 0,1 1,-16 0"/>
+    <!-- Leaf accent dot -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M62,38m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0"/>
 </vector>
