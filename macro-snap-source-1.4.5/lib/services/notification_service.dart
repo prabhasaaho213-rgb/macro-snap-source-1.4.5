@@ -367,6 +367,22 @@ class NotificationService {
     }
   }
 
+  /// Returns a human-readable list of every reminder currently scheduled on
+  /// the device (id, title, next fire time). Used by the Settings diagnostic
+  /// so "habit reminders not working" can be told apart from "habit
+  /// reminders were never scheduled".
+  Future<List<String>> pendingReminderSummary() async {
+    try {
+      final requests = await _plugin.pendingNotificationRequests();
+      requests.sort((a, b) => a.id.compareTo(b.id));
+      return requests
+          .map((r) => '#${r.id} ${r.title ?? ''}${r.payload == null || r.payload!.isEmpty ? '' : ' (payload: ${r.payload})'}')
+          .toList();
+    } catch (e) {
+      return ['Could not read pending requests: $e'];
+    }
+  }
+
   /// Full startup safety net: re-create every reminder so a lost alarm
   /// (reinstall, app update, force-stop) can never silently disable
   /// notifications. Each reminder restores independently — one failure

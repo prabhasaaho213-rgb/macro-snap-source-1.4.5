@@ -62,7 +62,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   bool get _isGuest => _phone.isEmpty || _phone.startsWith('guest_');
   String _phone = '';
-  String get _packageVersion => '1.4.57';
+  String get _packageVersion => '1.4.58';
 
   Future<void> _upgradeFromGuest() async {
     final phone = await Navigator.push<String>(
@@ -212,6 +212,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       );
     }
+  }
+
+  /// Shows every reminder currently scheduled on the device (id, title,
+  /// payload) so "habit reminders not working" can be told apart from
+  /// "habit reminders were never scheduled". Habit reminders carry the
+  /// habit id as payload.
+  Future<void> _viewScheduledReminders(bool isDark) async {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Reading scheduled reminders...')),
+    );
+    final list = await NotificationService().pendingReminderSummary();
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? MacroSnapTheme.cardDark : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Scheduled Reminders'),
+        content: SingleChildScrollView(
+          child: Text(
+            list.isEmpty
+                ? 'Nothing scheduled. Habit reminders were never created — check that a habit has reminders enabled and the app restarted since.'
+                : list.join('\n'),
+            style: const TextStyle(fontSize: 13),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _sendFeedback(bool isDark) async {
@@ -521,6 +557,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'Test Notification',
                       'Verify reminders work on this phone',
                       () => _testNotification(isDark),
+                      isDark,
+                    ),
+                  ),
+                  const Divider(height: 24),
+                  AnimatedEntrance(
+                    delayMs: 245,
+                    child: _settingTile(
+                      Icons.schedule_rounded,
+                      'Scheduled Reminders',
+                      'See every alarm registered on this phone',
+                      () => _viewScheduledReminders(isDark),
                       isDark,
                     ),
                   ),

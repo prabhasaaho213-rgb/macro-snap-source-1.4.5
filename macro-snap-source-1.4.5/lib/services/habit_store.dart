@@ -139,6 +139,18 @@ class HabitStore extends ChangeNotifier {
           await save(notify: true);
         }
       }
+
+      // CRITICAL: reminders for cloud-restored habits were never scheduled.
+      // restoreAllReminders() at startup only sees the LOCAL list, and the
+      // cloud merge lands afterwards — so after a reinstall / data clear /
+      // new device, every cloud habit had reminderEnabled=true but ZERO
+      // alarms behind it. Re-arm all enabled habits here (idempotent —
+      // zonedSchedule replaces by id).
+      for (final h in habits) {
+        if (h.reminderEnabled) {
+          await NotificationService().scheduleHabitReminder(h);
+        }
+      }
     } catch (_) {}
     _restoring = false;
     _cloudRestored = true;
