@@ -58,6 +58,14 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
+            // R8 runs on release builds (Flutter enables minify). Without these
+            // rules R8 strips Gson generic signatures, breaking
+            // flutter_local_notifications' scheduled-notification cache and
+            // pendingNotificationRequests (TypeToken error at runtime).
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
             ndk {
                 debugSymbolLevel = "none"
             }
