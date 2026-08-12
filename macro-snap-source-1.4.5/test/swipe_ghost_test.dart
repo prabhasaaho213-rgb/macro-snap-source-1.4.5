@@ -160,6 +160,58 @@ void main() {
             'corners');
   });
 
+  // ─── SOFT-EDGE SWIPE FIX (moving card keeps rounded corners) ──
+  // The moving card must keep its 28px rounded corners so it reads as a card
+  // mid-swipe (a flat rectangle looks like a glitch), but it must NOT paint
+  // its own border (that rode the moving edge as a lavender seam line). The
+  // reveal backgrounds must be full-bleed squares so the card's corner cutout
+  // always shows reveal color — the outer ClipRRect(28) owns the tile's
+  // rounding. These pins keep all three halves in place.
+  testWidgets('moving card keeps rounded corners, no border; reveal is square',
+      (tester) async {
+    final store = HabitStore.instance;
+    store.habits.addAll([
+      Habit(
+          id: 'v1',
+          name: 'Morning Run',
+          emoji: '🏃',
+          colorValue: 0xFFFF007F,
+          frequency: 'Daily'),
+    ]);
+    await pumpHabitsTab(tester);
+
+    final dismissible =
+        tester.widget<Dismissible>(find.byType(Dismissible).first);
+
+    // 1. Reveal backgrounds are full-bleed squares — no own radius.
+    for (final bg in [
+      dismissible.background,
+      dismissible.secondaryBackground,
+    ]) {
+      final container = bg as Container;
+      final deco = container.decoration! as BoxDecoration;
+      expect(deco.borderRadius, isNull,
+          reason:
+              'reveal must be a full-bleed square — the outer ClipRRect(28) '
+              'owns the tile rounding, and a square reveal sits flush under '
+              'the card\'s moving corners');
+    }
+
+    // 2. The moving card keeps its 28px rounded corners (soft edges)...
+    final card = (dismissible.child as GestureDetector).child! as Container;
+    final cardDeco = card.decoration! as BoxDecoration;
+    expect(cardDeco.borderRadius, BorderRadius.circular(28),
+        reason:
+            'moving card must keep soft rounded corners while swiping — a '
+            'flat rectangle reads as a glitch');
+
+    // ...but paints no border (it rode the moving edge as a seam line).
+    expect(cardDeco.border, isNull,
+        reason:
+            'no border on the moving card — a card-painted border showed as '
+            'a lavender seam line between the reveal and the card');
+  });
+
   // ─── GESTURE-CONFLICT FIX (slow swipes were hijacked into reorders) ──
   testWidgets('emoji tile is NOT a reorder handle — the grip is the only one',
       (tester) async {

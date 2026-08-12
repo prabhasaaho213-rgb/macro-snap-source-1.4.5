@@ -105,6 +105,7 @@ class MacroSnapTheme {
   static BoxDecoration habitlyHeroCard(
     BuildContext context, {
     BorderRadius? borderRadius = const BorderRadius.all(Radius.circular(28)),
+    bool showBorder = true,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     if (isDark) {
@@ -115,7 +116,7 @@ class MacroSnapTheme {
           end: Alignment.bottomRight,
         ),
         borderRadius: borderRadius,
-        border: Border.all(color: const Color(0xFF353550)),
+        border: showBorder ? Border.all(color: const Color(0xFF353550)) : null,
       );
     }
     return BoxDecoration(
@@ -125,7 +126,7 @@ class MacroSnapTheme {
         end: Alignment.bottomRight,
       ),
       borderRadius: borderRadius,
-      border: Border.all(color: const Color(0xFFC8BEFF)),
+      border: showBorder ? Border.all(color: const Color(0xFFC8BEFF)) : null,
     );
   }
 
@@ -137,11 +138,16 @@ class MacroSnapTheme {
   static BoxDecoration habitlyCard(
     BuildContext context, {
     BorderRadius? borderRadius = const BorderRadius.all(Radius.circular(28)),
+    bool showBorder = true,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     if (isDark) {
       // Identical to the hero card → uniform dark gradient cards everywhere.
-      return habitlyHeroCard(context, borderRadius: borderRadius);
+      return habitlyHeroCard(
+        context,
+        borderRadius: borderRadius,
+        showBorder: showBorder,
+      );
     }
     return BoxDecoration(
       gradient: const LinearGradient(
@@ -150,7 +156,7 @@ class MacroSnapTheme {
         end: Alignment.bottomRight,
       ),
       borderRadius: borderRadius,
-      border: Border.all(color: const Color(0xFFC8BEFF)),
+      border: showBorder ? Border.all(color: const Color(0xFFC8BEFF)) : null,
     );
   }
 
