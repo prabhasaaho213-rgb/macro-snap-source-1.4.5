@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../core/theme.dart';
 import '../models/diet_profile.dart';
 import '../widgets/glass_card.dart';
@@ -47,6 +48,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _load() async {
     await SubscriptionService.instance.load();
+    // Real installed version from the platform (zero drift with pubspec);
+    // falls back to the constant when the platform channel is unavailable.
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (info.version.isNotEmpty) _packageVersion = info.version;
+    } catch (_) {}
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _name = prefs.getString('name') ?? 'User';
@@ -62,7 +69,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   bool get _isGuest => _phone.isEmpty || _phone.startsWith('guest_');
   String _phone = '';
-  String get _packageVersion => '1.4.65';
+  String _packageVersion = '1.4.65';
 
   Future<void> _upgradeFromGuest() async {
     final phone = await Navigator.push<String>(

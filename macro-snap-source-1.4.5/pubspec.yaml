@@ -33,6 +33,7 @@ dependencies:
   jni: 1.0.2
   cloud_firestore: ^6.8.0
   flutter_timezone: ^5.1.0
+  package_info_plus: ^9.0.1
 
 dev_dependencies:
   flutter_test:
