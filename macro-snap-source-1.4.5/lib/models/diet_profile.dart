@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
+import '../services/account_partition.dart';
 
 enum Goal { loseWeight, maintain, gainMuscle }
 
@@ -132,9 +134,25 @@ class DietPlanService {
   DietProfile? get profile => _profile;
 
   Future<void> load() async {
+    // A stale in-memory profile from another account must never linger when
+    // this account has no profile file of its own.
+    _profile = null;
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/diet_profile.json');
+      final prefs = await SharedPreferences.getInstance();
+      final suffix = AccountPartition.suffix(
+        AccountPartition.activeFromPrefs(prefs),
+      );
+      final file = File('${dir.path}/${AccountPartition.key('diet_profile', suffix)}.json');
+      if (!await file.exists() && suffix.isNotEmpty) {
+        // One-shot migration: attribute the legacy pre-partitioning file to
+        // this account; the move deletes the legacy file so a later
+        // different account can never inherit it.
+        final legacy = File('${dir.path}/diet_profile.json');
+        if (await legacy.exists()) {
+          await legacy.rename(file.path);
+        }
+      }
       if (await file.exists()) {
         _profile = DietProfile.fromJson(jsonDecode(await file.readAsString()));
       }
@@ -145,7 +163,11 @@ class DietPlanService {
     _profile = profile;
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/diet_profile.json');
+      final prefs = await SharedPreferences.getInstance();
+      final suffix = AccountPartition.suffix(
+        AccountPartition.activeFromPrefs(prefs),
+      );
+      final file = File('${dir.path}/${AccountPartition.key('diet_profile', suffix)}.json');
       await file.writeAsString(jsonEncode(profile.toJson()));
     } catch (_) {}
   }

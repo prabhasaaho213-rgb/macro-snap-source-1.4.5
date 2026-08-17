@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/habit.dart';
+import 'account_partition.dart';
 import 'meal_sync_service.dart';
 import 'subscription_service.dart';
 
@@ -43,12 +44,14 @@ class HabitStore extends ChangeNotifier {
   Future<void> load() async {
     if (_loaded) return;
     final p = await SharedPreferences.getInstance();
+    final suffix = AccountPartition.suffix(AccountPartition.activeFromPrefs(p));
+    await _migrateLegacy(p, suffix);
 
     // Habits — parsed defensively: a corrupted JSON string must reset the
     // list, never crash the app at launch (a throw here used to kill main()
     // before runApp(), leaving the app unable to open).
     try {
-      final raw = p.getString('habits');
+      final raw = p.getString(AccountPartition.key('habits', suffix));
       if (raw != null && raw.isNotEmpty) {
         final decoded = jsonDecode(raw);
         if (decoded is List) {
@@ -65,7 +68,8 @@ class HabitStore extends ChangeNotifier {
 
     // Water log — same defensive parsing.
     try {
-      final waterRaw = p.getString('water_log');
+      final waterRaw =
+          p.getString(AccountPartition.key('water_log', suffix));
       if (waterRaw != null && waterRaw.isNotEmpty) {
         final decoded = jsonDecode(waterRaw);
         if (decoded is Map) {
@@ -78,13 +82,43 @@ class HabitStore extends ChangeNotifier {
     } catch (_) {
       _waterLog.clear();
     }
-    waterGoal = p.getInt('water_goal') ?? 8;
+    waterGoal = p.getInt(AccountPartition.key('water_goal', suffix)) ?? 8;
 
     _loaded = true;
 
     // Restore from cloud backup in the background so a slow or sleeping
     // backend never blocks the app from opening.
     unawaited(_restoreFromCloud());
+  }
+
+  /// One-shot migration of the legacy (pre-partitioning) prefs keys into the
+  /// active account's partition. A signed-in user who updates the app keeps
+  /// their existing habits/water; the legacy keys are then removed so a
+  /// different account signing in later can never inherit them. Guests (no
+  /// account) already own the legacy keys and need no migration.
+  static Future<void> _migrateLegacy(
+    SharedPreferences p,
+    String suffix,
+  ) async {
+    if (suffix.isEmpty) return;
+    final hasPartition = p.containsKey('habits_$suffix') ||
+        p.containsKey('water_log_$suffix') ||
+        p.containsKey('water_goal_$suffix');
+    if (hasPartition) return;
+    final legacyHabits = p.getString('habits');
+    if (legacyHabits != null && legacyHabits.isNotEmpty) {
+      await p.setString('habits_$suffix', legacyHabits);
+    }
+    final legacyWater = p.getString('water_log');
+    if (legacyWater != null && legacyWater.isNotEmpty) {
+      await p.setString('water_log_$suffix', legacyWater);
+    }
+    if (p.containsKey('water_goal')) {
+      await p.setInt('water_goal_$suffix', p.getInt('water_goal') ?? 8);
+    }
+    await p.remove('habits');
+    await p.remove('water_log');
+    await p.remove('water_goal');
   }
 
   /// Force a full reload from local + cloud (used after login/logout so
@@ -164,9 +198,16 @@ class HabitStore extends ChangeNotifier {
 
   Future<void> save({bool notify = true}) async {
     final p = await SharedPreferences.getInstance();
-    await p.setString('habits', jsonEncode(habits.map((h) => h.toJson()).toList()));
-    await p.setString('water_log', jsonEncode(_waterLog));
-    await p.setInt('water_goal', waterGoal);
+    final suffix = AccountPartition.suffix(AccountPartition.activeFromPrefs(p));
+    await p.setString(
+      AccountPartition.key('habits', suffix),
+      jsonEncode(habits.map((h) => h.toJson()).toList()),
+    );
+    await p.setString(
+      AccountPartition.key('water_log', suffix),
+      jsonEncode(_waterLog),
+    );
+    await p.setInt(AccountPartition.key('water_goal', suffix), waterGoal);
     if (notify) notifyListeners();
   }
 

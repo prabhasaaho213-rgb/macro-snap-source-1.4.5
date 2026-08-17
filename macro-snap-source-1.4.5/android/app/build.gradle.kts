@@ -58,10 +58,16 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
-            // R8 runs on release builds (Flutter enables minify). Without these
-            // rules R8 strips Gson generic signatures, breaking
-            // flutter_local_notifications' scheduled-notification cache and
-            // pendingNotificationRequests (TypeToken error at runtime).
+            // R8 code + resource shrinking, declared explicitly (Play Console
+            // flags "Optimized resource shrinking isn't enabled" otherwise).
+            // With AGP 9 the optimized resource-shrinking pipeline
+            // (android.r8.optimizedResourceShrinking) is standard whenever the
+            // resource shrinker is on. Without these rules R8 strips Gson
+            // generic signatures, breaking flutter_local_notifications'
+            // scheduled-notification cache and pendingNotificationRequests
+            // (TypeToken error at runtime) — covered in proguard-rules.pro.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",

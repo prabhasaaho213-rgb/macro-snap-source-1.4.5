@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 import '../models/habit.dart';
+import 'account_partition.dart';
 import 'notification_branding.dart';
 
 class HabitReminderService {
@@ -179,7 +180,13 @@ Future<void> handleHabitReminderActionBackground(
       ),
     );
 
-    final raw = prefs.getString('habits');
+    // Partition by the active account (same rule as HabitStore) so a
+    // notification action can never read or write another account's habits.
+    final habitsKey =
+        AccountPartition.key('habits', AccountPartition.suffix(
+              AccountPartition.activeFromPrefs(prefs),
+            ));
+    final raw = prefs.getString(habitsKey);
     if (raw == null || raw.isEmpty) {
       debugPrint('⚠️ Notification action: no habits saved to act on');
       return;
@@ -211,7 +218,7 @@ Future<void> handleHabitReminderActionBackground(
       }
       habits[index] = habit;
       await prefs.setString(
-        'habits',
+        habitsKey,
         jsonEncode(habits.map((h) => h.toJson()).toList()),
       );
       // Mark done from the shade: clear the snoozed one-off AND push today's

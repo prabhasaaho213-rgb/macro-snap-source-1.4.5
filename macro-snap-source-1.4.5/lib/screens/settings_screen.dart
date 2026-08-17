@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/theme.dart';
+import '../models/diet_profile.dart';
 import '../widgets/glass_card.dart';
 import '../widgets/animations.dart';
 import '../services/meal_store.dart';
@@ -60,7 +62,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   bool get _isGuest => _phone.isEmpty || _phone.startsWith('guest_');
   String _phone = '';
-  String get _packageVersion => '1.4.63';
+  String get _packageVersion => '1.4.64';
 
   Future<void> _upgradeFromGuest() async {
     final phone = await Navigator.push<String>(
@@ -125,6 +127,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await prefs.remove('photo_url');
     await prefs.remove('last_sync');
     await prefs.remove('subscription_offered');
+    // Clear the in-memory stores so the previous account's data can never
+    // surface for the next user (or a Mark-done notification action during
+    // the logged-out window). Partitioned local data stays on disk for the
+    // account's next login; the cloud restores on login.
+    unawaited(MealStore.instance.reload());
+    unawaited(HabitStore.instance.reload());
+    unawaited(DietPlanService.instance.load());
     if (context.mounted) {
       Navigator.pushAndRemoveUntil(
         context,

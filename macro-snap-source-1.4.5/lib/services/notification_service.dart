@@ -10,6 +10,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/app_nav.dart';
 import '../models/habit.dart';
+import 'account_partition.dart';
 import 'habit_reminder_service.dart';
 import 'habit_store.dart';
 import 'meal_store.dart';
@@ -270,7 +271,9 @@ class NotificationService with WidgetsBindingObserver {
   Future<Habit?> _findHabitFromPrefs(String habitId) async {
     try {
       final p = await SharedPreferences.getInstance();
-      final raw = p.getString('habits');
+      final suffix =
+          AccountPartition.suffix(AccountPartition.activeFromPrefs(p));
+      final raw = p.getString(AccountPartition.key('habits', suffix));
       if (raw == null || raw.isEmpty) return null;
       final decoded = jsonDecode(raw);
       if (decoded is! List) return null;
@@ -338,7 +341,10 @@ class NotificationService with WidgetsBindingObserver {
   /// store, whose `save()` serializes its own (empty) list.
   Future<void> _persistCompletionToPrefs(Habit habit) async {
     final p = await SharedPreferences.getInstance();
-    final raw = p.getString('habits');
+    final suffix =
+        AccountPartition.suffix(AccountPartition.activeFromPrefs(p));
+    final habitsKey = AccountPartition.key('habits', suffix);
+    final raw = p.getString(habitsKey);
     if (raw == null || raw.isEmpty) return;
     final decoded = jsonDecode(raw);
     if (decoded is! List) return;
@@ -356,7 +362,7 @@ class NotificationService with WidgetsBindingObserver {
     }
     habits[index] = saved;
     await p.setString(
-      'habits',
+      habitsKey,
       jsonEncode(habits.map((h) => h.toJson()).toList()),
     );
   }
