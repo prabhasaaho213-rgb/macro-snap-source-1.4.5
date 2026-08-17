@@ -11,7 +11,7 @@ void main() {
     // Fresh in-memory prefs for every test.
     SharedPreferences.setMockInitialValues({});
     // Reset the singleton so state never bleeds between tests.
-    await SubscriptionService.instance.cancel();
+    await SubscriptionService.instance.load();
   });
 
   test(

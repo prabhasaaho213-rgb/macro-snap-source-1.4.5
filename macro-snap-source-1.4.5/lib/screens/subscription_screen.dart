@@ -404,8 +404,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         _subscribed && _subscribedDate != null
                             ? (_isAdmin
                                   ? 'Lifetime \u2022 Free forever'
-                                  : 'Auto-renews monthly \u2022 Cancel anytime')
-                            : 'Auto-renews ₹29/month \u2022 Cancel anytime',
+                                  : 'Auto-renews monthly')
+                            : 'Auto-renews ₹29/month',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 13,
@@ -528,7 +528,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Secure payment • Auto-renews ₹29/month • Cancel anytime',
+                          'Secure payment • Auto-renews ₹29/month',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 12,
@@ -565,36 +565,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     ),
                   ),
                 ),
-                if (!_isAdmin) ...[
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: () async {
-                      // Cancelling the subscription notifies SubscriptionService
-                      // listeners; NotificationService applies the free-user
-                      // reminder plan (cancel only subscriber-gated ids — never
-                      // cancelAll, which would wipe the free daily/streak nudge
-                      // and every habit reminder too).
-                      await SubscriptionService.instance.cancel();
-                      setState(() {
-                        _subscribed = false;
-                        _subscribedDate = null;
-                      });
-                    },
-                    child: const Text(
-                      'Cancel Subscription',
-                      style: TextStyle(color: MacroSnapTheme.neonPink),
-                    ),
-                  ),
-                ],
               ],
-              const SizedBox(height: 16),
-              Text(
-                'Cancel anytime. No questions asked.',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: MacroSnapTheme.textTertiary(context),
-                ),
-              ),
               const SizedBox(height: 24),
               GestureDetector(
                 onTap: () => Navigator.push(

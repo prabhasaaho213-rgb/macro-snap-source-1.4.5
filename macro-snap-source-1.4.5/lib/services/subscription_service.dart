@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
@@ -14,7 +13,7 @@ import 'sync_status_service.dart';
 /// Replaces ad-hoc `prefs.getBool('subscribed')` reads scattered across
 /// screens and services. Screens read [isSubscribed] / [subscribedAt] and can
 /// listen for changes so an activation (Razorpay, UPI verification, server
-/// poll) or cancellation immediately updates every open screen.
+/// poll) immediately updates every open screen.
 class SubscriptionService extends ChangeNotifier {
   SubscriptionService._();
   static final SubscriptionService instance = SubscriptionService._();
@@ -186,40 +185,4 @@ class SubscriptionService extends ChangeNotifier {
     } catch (_) {}
   }
 
-  /// Cancels the subscription: stops the recurring Razorpay charge on the
-  /// server, clears the flag + timestamp and notifies.
-  ///
-  /// The server call is fire-and-forget — the local downgrade is instant and
-  /// never blocked by the network (offline cancel still works, and the
-  /// recurring charge stop is retried on the next cancel / handled by the
-  /// subscription.cancelled webhook).
-  Future<void> cancel() async {
-    unawaited(_notifyServerCancellation());
-    final p = await SharedPreferences.getInstance();
-    await p.setBool(_subscribedKey, false);
-    await p.remove(_subscribedAtKey);
-    _subscribed = false;
-    _subscribedAt = null;
-    notifyListeners();
-  }
-
-  /// Best-effort: tell the backend to cancel the Razorpay recurring plan so
-  /// future monthly auto-charges stop. Never throws — a failure only logs;
-  /// the local downgrade has already happened.
-  Future<void> _notifyServerCancellation() async {
-    try {
-      final p = await SharedPreferences.getInstance();
-      final phone = p.getString('phone');
-      if (phone == null || phone.isEmpty) return;
-      await http
-          .post(
-            Uri.parse('${GeminiService.serverUrl}/payment/cancel-subscription'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'phone': phone}),
-          )
-          .timeout(const Duration(seconds: 8));
-    } catch (e) {
-      debugPrint('❌ cancel-subscription call failed: $e');
-    }
-  }
 }
