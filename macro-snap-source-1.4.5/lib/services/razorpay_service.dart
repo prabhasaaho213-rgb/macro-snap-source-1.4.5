@@ -1,8 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:razorpay_flutter/razorpay_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'gemini_service.dart';
 import 'subscription_service.dart';
 
@@ -27,10 +28,18 @@ class RazorpayService {
     _initialized = false;
   }
 
-  /// Start the Razorpay checkout flow for the ₹29/month RECURRING
-  /// subscription. Creates a Razorpay Subscription (auto-charges every
-  /// month) instead of a one-time order, and opens checkout with the
-  /// returned subscription_id so Razorpay handles renewals.
+  /// Start the payment flow for the ₹29/month RECURRING subscription.
+  ///
+  /// Creates the Razorpay Subscription on the backend, then opens Razorpay's
+  /// HOSTED subscription page (the /v1/l/subscriptions/{id} URL) in the
+  /// system browser instead of the SDK checkout.
+  ///
+  /// WHY: the razorpay_flutter SDK checkout throws Razorpay error VC
+  /// ("INCORRECT RECURRENCE PATTERN RULE") on this plan even though the
+  /// plan/subscription are valid — the hosted page is proven to work
+  /// (razorpay/razorpay-flutter#396, open since 2024). The subscription is
+  /// auto-charged monthly by Razorpay either way; the backend webhook
+  /// (subscription.charged) activates Pro in Firestore, which we poll for.
   static Future<void> startCheckout({
     required String phone,
     required String name,
@@ -53,36 +62,58 @@ class RazorpayService {
       }
 
       final subData = jsonDecode(subResponse.body);
-      _lastSubscriptionId = subData['subscription_id'] as String;
-      final razorpayKey = subData['razorpay_key'] as String;
+      final subscriptionId = subData['subscription_id'] as String;
+      _lastSubscriptionId = subscriptionId;
 
-      // Get stored user info for receipt
-      final prefs = await SharedPreferences.getInstance();
-      final userName = prefs.getString('name') ?? name;
-      final userEmail = prefs.getString('email') ?? email;
+      // 2. Open the hosted subscription payment page in the system browser.
+      final uri = Uri.parse(
+        'https://api.razorpay.com/v1/l/subscriptions/$subscriptionId',
+      );
+      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!opened) {
+        throw Exception('Could not open the payment page');
+      }
 
-      // 2. Open Razorpay checkout with subscription_id (no order_id) so the
-      //    customer is enrolled in the recurring plan.
-      final options = {
-        'key': razorpayKey,
-        'subscription_id': _lastSubscriptionId,
-        'name': 'MacroSnap',
-        'description': 'Pro Subscription (₹29/month)',
-        'prefill': {
-          'contact': phone,
-          'name': userName,
-          'email': userEmail,
-        },
-        'theme': {
-          'color': '#10B981', // Emerald green matching MacroSnap theme
-        },
-      };
-
-      _razorpay.open(options);
+      // 3. Watch the backend for activation: the subscription.charged
+      //    webhook flips users/{uid}.subscribed in Firestore, and
+      //    /subscription/status reads Firestore. Fire the success callback
+      //    when Pro is live so the screen refreshes + shows the celebration.
+      unawaited(_pollForActivation(phone));
     } catch (e) {
       _lastSubscriptionId = null;
       rethrow;
     }
+  }
+
+  /// Polls /subscription/status (Firestore-backed) until the user is
+  /// subscribed, then triggers the success callback. Silently gives up after
+  /// the timeout — the webhook still activates Pro in the background, so a
+  /// slow webhook only delays the on-screen confirmation.
+  static Future<void> _pollForActivation(
+    String identifier, {
+    Duration timeout = const Duration(minutes: 3),
+  }) async {
+    final deadline = DateTime.now().add(timeout);
+    try {
+      while (DateTime.now().isBefore(deadline)) {
+        final resp = await http.get(Uri.parse(
+          '${GeminiService.serverUrl}/subscription/status'
+          '?phone=${Uri.encodeQueryComponent(identifier)}',
+        ));
+        if (resp.statusCode == 200) {
+          final data = jsonDecode(resp.body);
+          if (data is Map && data['subscribed'] == true) {
+            _lastSubscriptionId = null;
+            if (_onSuccessCallback != null) _onSuccessCallback!();
+            return;
+          }
+        }
+        await Future.delayed(const Duration(seconds: 4));
+      }
+    } catch (_) {
+      // Network hiccup while polling — the webhook still activates Pro.
+    }
+    _lastSubscriptionId = null;
   }
 
   /// Handle successful payment from Razorpay.

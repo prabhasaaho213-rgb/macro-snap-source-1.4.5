@@ -62,7 +62,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   bool get _isGuest => _phone.isEmpty || _phone.startsWith('guest_');
   String _phone = '';
-  String get _packageVersion => '1.4.64';
+  String get _packageVersion => '1.4.65';
 
   Future<void> _upgradeFromGuest() async {
     final phone = await Navigator.push<String>(
