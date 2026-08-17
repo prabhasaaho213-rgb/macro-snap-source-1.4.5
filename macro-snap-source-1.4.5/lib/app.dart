@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/app_nav.dart';
 import 'core/theme.dart';
+import 'navigation/route_observer.dart';
 import 'screens/main_shell.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/phone_login_screen.dart';
@@ -88,6 +89,7 @@ class _MacroSnapAppState extends State<MacroSnapApp> {
       title: 'MacroSnap',
       debugShowCheckedModeBanner: false,
       navigatorKey: appNavigatorKey,
+      navigatorObservers: [routeObserver],
       theme: MacroSnapTheme.light,
       darkTheme: MacroSnapTheme.dark,
       themeMode: _themeMode,

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/theme.dart';
+import '../navigation/route_observer.dart';
 import '../services/meal_store.dart';
 import '../models/meal_record.dart';
 import '../services/scan_gate.dart';
@@ -25,7 +26,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, RouteAware {
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
@@ -48,6 +49,30 @@ class _HomeScreenState extends State<HomeScreen>
     ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     MealStore.instance.changeNotifier.addListener(_onDataChanged);
     _loadAll();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didPopNext() {
+    // A route pushed on top (Settings, etc.) was popped — re-read the name
+    // so edits made there appear on Home immediately.
+    _refreshName();
+  }
+
+  Future<void> _refreshName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final name = prefs.getString('name') ?? '';
+    if (mounted && name != _name) {
+      setState(() => _name = name);
+    }
   }
 
   void _onDataChanged() {
@@ -81,6 +106,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     MealStore.instance.changeNotifier.removeListener(_onDataChanged);
     _animController.stop();
     _animController.dispose();
