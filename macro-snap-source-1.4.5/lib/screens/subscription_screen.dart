@@ -222,10 +222,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           _activateFromServer();
         }
       });
+      // Pass the identity the user already logged in with so Razorpay's
+      // hosted page prefills it (the email must never be re-typed).
+      final p = await SharedPreferences.getInstance();
       await RazorpayService.startCheckout(
         phone: _phone!,
-        name: 'MacroSnap User',
-        email: '',
+        name: p.getString('name') ?? '',
+        email: p.getString('email') ?? '',
       );
     } catch (e) {
       _showError('Could not start payment: $e');
