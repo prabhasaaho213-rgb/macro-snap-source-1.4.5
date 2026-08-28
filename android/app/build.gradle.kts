@@ -34,7 +34,7 @@ android {
         }
     }
 
-    ndkVersion = "27.0.12077973"
+    // Removed ndkVersion — use Flutter's bundled NDK
 
     defaultConfig {
         applicationId = "com.macrosnap.macro_snap"
@@ -104,4 +104,12 @@ dependencies {
 
 flutter {
     source = "../.."
+}
+
+// Skip native debug symbol stripping in CI (fixes AAB build failure)
+// when the NDK strip tool is not available.
+tasks.configureEach {
+    if (name.contains("stripDebugSymbols") || name.contains("stripReleaseSymbols")) {
+        enabled = false
+    }
 }
