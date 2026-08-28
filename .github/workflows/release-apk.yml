@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,8 +32,15 @@ jobs:
         run: |
           mv build/app/outputs/flutter-apk/app-debug.apk macro-snap-${{ github.ref_name }}-debug.apk
 
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macro-snap-${{ github.ref_name }}-debug
+          path: macro-snap-${{ github.ref_name }}-debug.apk
+          retention-days: 30
+
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: macro-snap-${{ github.ref_name }}-debug.apk
           draft: false
