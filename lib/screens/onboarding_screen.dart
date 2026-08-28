@@ -210,7 +210,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       case 5: return _buildHeight(textColor, subText, isDark);
       case 6: return _buildGoal(textColor, subText, isDark);
       case 7: return _buildActivity(textColor, subText, isDark);
-      return const SizedBox();
+      default: return const SizedBox();
     }
   }
 
@@ -294,15 +294,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       textColor,
       Row(
         children: [
-          Expanded(child: _genderOption('👨', 'Male', Gender.male, isDark)),
+          Expanded(child: _genderOption('👨', 'Male', Gender.male, isDark, textColor)),
           const SizedBox(width: 16),
-          Expanded(child: _genderOption('👩', 'Female', Gender.female, isDark)),
+          Expanded(child: _genderOption('👩', 'Female', Gender.female, isDark, textColor)),
         ],
       ),
     );
   }
 
-  Widget _genderOption(String emoji, String label, Gender value, bool isDark) {
+  Widget _genderOption(String emoji, String label, Gender value, bool isDark, Color textColor) {
     final selected = _gender == value;
     return GestureDetector(
       onTap: () => setState(() => _gender = value),
@@ -386,7 +386,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             value: display.round(),
             min: 30,
             max: 250,
-            onMinus: () => setState(() => _weight = _isKg ? (_weight > 30 ? _weight - 0.5 : 30) : (_weight > 66 : _weight - 1.1 : 66)),
+            onMinus: () => setState(() => _weight = _isKg ? (_weight > 30 ? _weight - 0.5 : 30) : (_weight > 66 ? _weight - 1.1 : 66)),
             onPlus: () => setState(() => _weight = _isKg ? (_weight < 250 ? _weight + 0.5 : 250) : (_weight < 551 ? _weight + 1.1 : 551)),
           ),
         ],
