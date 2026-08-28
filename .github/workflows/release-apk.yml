@@ -28,9 +28,15 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Install Android NDK
+      - name: Install Android SDK and NDK
         run: |
+          flutter doctor -v
+          # Accept all licenses
+          yes | sdkmanager --licenses 2>/dev/null || true
+          # Install the exact NDK version Flutter needs
           yes | sdkmanager --install "ndk;27.0.12077973" 2>/dev/null || true
+          # Verify NDK is installed
+          ls -la $ANDROID_HOME/ndk/27.0.12077973/toolchains/llvm/prebuilt/linux-x86_64/bin/ | head -5
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973" >> $GITHUB_ENV
 
       - name: Set up signing
@@ -49,7 +55,7 @@ jobs:
         run: flutter pub get
 
       - name: Build AAB (release)
-        run: flutter build appbundle --release --no-tree-shake-icons
+        run: flutter build appbundle --release
 
       - name: Verify AAB
         run: |

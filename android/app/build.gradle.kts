@@ -24,11 +24,6 @@ android {
     }
 
     packaging {
-        jniLibs {
-            useLegacyPackaging = true
-            // Prevents AAB build failure when strip tool is missing
-            pickFirsts += "**/*.so"
-        }
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
@@ -81,13 +76,6 @@ android {
             ndk {
                 debugSymbolLevel = "none"
             }
-            // Disable native lib stripping to prevent CI build failure
-            // when the strip tool from NDK is not found
-            packaging {
-                jniLibs {
-                    useLegacyPackaging = true
-                }
-            }
         }
     }
 }
@@ -104,12 +92,4 @@ dependencies {
 
 flutter {
     source = "../.."
-}
-
-// Skip native debug symbol stripping in CI (fixes AAB build failure)
-// when the NDK strip tool is not available.
-tasks.configureEach {
-    if (name.contains("stripDebugSymbols") || name.contains("stripReleaseSymbols")) {
-        enabled = false
-    }
 }
