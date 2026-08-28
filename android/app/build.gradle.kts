@@ -34,7 +34,7 @@ android {
         }
     }
 
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
 
     defaultConfig {
         applicationId = "com.macrosnap.macro_snap"
@@ -80,6 +80,13 @@ android {
             )
             ndk {
                 debugSymbolLevel = "none"
+            }
+            // Disable native lib stripping to prevent CI build failure
+            // when the strip tool from NDK is not found
+            packaging {
+                jniLibs {
+                    useLegacyPackaging = true
+                }
             }
         }
     }
