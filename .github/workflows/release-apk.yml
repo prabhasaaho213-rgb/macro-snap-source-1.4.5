@@ -1,10 +1,4 @@
-name: Build and Release APK/AAB
-
-# IMPORTANT: This workflow builds a RELEASE APK/AAB signed with the upload keystore.
-# Google Sign-In requires the signing certificate's SHA-1 to be registered in
-# Firebase Console. The upload-keystore.jks SHA-1 (07:ED:F9:...) is registered.
-# If you change the keystore, you MUST also update Firebase Console with the
-# new SHA-1 or Google Sign-In will break.
+name: Build and Release AAB
 
 on:
   push:
@@ -30,23 +24,19 @@ jobs:
 
       - name: Set up signing
         run: |
-          # Decode the upload keystore from the secret
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
-          # Create key.properties for the release signing config
           cat > android/key.properties << KEYEOF
           storePassword=${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword=${{ secrets.KEY_PASSWORD }}
           keyAlias=${{ secrets.KEY_ALIAS }}
           storeFile=app/upload-keystore.jks
           KEYEOF
-          # Verify the keystore exists and is valid
           ls -la android/app/upload-keystore.jks
           keytool -list -keystore android/app/upload-keystore.jks -storepass "${{ secrets.KEYSTORE_PASSWORD }}" -alias "${{ secrets.KEY_ALIAS }}" | head -5
           echo "Signing configured successfully"
 
       - name: Verify signing config
         run: |
-          # Safety check: ensure we're NOT building with debug keystore
           if ! grep -q 'storeFile' android/key.properties; then
             echo "ERROR: key.properties missing storeFile"
             exit 1
@@ -60,23 +50,8 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Build APK (release)
-        run: flutter build apk --release
-
       - name: Build AAB (release)
         run: flutter build appbundle --release
-
-      - name: Verify APK signature
-        run: |
-          APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
-          if [ -f "$APK_PATH" ]; then
-            echo "APK built successfully: $(ls -lh $APK_PATH | awk '{print $5}')"
-            # Verify it's signed with our keystore, not debug
-            jarsigner -verify -verbose -certs "$APK_PATH" 2>&1 | head -10
-          else
-            echo "ERROR: APK not found at $APK_PATH"
-            exit 1
-          fi
 
       - name: Verify AAB signature
         run: |
@@ -89,19 +64,10 @@ jobs:
             exit 1
           fi
 
-      - name: Rename files
+      - name: Rename AAB
         run: |
-          mv build/app/outputs/flutter-apk/app-release.apk macro-snap-${{ github.ref_name }}.apk
           mv build/app/outputs/bundle/release/app-release.aab macro-snap-${{ github.ref_name }}.aab
-          echo "Release APK: macro-snap-${{ github.ref_name }}.apk"
           echo "Release AAB: macro-snap-${{ github.ref_name }}.aab"
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: macro-snap-${{ github.ref_name }}
-          path: macro-snap-${{ github.ref_name }}.apk
-          retention-days: 30
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
@@ -113,9 +79,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            macro-snap-${{ github.ref_name }}.apk
-            macro-snap-${{ github.ref_name }}.aab
+          files: macro-snap-${{ github.ref_name }}.aab
           draft: false
           prerelease: false
         env:
