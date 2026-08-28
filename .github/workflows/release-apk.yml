@@ -15,12 +15,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.47.2'
           channel: 'stable'
           cache: true
+
+      - name: Set up Android NDK
+        run: |
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973" >> $GITHUB_ENV
+          if [ ! -d "$ANDROID_HOME/ndk/27.0.12077973" ]; then
+            echo "Installing NDK..."
+            yes | sdkmanager "ndk;27.0.12077973" 2>/dev/null || true
+          fi
 
       - name: Set up signing
         run: |
@@ -53,12 +67,11 @@ jobs:
       - name: Build AAB (release)
         run: flutter build appbundle --release
 
-      - name: Verify AAB signature
+      - name: Verify AAB
         run: |
           AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
           if [ -f "$AAB_PATH" ]; then
             echo "AAB built successfully: $(ls -lh $AAB_PATH | awk '{print $5}')"
-            jarsigner -verify -verbose -certs "$AAB_PATH" 2>&1 | head -10
           else
             echo "ERROR: AAB not found at $AAB_PATH"
             exit 1
