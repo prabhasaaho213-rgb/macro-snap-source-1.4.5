@@ -1,6 +1,6 @@
-name: Build and Release APK
+name: Build and Release APK/AAB
 
-# IMPORTANT: This workflow builds a RELEASE APK signed with the upload keystore.
+# IMPORTANT: This workflow builds a RELEASE APK/AAB signed with the upload keystore.
 # Google Sign-In requires the signing certificate's SHA-1 to be registered in
 # Firebase Console. The upload-keystore.jks SHA-1 (07:ED:F9:...) is registered.
 # If you change the keystore, you MUST also update Firebase Console with the
@@ -63,6 +63,9 @@ jobs:
       - name: Build APK (release)
         run: flutter build apk --release
 
+      - name: Build AAB (release)
+        run: flutter build appbundle --release
+
       - name: Verify APK signature
         run: |
           APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
@@ -75,10 +78,23 @@ jobs:
             exit 1
           fi
 
-      - name: Rename APK
+      - name: Verify AAB signature
+        run: |
+          AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
+          if [ -f "$AAB_PATH" ]; then
+            echo "AAB built successfully: $(ls -lh $AAB_PATH | awk '{print $5}')"
+            jarsigner -verify -verbose -certs "$AAB_PATH" 2>&1 | head -10
+          else
+            echo "ERROR: AAB not found at $AAB_PATH"
+            exit 1
+          fi
+
+      - name: Rename files
         run: |
           mv build/app/outputs/flutter-apk/app-release.apk macro-snap-${{ github.ref_name }}.apk
+          mv build/app/outputs/bundle/release/app-release.aab macro-snap-${{ github.ref_name }}.aab
           echo "Release APK: macro-snap-${{ github.ref_name }}.apk"
+          echo "Release AAB: macro-snap-${{ github.ref_name }}.aab"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -87,10 +103,19 @@ jobs:
           path: macro-snap-${{ github.ref_name }}.apk
           retention-days: 30
 
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macro-snap-aab-${{ github.ref_name }}
+          path: macro-snap-${{ github.ref_name }}.aab
+          retention-days: 30
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: macro-snap-${{ github.ref_name }}.apk
+          files: |
+            macro-snap-${{ github.ref_name }}.apk
+            macro-snap-${{ github.ref_name }}.aab
           draft: false
           prerelease: false
         env:
