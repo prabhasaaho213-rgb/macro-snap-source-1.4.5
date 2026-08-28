@@ -23,6 +23,14 @@
           }
         },
         {
+          "client_id": "562037381-bb5nr7lthsv3ci9mfjf26rrifkstjnet.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.macrosnap.macro_snap",
+            "certificate_hash": "b662159fbd0e21e4db735bf4437a81ea123d2036"
+          }
+        },
+        {
           "client_id": "562037381-chh5aop2j003hhpieiuhpulfuknl4kps.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
