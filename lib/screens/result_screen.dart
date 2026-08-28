@@ -316,7 +316,7 @@ class _ResultScreenState extends State<ResultScreen>
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               final name = nameCtrl.text.trim();
               if (name.isEmpty) return;
               final cal = int.tryParse(calCtrl.text) ?? 200;
