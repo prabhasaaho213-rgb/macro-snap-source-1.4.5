@@ -22,27 +22,38 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Set up signing
+        run: |
+          mkdir -p android/app
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+          cat > android/key.properties << EOF
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          storeFile=upload-keystore.jks
+          EOF
+
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Build APK (debug)
-        run: flutter build apk --debug
+      - name: Build APK (release)
+        run: flutter build apk --release
 
       - name: Rename APK
         run: |
-          mv build/app/outputs/flutter-apk/app-debug.apk macro-snap-${{ github.ref_name }}-debug.apk
+          mv build/app/outputs/flutter-apk/app-release.apk macro-snap-${{ github.ref_name }}.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macro-snap-${{ github.ref_name }}-debug
-          path: macro-snap-${{ github.ref_name }}-debug.apk
+          name: macro-snap-${{ github.ref_name }}
+          path: macro-snap-${{ github.ref_name }}.apk
           retention-days: 30
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: macro-snap-${{ github.ref_name }}-debug.apk
+          files: macro-snap-${{ github.ref_name }}.apk
           draft: false
           prerelease: false
         env:
