@@ -20,12 +20,14 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
+  bool _isGuest = true;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = shellTabIndex.value;
     shellTabIndex.addListener(_onShellTabChanged);
+    _loadGuestStatus();
     // Launch prompts, ordered so dialogs never stack: subscription upsell
     // first, then the notification-permission ask if still denied.
     WidgetsBinding.instance.addPostFrameCallback(
@@ -52,6 +54,16 @@ class _MainShellState extends State<MainShell> {
   void dispose() {
     shellTabIndex.removeListener(_onShellTabChanged);
     super.dispose();
+  }
+
+  Future<void> _loadGuestStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final phone = prefs.getString('phone') ?? '';
+    if (mounted) {
+      setState(() {
+        _isGuest = phone.isEmpty || phone.startsWith('guest_');
+      });
+    }
   }
 
   Future<void> _maybeShowLaunchPrompts() async {
@@ -263,9 +275,10 @@ class _MainShellState extends State<MainShell> {
         builder: (context, _) {
           final isDark = Theme.of(context).brightness == Brightness.dark;
           final syncDown = SyncStatusService.instance.backendUnreachable;
+          // Don't show backup warning for guests — they can't back up anyway.
           return Column(
             children: [
-              if (syncDown) _syncWarningBanner(isDark),
+              if (syncDown && !_isGuest) _syncWarningBanner(isDark),
               Expanded(
                 child: GestureDetector(
                   behavior: HitTestBehavior.translucent,
