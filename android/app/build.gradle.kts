@@ -46,6 +46,10 @@ android {
         }
     }
 
+    // IMPORTANT: Release builds MUST use upload-keystore.jks, not the debug keystore.
+    // Google Sign-In requires the signing certificate's SHA-1 to be registered in
+    // Firebase Console. Only upload-keystore.jks's SHA-1 is registered.
+    // If you change the keystore, update Firebase Console or Sign-In will break.
     signingConfigs {
         create("release") {
             storeFile = rootProject.file(keystoreProperties.getProperty("storeFile", "upload-keystore.jks"))
