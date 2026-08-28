@@ -24,13 +24,13 @@ jobs:
 
       - name: Set up signing
         run: |
-          mkdir -p android/app
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
           echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" > android/key.properties
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
-          echo "storeFile=upload-keystore.jks" >> android/key.properties
+          echo "storeFile=app/upload-keystore.jks" >> android/key.properties
           cat android/key.properties
+          ls -la android/app/upload-keystore.jks
 
       - name: Get dependencies
         run: flutter pub get
