@@ -26,13 +26,15 @@ android {
     packaging {
         jniLibs {
             useLegacyPackaging = true
+            // Prevents AAB build failure when strip tool is missing
+            pickFirsts += "**/*.so"
         }
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
 
-    ndkVersion = "28.2.13676358"
+    ndkVersion = flutter.ndkVersion
 
     defaultConfig {
         applicationId = "com.macrosnap.macro_snap"

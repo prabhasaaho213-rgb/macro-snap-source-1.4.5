@@ -28,14 +28,6 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Set up Android NDK
-        run: |
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973" >> $GITHUB_ENV
-          if [ ! -d "$ANDROID_HOME/ndk/27.0.12077973" ]; then
-            echo "Installing NDK..."
-            yes | sdkmanager "ndk;27.0.12077973" 2>/dev/null || true
-          fi
-
       - name: Set up signing
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
@@ -45,42 +37,27 @@ jobs:
           keyAlias=${{ secrets.KEY_ALIAS }}
           storeFile=app/upload-keystore.jks
           KEYEOF
-          ls -la android/app/upload-keystore.jks
-          keytool -list -keystore android/app/upload-keystore.jks -storepass "${{ secrets.KEYSTORE_PASSWORD }}" -alias "${{ secrets.KEY_ALIAS }}" | head -5
-          echo "Signing configured successfully"
-
-      - name: Verify signing config
-        run: |
-          if ! grep -q 'storeFile' android/key.properties; then
-            echo "ERROR: key.properties missing storeFile"
-            exit 1
-          fi
-          if [ ! -f android/app/upload-keystore.jks ]; then
-            echo "ERROR: upload-keystore.jks not found"
-            exit 1
-          fi
-          echo "All signing checks passed"
+          keytool -list -keystore android/app/upload-keystore.jks -storepass "${{ secrets.KEYSTORE_PASSWORD }}" -alias "${{ secrets.KEY_ALIAS }}" | head -3
+          echo "Signing configured"
 
       - name: Get dependencies
         run: flutter pub get
 
       - name: Build AAB (release)
-        run: flutter build appbundle --release
+        run: flutter build appbundle --release --no-tree-shake-icons
 
       - name: Verify AAB
         run: |
           AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
           if [ -f "$AAB_PATH" ]; then
-            echo "AAB built successfully: $(ls -lh $AAB_PATH | awk '{print $5}')"
+            echo "AAB built: $(ls -lh $AAB_PATH | awk '{print $5}')"
           else
-            echo "ERROR: AAB not found at $AAB_PATH"
+            echo "ERROR: AAB not found"
             exit 1
           fi
 
       - name: Rename AAB
-        run: |
-          mv build/app/outputs/bundle/release/app-release.aab macro-snap-${{ github.ref_name }}.aab
-          echo "Release AAB: macro-snap-${{ github.ref_name }}.aab"
+        run: mv build/app/outputs/bundle/release/app-release.aab macro-snap-${{ github.ref_name }}.aab
 
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
