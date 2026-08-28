@@ -59,7 +59,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _completeOnboarding() async {
     HapticFeedback.heavyImpact();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('onboarding_done', true);
+    await prefs.setBool('onboarding_v2_done', true);
     if (mounted) {
       Navigator.of(
         context,

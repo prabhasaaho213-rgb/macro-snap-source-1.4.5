@@ -66,7 +66,9 @@ class _MacroSnapAppState extends State<MacroSnapApp> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final phone = prefs.getString('phone');
-      final onboardingDone = prefs.getBool('onboarding_done') ?? false;
+      // Use v2 key so existing users (who completed old feature tour)
+      // see the new Cal AI-style onboarding once.
+      final onboardingDone = prefs.getBool('onboarding_v2_done') ?? false;
       if (mounted) {
         setState(() {
           _savedPhone = phone;
