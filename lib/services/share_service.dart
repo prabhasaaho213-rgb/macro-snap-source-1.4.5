@@ -37,7 +37,7 @@ ${daysLogged.length >= 6 ? '⭐ Great consistency!' : daysLogged.length >= 4 ? '
 🌾 Carbs: ${totalCarbs.toStringAsFixed(0)}g
 🥑 Fats: ${totalFats.toStringAsFixed(0)}g
 ━━━━━━━━━━━━━━━━━━
-Track every meal with MacroSnap 🍽️''';
+Track every meal with MacroSnap 🍽️\nhttps://play.google.com/store/apps/details?id=com.macrosnap.macro_snap''';
   }
 
   /// Returns true if share was initiated, false if there's nothing to share.

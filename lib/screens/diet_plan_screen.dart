@@ -222,12 +222,14 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
             ),
           ),
           const SizedBox(height: 16),
+          // Row 1: Weight + Height (related metrics, side by side)
           Row(
             children: [
               Expanded(
                 child: AppTextField(
                   controller: _weightCtrl,
-                  label: 'Weight (kg)',
+                  label: 'Weight',
+                  hint: 'kg',
                   keyboardType: TextInputType.number,
                 ),
               ),
@@ -235,19 +237,20 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
               Expanded(
                 child: AppTextField(
                   controller: _heightCtrl,
-                  label: 'Height (cm)',
-                  keyboardType: TextInputType.number,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: AppTextField(
-                  controller: _ageCtrl,
-                  label: 'Age',
+                  label: 'Height',
+                  hint: 'cm',
                   keyboardType: TextInputType.number,
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          // Row 2: Age (full width for readability)
+          AppTextField(
+            controller: _ageCtrl,
+            label: 'Age',
+            hint: 'years',
+            keyboardType: TextInputType.number,
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<Gender>(

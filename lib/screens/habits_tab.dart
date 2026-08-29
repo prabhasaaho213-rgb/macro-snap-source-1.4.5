@@ -7,6 +7,7 @@ import '../services/subscription_service.dart';
 import '../widgets/animations.dart';
 import '../widgets/consistency_map.dart';
 import '../widgets/gradient_button.dart';
+import '../widgets/confetti_celebration.dart';
 import '../widgets/streak_flame.dart';
 import 'settings_screen.dart';
 import 'subscription_screen.dart';
@@ -22,6 +23,7 @@ class _HabitsTabState extends State<HabitsTab> {
   HabitStore get store => HabitStore.instance;
   bool _subscribed = false;
   bool _isAdmin = false;
+  bool _previousAllDone = false; // Track to detect transition to all-complete
 
   /// True when this user can create unlimited habits: the owner/admin account
   /// is always exempt (lifetime Pro) even before [SubscriptionService.load]
@@ -73,6 +75,15 @@ class _HabitsTabState extends State<HabitsTab> {
     final waterProgress = store.waterGoal > 0
         ? (store.waterToday / store.waterGoal).clamp(0.0, 1.0)
         : 0.0;
+
+    // 🎉 Detect: all missions just completed → confetti celebration!
+    final allDone = active.isNotEmpty && completed >= active.length;
+    if (allDone && !_previousAllDone) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ConfettiCelebration.show(context);
+      });
+    }
+    _previousAllDone = allDone;
 
     return Scaffold(
       backgroundColor: isDark

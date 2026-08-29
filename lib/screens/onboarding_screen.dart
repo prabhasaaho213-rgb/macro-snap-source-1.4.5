@@ -896,6 +896,7 @@ class _DialPicker extends StatefulWidget {
 class _DialPickerState extends State<_DialPicker> {
   late FixedExtentScrollController _scrollController;
   late int _selectedIndex;
+  bool _userScrolling = false;
 
   @override
   void initState() {
@@ -909,8 +910,11 @@ class _DialPickerState extends State<_DialPicker> {
   @override
   void didUpdateWidget(covariant _DialPicker oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // Only animate when parent changes currentIndex EXTERNALLY
+    // (e.g. unit toggle). Skip if user is scrolling — it fights the gesture.
     if (oldWidget.currentIndex != widget.currentIndex &&
-        oldWidget.currentIndex != _selectedIndex) {
+        !_userScrolling &&
+        widget.currentIndex != _selectedIndex) {
       _selectedIndex = widget.currentIndex;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -930,24 +934,33 @@ class _DialPickerState extends State<_DialPicker> {
     super.dispose();
   }
 
-  double _getItemExtent() => 52.0;
+  double _getItemExtent() => 56.0;
 
   @override
   Widget build(BuildContext context) {
     final neonGreen = MacroSnapTheme.neonGreen;
 
     return SizedBox(
-      height: _getItemExtent() * 5,
+      height: 320,
       child: ListWheelScrollView.useDelegate(
         controller: _scrollController,
         itemExtent: _getItemExtent(),
-        diameterRatio: 1.8,
+        perspective: 0.004,
+        diameterRatio: 2.5,
+        squeeze: 1.0,
         physics: const FixedExtentScrollPhysics(),
         onSelectedItemChanged: (index) {
           if (index != _selectedIndex) {
             HapticFeedback.mediumImpact();
-            setState(() => _selectedIndex = index);
+            setState(() {
+              _userScrolling = true;
+              _selectedIndex = index;
+            });
             widget.onSelected(index);
+            // Reset flag after parent rebuild settles
+            Future.delayed(const Duration(milliseconds: 100), () {
+              if (mounted) setState(() => _userScrolling = false);
+            });
           }
         },
         childDelegate: ListWheelChildBuilderDelegate(

@@ -11,6 +11,7 @@ import '../models/diet_profile.dart';
 import '../services/share_service.dart';
 
 import '../widgets/animations.dart';
+import '../widgets/confetti_celebration.dart';
 import 'diet_plan_screen.dart';
 import 'scan_screen.dart';
 import 'settings_screen.dart';
@@ -34,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen>
   int _streak = 0;
   int _bestStreak = 0;
   int _scansLeft = 3;
+  bool _previousGoalMet = false; // Track to detect transition to goal-met
 
   @override
   void initState() {
@@ -394,6 +396,17 @@ class _HomeScreenState extends State<HomeScreen>
     final consumed = MealStore.instance.todayCalories;
     final progress = (consumed / targetCal).clamp(0.0, 1.0);
     final remaining = max(targetCal - consumed, 0);
+
+    // 🎉 Detect: calorie goal just met → confetti celebration!
+    final goalMet = consumed >= targetCal;
+    if (goalMet && !_previousGoalMet && targetCal > 0) {
+      _previousGoalMet = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ConfettiCelebration.show(context);
+      });
+    } else if (!goalMet) {
+      _previousGoalMet = false;
+    }
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),

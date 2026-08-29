@@ -43,7 +43,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
   Future<void> _share() async {
     if (_myCode == null) return;
     await Share.share(
-      'Join MacroSnap and get a FREE month! Use my referral code: $_myCode\n\nTrack every meal, know your macros. Download now!',
+      'Join MacroSnap and get a FREE month! Use my referral code: $_myCode\n\nTrack every meal, know your macros. Download now!\nhttps://play.google.com/store/apps/details?id=com.macrosnap.macro_snap',
     );
   }
 
