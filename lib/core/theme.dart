@@ -4,6 +4,11 @@ final ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(
   ThemeMode.system,
 );
 
+/// Global name notifier — Settings writes to it, Home reads from it.
+/// Eliminates the race between SharedPreferences reads and routeObserver
+/// didPopNext callbacks.
+final ValueNotifier<String> userNameNotifier = ValueNotifier('');
+
 /// MacroSnap dark neon theme — Pop UPI inspired bold & vibrant aesthetic
 class MacroSnapTheme {
   // ─── Neon Palette ──────────────────────────────────────────

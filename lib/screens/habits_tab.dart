@@ -817,6 +817,8 @@ class _HabitsTabState extends State<HabitsTab> {
                           children: [
                             Text(
                               h.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
@@ -943,6 +945,8 @@ class _HabitsTabState extends State<HabitsTab> {
                     children: [
                       Text(
                         h.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
@@ -1373,6 +1377,8 @@ class _HabitsTabState extends State<HabitsTab> {
                       Expanded(
                         child: Text(
                           name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,

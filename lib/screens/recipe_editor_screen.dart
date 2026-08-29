@@ -86,6 +86,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
   }
 
   Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
     final name = _nameCtrl.text.trim();
     final servings = int.tryParse(_servingsCtrl.text) ?? 4;
     if (name.isEmpty || _ingredients.isEmpty) return;
@@ -258,7 +259,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(ing.name, style: TextStyle(fontWeight: FontWeight.w600,
+                    Text(ing.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontWeight: FontWeight.w600,
                         color: isDark ? Colors.white : const Color(0xFF1A1A1A))),
                     Text('${ing.grams.toInt()}g · ${ing.caloriesPer100g.toInt()} cal/100g',
                         style: TextStyle(fontSize: 12,
@@ -266,7 +267,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                   ],
                 ),
               ),
-              Text('${ing.calories.toStringAsFixed(0)} kcal',
+              Text('${ing.calories.toStringAsFixed(0)} kcal', maxLines: 1, overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontWeight: FontWeight.w700, color: MacroSnapTheme.greenText(context))),
             ],
           ),

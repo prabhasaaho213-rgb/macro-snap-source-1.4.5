@@ -78,6 +78,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     final name = _name.isNotEmpty ? _name : _nameController.text.trim();
     if (name.isNotEmpty) {
       await prefs.setString('name', name);
+      userNameNotifier.value = name;
     }
 
     final profile = DietProfile(
@@ -139,19 +140,19 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             // Skip + progress
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-              child: Row(
-                children: [
-                  if (_page.value > 0)
-                    IconButton(
-                      onPressed: _prev,
-                      icon: Icon(Icons.arrow_back_rounded, color: textColor),
-                    )
-                  else
-                    const SizedBox(width: 48),
-                  const Spacer(),
-                  ValueListenableBuilder<int>(
-                    valueListenable: _page,
-                    builder: (_, p, __) => Text(
+              child: ValueListenableBuilder<int>(
+                valueListenable: _page,
+                builder: (_, p, __) => Row(
+                  children: [
+                    if (p > 0)
+                      IconButton(
+                        onPressed: _prev,
+                        icon: Icon(Icons.arrow_back_rounded, color: textColor),
+                      )
+                    else
+                      const SizedBox(width: 48),
+                    const Spacer(),
+                    Text(
                       '${p + 1}/$_totalSteps',
                       style: TextStyle(
                         fontSize: 13,
@@ -159,16 +160,16 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         color: subText,
                       ),
                     ),
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: _complete,
-                    child: Text(
-                      'Skip',
-                      style: TextStyle(color: subText, fontWeight: FontWeight.w600),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: _complete,
+                      child: Text(
+                        'Skip',
+                        style: TextStyle(color: subText, fontWeight: FontWeight.w600),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             // Progress bar
@@ -306,6 +307,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             Text(
               'Welcome to\nMacroSnap',
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.w900,
@@ -317,6 +320,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             Text(
               "Let's set up your profile for personalized calorie and macro targets.",
               textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 15, color: subText, height: 1.5),
             ),
           ],
@@ -498,8 +503,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   Widget _buildWeightDial(Color textColor, Color subText, bool isDark) {
     final minW = _isKg ? 30.0 : 66.0;
-    final maxW = _isKg ? 250.0 : 551.0;
-    final step = _isKg ? 0.5 : 1.1;
+    final maxW = _isKg ? 200.0 : 440.0;
+    final step = _isKg ? 1.0 : 1.0;
     final display = _isKg ? _weight : _weight / 0.453592;
     final itemCount = ((maxW - minW) / step).round();
     final currentIndex = ((display - minW) / step).round().clamp(0, itemCount - 1);
@@ -563,9 +568,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   Widget _buildHeightDial(Color textColor, Color subText, bool isDark) {
-    final minH = _isCm ? 100.0 : 39.4;
-    final maxH = _isCm ? 250.0 : 98.4;
-    final step = _isCm ? 1.0 : 0.1;
+    final minH = _isCm ? 100.0 : 48.0;
+    final maxH = _isCm ? 220.0 : 84.0;
+    final step = _isCm ? 1.0 : 1.0;
     final display = _isCm ? _height : _height / 2.54;
     final itemCount = ((maxH - minH) / step).round();
     final currentIndex = ((display - minH) / step).round().clamp(0, itemCount - 1);
@@ -688,7 +693,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: TextStyle(
+                  Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: Theme.of(context).brightness == Brightness.dark
@@ -696,7 +701,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         : const Color(0xFF1A1A1A),
                   )),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: TextStyle(
+                  Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(
                     fontSize: 13,
                     color: MacroSnapTheme.textSecondary(context),
                   )),
@@ -762,13 +767,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(l.$2, style: TextStyle(
+                            Text(l.$2, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                               color: textColor,
                             )),
                             const SizedBox(height: 2),
-                            Text(l.$3, style: TextStyle(fontSize: 12, color: subText)),
+                            Text(l.$3, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: subText)),
                           ],
                         ),
                       ),
@@ -889,28 +894,28 @@ class _DialPicker extends StatefulWidget {
 }
 
 class _DialPickerState extends State<_DialPicker> {
-  late ScrollController _scrollController;
+  late FixedExtentScrollController _scrollController;
   late int _selectedIndex;
-  bool _scrolling = false;
 
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.currentIndex;
-    _scrollController = ScrollController(
-      initialScrollOffset: _getItemExtent() * widget.currentIndex,
+    _scrollController = FixedExtentScrollController(
+      initialItem: widget.currentIndex,
     );
   }
 
   @override
   void didUpdateWidget(covariant _DialPicker oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.currentIndex != widget.currentIndex && !_scrolling) {
+    if (oldWidget.currentIndex != widget.currentIndex &&
+        oldWidget.currentIndex != _selectedIndex) {
       _selectedIndex = widget.currentIndex;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _scrollController.hasClients) {
-          _scrollController.animateTo(
-            _getItemExtent() * widget.currentIndex,
+        if (mounted) {
+          _scrollController.animateToItem(
+            widget.currentIndex,
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOutCubic,
           );
@@ -927,179 +932,64 @@ class _DialPickerState extends State<_DialPicker> {
 
   double _getItemExtent() => 52.0;
 
-  void _onScrollEnd() {
-    _scrolling = false;
-    final offset = _scrollController.offset;
-    final newIndex = (offset / _getItemExtent()).round().clamp(0, widget.itemCount - 1);
-    if (newIndex != _selectedIndex) {
-      _selectedIndex = newIndex;
-      widget.onSelected(newIndex);
-      // Snap to the exact position
-      _scrollController.animateTo(
-        _getItemExtent() * newIndex,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final neonGreen = MacroSnapTheme.neonGreen;
 
     return SizedBox(
-      height: _getItemExtent() * 5, // Show ~5 items
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Selection indicator (center highlight bar)
-          Container(
-            height: _getItemExtent(),
-            width: double.infinity,
-            margin: const EdgeInsets.symmetric(horizontal: 24),
-            decoration: BoxDecoration(
-              color: neonGreen.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: neonGreen.withValues(alpha: 0.25),
-                width: 1,
-              ),
-            ),
-          ),
-          // Gradient fade on top and bottom
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: _getItemExtent() * 2,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF0D0D12)
-                        : MacroSnapTheme.surfaceLight,
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: _getItemExtent() * 2,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [
-                    Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF0D0D12)
-                        : MacroSnapTheme.surfaceLight,
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // Scroll wheel
-          ListWheelScrollView.useDelegate(
-            controller: _scrollController,
-            itemExtent: _getItemExtent(),
-            diameterRatio: 1.8,
-            physics: const FixedExtentScrollPhysics(),
-            onSelectedItemChanged: (_) {},
-            childDelegate: ListWheelChildBuilderDelegate(
-              childCount: widget.itemCount,
-              builder: (context, index) {
-                final distance = (index - _selectedIndex).abs().toDouble().clamp(0, 3);
-                final opacity = 1.0 - (distance * 0.25);
-                final scale = 1.0 - (distance * 0.08);
-                final isSelected = index == _selectedIndex;
-                final label = widget.labelBuilder(index);
+      height: _getItemExtent() * 5,
+      child: ListWheelScrollView.useDelegate(
+        controller: _scrollController,
+        itemExtent: _getItemExtent(),
+        diameterRatio: 1.8,
+        physics: const FixedExtentScrollPhysics(),
+        onSelectedItemChanged: (index) {
+          if (index != _selectedIndex) {
+            HapticFeedback.mediumImpact();
+            setState(() => _selectedIndex = index);
+            widget.onSelected(index);
+          }
+        },
+        childDelegate: ListWheelChildBuilderDelegate(
+          childCount: widget.itemCount,
+          builder: (context, index) {
+            final distance = (index - _selectedIndex).abs().toDouble().clamp(0.0, 3.0);
+            final opacity = (1.0 - (distance * 0.25)).clamp(0.3, 1.0);
+            final scale = (1.0 - (distance * 0.08));
+            final isSelected = index == _selectedIndex;
+            final label = widget.labelBuilder(index);
 
-                return GestureDetector(
-                  onTap: () {
-                    HapticFeedback.mediumImpact();
-                    setState(() {
-                      _scrolling = true;
-                      _selectedIndex = index;
-                    });
-                    widget.onSelected(index);
-                    _scrollController.animateTo(
-                      _getItemExtent() * index,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOutCubic,
-                    ).then((_) => _scrolling = false);
-                  },
-                  child: AnimatedOpacity(
-                    opacity: opacity.clamp(0.3, 1.0),
-                    duration: const Duration(milliseconds: 150),
-                    child: Transform.scale(
-                      scale: scale,
-                      child: Center(
-                        child: Text(
-                          label,
-                          style: TextStyle(
-                            fontSize: isSelected ? 24 : 18,
-                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-                            color: isSelected
-                                ? neonGreen
-                                : (widget.isDark ? Colors.white54 : Colors.black38),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+            return GestureDetector(
+              onTap: () {
+                HapticFeedback.mediumImpact();
+                _scrollController.animateToItem(
+                  index,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutCubic,
                 );
               },
-            ),
-          ),
-          // Left/right fade lines
-          Positioned(
-            left: 20,
-            top: _getItemExtent() * 2,
-            bottom: _getItemExtent() * 2,
-            child: Container(
-              width: 2,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    neonGreen.withValues(alpha: 0.3),
-                    Colors.transparent,
-                  ],
+              child: Center(
+                child: AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  style: TextStyle(
+                    fontSize: isSelected ? 24 : 18,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                    color: isSelected
+                        ? neonGreen
+                        : (widget.isDark ? Colors.white54 : Colors.black38),
+                  ),
+                  child: Opacity(
+                    opacity: opacity,
+                    child: Transform.scale(
+                      scale: scale,
+                      child: Text(label),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          Positioned(
-            right: 20,
-            top: _getItemExtent() * 2,
-            bottom: _getItemExtent() * 2,
-            child: Container(
-              width: 2,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    neonGreen.withValues(alpha: 0.3),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
     );
   }

@@ -44,7 +44,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _load(); // Refresh when returning from other screens
+    // Only refresh if we have stale data (avoid repeated network calls).
+    // The screen refreshes when the user edits name or toggles subscription.
   }
 
   Future<void> _load() async {
@@ -266,6 +267,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (newName != null && newName.isNotEmpty && newName != _name) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('name', newName);
+      userNameNotifier.value = newName;
       setState(() => _name = newName);
       // Auto-sync name to cloud.
       MealSyncService.syncPreferences({'name': newName});

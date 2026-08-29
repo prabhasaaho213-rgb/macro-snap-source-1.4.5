@@ -1,4 +1,4 @@
-name: Build and Release APK + AAB
+name: Build and Release APK
 
 on:
   push:
@@ -49,31 +49,23 @@ jobs:
       - name: Build APK (release)
         run: flutter build apk --release
 
-      - name: Build AAB (release)
-        run: flutter build appbundle --release
-
-      - name: Rename artifacts
+      - name: Verify APK
         run: |
-          cp build/app/outputs/flutter-apk/app-release.apk macro-snap-${{ github.ref_name }}.apk
-          cp build/app/outputs/bundle/release/app-release.aab macro-snap-${{ github.ref_name }}.aab
-          echo "APK: $(ls -lh macro-snap-${{ github.ref_name }}.apk | awk '{print $5}')"
-          echo "AAB: $(ls -lh macro-snap-${{ github.ref_name }}.aab | awk '{print $5}')"
+          APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
+          if [ -f "$APK_PATH" ]; then
+            echo "APK built: $(ls -lh $APK_PATH | awk '{print $5}')"
+          else
+            echo "ERROR: APK not found"
+            exit 1
+          fi
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: macro-snap-${{ github.ref_name }}
-          path: |
-            macro-snap-${{ github.ref_name }}.apk
-            macro-snap-${{ github.ref_name }}.aab
-          retention-days: 30
+      - name: Rename APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk macro-snap-${{ github.ref_name }}.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            macro-snap-${{ github.ref_name }}.apk
-            macro-snap-${{ github.ref_name }}.aab
+          files: macro-snap-${{ github.ref_name }}.apk
           draft: false
           prerelease: false
         env:

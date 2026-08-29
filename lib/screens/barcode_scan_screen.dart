@@ -270,6 +270,9 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
                 const SizedBox(height: 16),
                 Text(
                   f.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
@@ -279,6 +282,9 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> {
                 const SizedBox(height: 4),
                 Text(
                   f.brand,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
                     color: MacroSnapTheme.textTertiary(context),

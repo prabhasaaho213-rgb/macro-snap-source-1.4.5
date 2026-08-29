@@ -245,24 +245,22 @@ class _MainShellState extends State<MainShell> {
     );
   }
 
+  /// Cached tab pages so switching tabs doesn't re-create screens.
+  late final List<Widget> _tabPages = [
+    const HomeScreen(),
+    PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _goToTab(0);
+      },
+      child: const ScanScreen(),
+    ),
+    const HabitsTab(),
+  ];
+
   /// Build the current tab content — plain instant switch, no transition.
   Widget _buildTabContent() {
-    switch (_currentIndex) {
-      case 0:
-        return const HomeScreen();
-      case 1:
-        return PopScope(
-          canPop: false,
-          onPopInvokedWithResult: (didPop, _) {
-            if (!didPop) _goToTab(0);
-          },
-          child: const ScanScreen(),
-        );
-      case 2:
-        return const HabitsTab();
-      default:
-        return const HomeScreen();
-    }
+    return _tabPages[_currentIndex.clamp(0, _tabPages.length - 1)];
   }
 
   @override

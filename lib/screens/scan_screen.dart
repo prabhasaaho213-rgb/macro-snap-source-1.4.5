@@ -13,7 +13,6 @@ import '../widgets/gradient_button.dart';
 import 'recent_foods_screen.dart';
 import 'settings_screen.dart';
 import 'result_screen.dart';
-import 'settings_screen.dart';
 import 'subscription_screen.dart';
 
 class ScanScreen extends StatefulWidget {

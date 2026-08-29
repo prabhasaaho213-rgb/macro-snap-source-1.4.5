@@ -48,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     MealStore.instance.changeNotifier.addListener(_onDataChanged);
+    userNameNotifier.addListener(_onNameChanged);
     _loadAll();
   }
 
@@ -65,6 +66,13 @@ class _HomeScreenState extends State<HomeScreen>
     // A route pushed on top (Settings, etc.) was popped — re-read the name
     // so edits made there appear on Home immediately.
     _refreshName();
+  }
+
+  void _onNameChanged() {
+    final newName = userNameNotifier.value;
+    if (mounted && newName != _name) {
+      setState(() => _name = newName);
+    }
   }
 
   Future<void> _refreshName() async {
@@ -95,6 +103,7 @@ class _HomeScreenState extends State<HomeScreen>
         _bestStreak = best;
         _scansLeft = scans;
       });
+      userNameNotifier.value = name;
       _animController.forward();
     }
   }
@@ -108,6 +117,7 @@ class _HomeScreenState extends State<HomeScreen>
   void dispose() {
     routeObserver.unsubscribe(this);
     MealStore.instance.changeNotifier.removeListener(_onDataChanged);
+    userNameNotifier.removeListener(_onNameChanged);
     _animController.stop();
     _animController.dispose();
     super.dispose();

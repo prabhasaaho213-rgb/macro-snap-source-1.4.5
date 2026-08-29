@@ -671,6 +671,8 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
                 const SizedBox(height: 4),
                 Text(
                   meal['name'] ?? '',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -680,6 +682,8 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
                 const SizedBox(height: 4),
                 Text(
                   meal['description'] ?? '',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 12,
                     color: MacroSnapTheme.textSecondary(context),
@@ -899,6 +903,8 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
               children: [
                 Text(
                   title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -908,6 +914,8 @@ class _DietPlanScreenState extends State<DietPlanScreen> {
                 const SizedBox(height: 4),
                 Text(
                   suggestion,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 12,
                     color: MacroSnapTheme.textTertiary(context),
