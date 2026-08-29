@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,8 +7,9 @@ import '../models/diet_profile.dart';
 
 /// Cal AI-style onboarding: collects user profile data before first use.
 ///
-/// Flow: Welcome → Name → Gender → Age → Weight → Height → Goal → Activity → Done
-/// Saves to [DietPlanService] so the home screen shows personalized targets.
+/// Flow: Welcome → Name → Gender → Age → Weight → Height → Goal → Activity
+/// Features scroll-wheel dial pickers for age/weight/height, animated number
+/// transitions, gradient glow effects, and haptic feedback on every interaction.
 class OnboardingScreen extends StatefulWidget {
   final Widget nextScreen;
 
@@ -17,10 +19,16 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends State<OnboardingScreen>
+    with TickerProviderStateMixin {
   final _pageController = PageController();
   final _nameController = TextEditingController();
   final ValueNotifier<int> _page = ValueNotifier(0);
+
+  // Page entrance animation
+  late AnimationController _entranceAnim;
+  late Animation<double> _entranceOpacity;
+  late Animation<Offset> _entranceSlide;
 
   // User data
   String _name = '';
@@ -36,7 +44,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   static const _totalSteps = 8;
 
   @override
+  void initState() {
+    super.initState();
+    _entranceAnim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _entranceOpacity = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _entranceAnim, curve: Curves.easeOut),
+    );
+    _entranceSlide = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _entranceAnim, curve: Curves.easeOutCubic),
+    );
+    _entranceAnim.forward();
+  }
+
+  @override
   void dispose() {
+    _entranceAnim.dispose();
     _pageController.dispose();
     _nameController.dispose();
     _page.dispose();
@@ -52,7 +80,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       await prefs.setString('name', name);
     }
 
-    // Save diet profile
     final profile = DietProfile(
       weightKg: _isKg ? _weight : _weight * 0.453592,
       heightCm: _isCm ? _height : _height * 2.54,
@@ -73,8 +100,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _next() {
     HapticFeedback.lightImpact();
     if (_page.value < _totalSteps - 1) {
+      // Reset entrance animation for next page
+      _entranceAnim.reset();
+      _entranceAnim.forward();
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 350),
+        duration: const Duration(milliseconds: 400),
         curve: Curves.easeOutCubic,
       );
     } else {
@@ -85,8 +115,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void _prev() {
     HapticFeedback.lightImpact();
     if (_page.value > 0) {
+      _entranceAnim.reset();
+      _entranceAnim.forward();
       _pageController.previousPage(
-        duration: const Duration(milliseconds: 350),
+        duration: const Duration(milliseconds: 400),
         curve: Curves.easeOutCubic,
       );
     }
@@ -202,102 +234,156 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildPage(int i, Color textColor, Color subText, bool isDark) {
     switch (i) {
-      case 0: return _buildWelcome(textColor, subText);
+      case 0: return _buildWelcome(textColor, subText, isDark);
       case 1: return _buildName(textColor, subText, isDark);
       case 2: return _buildGender(textColor, subText, isDark);
-      case 3: return _buildAge(textColor, subText, isDark);
-      case 4: return _buildWeight(textColor, subText, isDark);
-      case 5: return _buildHeight(textColor, subText, isDark);
+      case 3: return _buildDialPage<int>(
+        title: 'How old are you?',
+        value: _age,
+        display: '$_age',
+        unit: 'years',
+        min: 14,
+        max: 100,
+        step: 1,
+        onChanged: (v) => setState(() => _age = v),
+        textColor: textColor,
+        subText: subText,
+        isDark: isDark,
+      );
+      case 4: return _buildWeightDial(textColor, subText, isDark);
+      case 5: return _buildHeightDial(textColor, subText, isDark);
       case 6: return _buildGoal(textColor, subText, isDark);
       case 7: return _buildActivity(textColor, subText, isDark);
       default: return const SizedBox();
     }
   }
 
+  // ── Animated entrance wrapper ────────────────────────────────
+
+  Widget _animateIn(Widget child) {
+    return FadeTransition(
+      opacity: _entranceOpacity,
+      child: SlideTransition(
+        position: _entranceSlide,
+        child: child,
+      ),
+    );
+  }
+
   // ── Page builders ──────────────────────────────────────────────
 
-  Widget _buildWelcome(Color textColor, Color subText) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              color: MacroSnapTheme.neonGreen.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
+  Widget _buildWelcome(Color textColor, Color subText, bool isDark) {
+    return _animateIn(
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Glowing circle icon
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    MacroSnapTheme.neonGreen.withValues(alpha: 0.2),
+                    MacroSnapTheme.neonGreen.withValues(alpha: 0.05),
+                    Colors.transparent,
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: MacroSnapTheme.neonGreen.withValues(alpha: 0.3),
+                    blurRadius: 40,
+                    spreadRadius: 10,
+                  ),
+                ],
+              ),
+              child: const Center(child: Text('📸', style: TextStyle(fontSize: 52))),
             ),
-            child: const Center(child: Text('📸', style: TextStyle(fontSize: 48))),
-          ),
-          const SizedBox(height: 28),
-          Text(
-            'Welcome to MacroSnap',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: textColor),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            "Let's set up your profile so we can give you personalized calorie and macro targets.",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 15, color: subText, height: 1.5),
-          ),
-        ],
+            const SizedBox(height: 32),
+            Text(
+              'Welcome to\nMacroSnap',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.w900,
+                color: textColor,
+                height: 1.2,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              "Let's set up your profile for personalized calorie and macro targets.",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 15, color: subText, height: 1.5),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildName(Color textColor, Color subText, bool isDark) {
-    return _buildQuestion(
-      'What is your name?',
-      textColor,
-      Column(
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: MacroSnapTheme.neonGreen.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: const Center(child: Text('👋', style: TextStyle(fontSize: 40))),
-          ),
-          const SizedBox(height: 28),
-          TextField(
-            controller: _nameController,
-            textCapitalization: TextCapitalization.words,
-            autofocus: true,
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: textColor),
-            decoration: InputDecoration(
-              hintText: 'Enter your name',
-              hintStyle: TextStyle(color: subText.withValues(alpha: 0.5)),
-              border: UnderlineInputBorder(
-                borderSide: BorderSide(color: MacroSnapTheme.neonGreen.withValues(alpha: 0.3)),
+    return _animateIn(
+      _buildQuestion(
+        'What is your name?',
+        textColor,
+        Column(
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    MacroSnapTheme.neonGreen.withValues(alpha: 0.15),
+                    Colors.transparent,
+                  ],
+                ),
               ),
-              focusedBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: MacroSnapTheme.neonGreen, width: 2),
-              ),
+              child: const Center(child: Text('👋', style: TextStyle(fontSize: 40))),
             ),
-            onChanged: (v) => _name = v.trim(),
-            onSubmitted: (_) => _next(),
-          ),
-        ],
+            const SizedBox(height: 28),
+            TextField(
+              controller: _nameController,
+              textCapitalization: TextCapitalization.words,
+              autofocus: true,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: textColor),
+              decoration: InputDecoration(
+                hintText: 'Enter your name',
+                hintStyle: TextStyle(color: subText.withValues(alpha: 0.5)),
+                border: UnderlineInputBorder(
+                  borderSide: BorderSide(color: MacroSnapTheme.neonGreen.withValues(alpha: 0.3)),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: MacroSnapTheme.neonGreen, width: 2),
+                ),
+              ),
+              onChanged: (v) => _name = v.trim(),
+              onSubmitted: (_) => _next(),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildGender(Color textColor, Color subText, bool isDark) {
-    return _buildQuestion(
-      'What is your gender?',
-      textColor,
-      Row(
-        children: [
-          Expanded(child: _genderOption('👨', 'Male', Gender.male, isDark, textColor)),
-          const SizedBox(width: 16),
-          Expanded(child: _genderOption('👩', 'Female', Gender.female, isDark, textColor)),
-        ],
+    return _animateIn(
+      _buildQuestion(
+        'What is your gender?',
+        textColor,
+        Row(
+          children: [
+            Expanded(child: _genderOption('👨', 'Male', Gender.male, isDark, textColor)),
+            const SizedBox(width: 16),
+            Expanded(child: _genderOption('👩', 'Female', Gender.female, isDark, textColor)),
+          ],
+        ),
       ),
     );
   }
@@ -305,149 +391,257 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _genderOption(String emoji, String label, Gender value, bool isDark, Color textColor) {
     final selected = _gender == value;
     return GestureDetector(
-      onTap: () => setState(() => _gender = value),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() => _gender = value);
+      },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        padding: const EdgeInsets.symmetric(vertical: 32),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(vertical: 36),
         decoration: BoxDecoration(
           color: selected
               ? MacroSnapTheme.neonGreen.withValues(alpha: 0.12)
               : (isDark ? const Color(0xFF1A1A22) : Colors.white),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: selected ? MacroSnapTheme.neonGreen : Colors.transparent,
             width: 2,
           ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: MacroSnapTheme.neonGreen.withValues(alpha: 0.15),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ]
+              : null,
         ),
         child: Column(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 44)),
+            AnimatedScale(
+              scale: selected ? 1.15 : 1.0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+              child: Text(emoji, style: const TextStyle(fontSize: 48)),
+            ),
             const SizedBox(height: 12),
-            Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: textColor)),
+            Text(label, style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: textColor,
+            )),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAge(Color textColor, Color subText, bool isDark) {
-    return _buildQuestion(
-      'How old are you?',
-      textColor,
-      Column(
-        children: [
-          Text('$_age', style: TextStyle(fontSize: 64, fontWeight: FontWeight.w900, color: MacroSnapTheme.neonGreen)),
-          const SizedBox(height: 4),
-          Text('years', style: TextStyle(fontSize: 16, color: subText)),
-          const SizedBox(height: 24),
-          _numberAdjuster(
-            value: _age,
-            min: 14,
-            max: 100,
-            onMinus: () => setState(() => _age = (_age > 14 ? _age - 1 : 14)),
-            onPlus: () => setState(() => _age = (_age < 100 ? _age + 1 : 100)),
-          ),
-        ],
+  // ── Cal AI-style DIAL picker pages ────────────────────────────
+
+  Widget _buildDialPage<T>({
+    required String title,
+    required T value,
+    required String display,
+    required String unit,
+    required T min,
+    required T max,
+    required int step,
+    required ValueChanged<T> onChanged,
+    required Color textColor,
+    required Color subText,
+    required bool isDark,
+    bool isDouble = false,
+  }) {
+    final itemCount = ((max as dynamic) - (min as dynamic)) ~/ step + 1;
+    final currentIndex = isDouble
+        ? ((value as double) - (min as double)) ~/ step
+        : ((value as int) - (min as int)) ~/ step;
+
+    return _animateIn(
+      _buildQuestion(
+        title,
+        textColor,
+        Column(
+          children: [
+            // Glowing number display
+            _GlowingNumber(text: display),
+            const SizedBox(height: 4),
+            Text(unit, style: TextStyle(fontSize: 16, color: subText)),
+            const SizedBox(height: 24),
+            // Cal AI-style scroll dial
+            _DialPicker(
+              currentIndex: currentIndex.clamp(0, itemCount - 1),
+              itemCount: itemCount,
+              isDark: isDark,
+              onSelected: (index) {
+                HapticFeedback.mediumImpact();
+                if (isDouble) {
+                  onChanged((min as double) + index * step as T);
+                } else {
+                  onChanged((min as int) + index * step as T);
+                }
+              },
+              labelBuilder: (index) {
+                final val = isDouble
+                    ? ((min as double) + index * step).toStringAsFixed(1)
+                    : '${(min as int) + index * step}';
+                return val;
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildWeight(Color textColor, Color subText, bool isDark) {
+  Widget _buildWeightDial(Color textColor, Color subText, bool isDark) {
+    final minW = _isKg ? 30.0 : 66.0;
+    final maxW = _isKg ? 250.0 : 551.0;
+    final step = _isKg ? 0.5 : 1.1;
     final display = _isKg ? _weight : _weight / 0.453592;
-    return _buildQuestion(
-      'What is your weight?',
-      textColor,
-      Column(
-        children: [
-          // Unit toggle
-          GestureDetector(
-            onTap: () => setState(() => _isKg = !_isKg),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(
-                color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                _isKg ? 'kg' : 'lbs',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: MacroSnapTheme.neonGreen),
+    final itemCount = ((maxW - minW) / step).round();
+    final currentIndex = ((display - minW) / step).round().clamp(0, itemCount - 1);
+
+    return _animateIn(
+      _buildQuestion(
+        'What is your weight?',
+        textColor,
+        Column(
+          children: [
+            // Unit toggle with glow
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                setState(() => _isKg = !_isKg);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                decoration: BoxDecoration(
+                  color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: MacroSnapTheme.neonGreen.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  _isKg ? 'kg' : 'lbs',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: MacroSnapTheme.neonGreen,
+                  ),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            display.toStringAsFixed(1),
-            style: TextStyle(fontSize: 64, fontWeight: FontWeight.w900, color: MacroSnapTheme.neonGreen),
-          ),
-          const SizedBox(height: 4),
-          Text(_isKg ? 'kilograms' : 'pounds', style: TextStyle(fontSize: 16, color: subText)),
-          const SizedBox(height: 24),
-          _numberAdjuster(
-            value: display.round(),
-            min: 30,
-            max: 250,
-            onMinus: () => setState(() => _weight = _isKg ? (_weight > 30 ? _weight - 0.5 : 30) : (_weight > 66 ? _weight - 1.1 : 66)),
-            onPlus: () => setState(() => _weight = _isKg ? (_weight < 250 ? _weight + 0.5 : 250) : (_weight < 551 ? _weight + 1.1 : 551)),
-          ),
-        ],
+            const SizedBox(height: 16),
+            _GlowingNumber(text: display.toStringAsFixed(1)),
+            const SizedBox(height: 4),
+            Text(_isKg ? 'kilograms' : 'pounds', style: TextStyle(fontSize: 16, color: subText)),
+            const SizedBox(height: 24),
+            _DialPicker(
+              currentIndex: currentIndex,
+              itemCount: itemCount,
+              isDark: isDark,
+              onSelected: (index) {
+                HapticFeedback.mediumImpact();
+                final val = minW + index * step;
+                setState(() => _weight = val);
+              },
+              labelBuilder: (index) {
+                final val = minW + index * step;
+                return val.toStringAsFixed(1);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeight(Color textColor, Color subText, bool isDark) {
+  Widget _buildHeightDial(Color textColor, Color subText, bool isDark) {
+    final minH = _isCm ? 100.0 : 39.4;
+    final maxH = _isCm ? 250.0 : 98.4;
+    final step = _isCm ? 1.0 : 0.1;
     final display = _isCm ? _height : _height / 2.54;
-    return _buildQuestion(
-      'What is your height?',
-      textColor,
-      Column(
-        children: [
-          // Unit toggle
-          GestureDetector(
-            onTap: () => setState(() => _isCm = !_isCm),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(
-                color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                _isCm ? 'cm' : 'in',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: MacroSnapTheme.neonGreen),
+    final itemCount = ((maxH - minH) / step).round();
+    final currentIndex = ((display - minH) / step).round().clamp(0, itemCount - 1);
+
+    return _animateIn(
+      _buildQuestion(
+        'What is your height?',
+        textColor,
+        Column(
+          children: [
+            // Unit toggle
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                setState(() => _isCm = !_isCm);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                decoration: BoxDecoration(
+                  color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: MacroSnapTheme.neonGreen.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  _isCm ? 'cm' : 'in',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: MacroSnapTheme.neonGreen,
+                  ),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            display.toStringAsFixed(1),
-            style: TextStyle(fontSize: 64, fontWeight: FontWeight.w900, color: MacroSnapTheme.neonGreen),
-          ),
-          const SizedBox(height: 4),
-          Text(_isCm ? 'centimeters' : 'inches', style: TextStyle(fontSize: 16, color: subText)),
-          const SizedBox(height: 24),
-          _numberAdjuster(
-            value: display.round(),
-            min: 100,
-            max: 250,
-            onMinus: () => setState(() => _height = _isCm ? (_height > 100 ? _height - 1 : 100) : (_height > 254 ? _height - 2.54 : 254)),
-            onPlus: () => setState(() => _height = _isCm ? (_height < 250 ? _height + 1 : 250) : (_height < 635 ? _height + 2.54 : 635)),
-          ),
-        ],
+            const SizedBox(height: 16),
+            _GlowingNumber(text: display.toStringAsFixed(1)),
+            const SizedBox(height: 4),
+            Text(_isCm ? 'centimeters' : 'inches', style: TextStyle(fontSize: 16, color: subText)),
+            const SizedBox(height: 24),
+            _DialPicker(
+              currentIndex: currentIndex,
+              itemCount: itemCount,
+              isDark: isDark,
+              onSelected: (index) {
+                HapticFeedback.mediumImpact();
+                final val = minH + index * step;
+                setState(() => _height = val);
+              },
+              labelBuilder: (index) {
+                final val = minH + index * step;
+                return _isCm ? '${val.round()}' : val.toStringAsFixed(1);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildGoal(Color textColor, Color subText, bool isDark) {
-    return _buildQuestion(
-      'What is your goal?',
-      textColor,
-      Column(
-        children: [
-          _goalOption('🔥', 'Lose Weight', 'Calorie deficit for fat loss', Goal.loseWeight, isDark),
-          const SizedBox(height: 12),
-          _goalOption('⚖️', 'Maintain Weight', 'Stay at your current weight', Goal.maintain, isDark),
-          const SizedBox(height: 12),
-          _goalOption('💪', 'Gain Muscle', 'Calorie surplus for muscle gain', Goal.gainMuscle, isDark),
-        ],
+    return _animateIn(
+      _buildQuestion(
+        'What is your goal?',
+        textColor,
+        Column(
+          children: [
+            _goalOption('🔥', 'Lose Weight', 'Calorie deficit for fat loss', Goal.loseWeight, isDark),
+            const SizedBox(height: 12),
+            _goalOption('⚖️', 'Maintain Weight', 'Stay at your current weight', Goal.maintain, isDark),
+            const SizedBox(height: 12),
+            _goalOption('💪', 'Gain Muscle', 'Calorie surplus for muscle gain', Goal.gainMuscle, isDark),
+          ],
+        ),
       ),
     );
   }
@@ -455,35 +649,62 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget _goalOption(String emoji, String title, String subtitle, Goal value, bool isDark) {
     final selected = _goal == value;
     return GestureDetector(
-      onTap: () => setState(() => _goal = value),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() => _goal = value);
+      },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: selected
               ? MacroSnapTheme.neonGreen.withValues(alpha: 0.12)
               : (isDark ? const Color(0xFF1A1A22) : Colors.white),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: selected ? MacroSnapTheme.neonGreen : Colors.transparent,
             width: 2,
           ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+                    blurRadius: 16,
+                    spreadRadius: 1,
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 32)),
+            AnimatedScale(
+              scale: selected ? 1.1 : 1.0,
+              duration: const Duration(milliseconds: 300),
+              child: Text(emoji, style: const TextStyle(fontSize: 32)),
+            ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1A1A1A))),
+                  Text(title, style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : const Color(0xFF1A1A1A),
+                  )),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: TextStyle(fontSize: 13, color: MacroSnapTheme.textSecondary(context))),
+                  Text(subtitle, style: TextStyle(
+                    fontSize: 13,
+                    color: MacroSnapTheme.textSecondary(context),
+                  )),
                 ],
               ),
             ),
-            if (selected) Icon(Icons.check_circle_rounded, color: MacroSnapTheme.neonGreen, size: 24),
+            if (selected)
+              Icon(Icons.check_circle_rounded, color: MacroSnapTheme.neonGreen, size: 24),
           ],
         ),
       ),
@@ -498,48 +719,68 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       (ActivityLevel.active, 'Active', '6-7 days/week exercise'),
       (ActivityLevel.veryActive, 'Very Active', 'Twice a day / physical job'),
     ];
-    return _buildQuestion(
-      'How active are you?',
-      textColor,
-      Column(
-        children: levels.map((l) {
-          final selected = _activity == l.$1;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: GestureDetector(
-              onTap: () => setState(() => _activity = l.$1),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? MacroSnapTheme.neonGreen.withValues(alpha: 0.12)
-                      : (isDark ? const Color(0xFF1A1A22) : Colors.white),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: selected ? MacroSnapTheme.neonGreen : Colors.transparent,
-                    width: 2,
+    return _animateIn(
+      _buildQuestion(
+        'How active are you?',
+        textColor,
+        Column(
+          children: levels.map((l) {
+            final selected = _activity == l.$1;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _activity = l.$1);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutCubic,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? MacroSnapTheme.neonGreen.withValues(alpha: 0.12)
+                        : (isDark ? const Color(0xFF1A1A22) : Colors.white),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: selected ? MacroSnapTheme.neonGreen : Colors.transparent,
+                      width: 2,
+                    ),
+                    boxShadow: selected
+                        ? [
+                            BoxShadow(
+                              color: MacroSnapTheme.neonGreen.withValues(alpha: 0.12),
+                              blurRadius: 16,
+                              spreadRadius: 1,
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l.$2, style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: textColor,
+                            )),
+                            const SizedBox(height: 2),
+                            Text(l.$3, style: TextStyle(fontSize: 12, color: subText)),
+                          ],
+                        ),
+                      ),
+                      if (selected)
+                        Icon(Icons.check_circle_rounded, color: MacroSnapTheme.neonGreen, size: 22),
+                    ],
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(l.$2, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: textColor)),
-                          const SizedBox(height: 2),
-                          Text(l.$3, style: TextStyle(fontSize: 12, color: subText)),
-                        ],
-                      ),
-                    ),
-                    if (selected) Icon(Icons.check_circle_rounded, color: MacroSnapTheme.neonGreen, size: 22),
-                  ],
-                ),
               ),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -568,52 +809,297 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
     );
   }
+}
 
-  Widget _numberAdjuster({
-    required int value,
-    required int min,
-    required int max,
-    required VoidCallback onMinus,
-    required VoidCallback onPlus,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _circleButton(
-          icon: Icons.remove_rounded,
-          onTap: value > min ? onMinus : null,
+// ═══════════════════════════════════════════════════════════════════
+//  Cal AI-style glowing number display
+// ═══════════════════════════════════════════════════════════════════
+
+class _GlowingNumber extends StatelessWidget {
+  final String text;
+  const _GlowingNumber({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(text),
+      tween: Tween(begin: 0.85, end: 1.0),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOutBack,
+      builder: (_, scale, child) {
+        return Transform.scale(
+          scale: scale,
+          child: child,
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          gradient: LinearGradient(
+            colors: [
+              MacroSnapTheme.neonGreen.withValues(alpha: 0.08),
+              MacroSnapTheme.neonGreen.withValues(alpha: 0.15),
+              MacroSnapTheme.neonGreen.withValues(alpha: 0.08),
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: MacroSnapTheme.neonGreen.withValues(alpha: 0.2),
+              blurRadius: 30,
+              spreadRadius: 5,
+            ),
+          ],
         ),
-        const SizedBox(width: 32),
-        Text(
-          '$value',
-          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 64,
+            fontWeight: FontWeight.w900,
+            color: MacroSnapTheme.neonGreen,
+            letterSpacing: -1,
+          ),
         ),
-        const SizedBox(width: 32),
-        _circleButton(
-          icon: Icons.add_rounded,
-          onTap: value < max ? onPlus : null,
-        ),
-      ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Cal AI-style circular scroll dial picker
+// ═══════════════════════════════════════════════════════════════════
+
+class _DialPicker extends StatefulWidget {
+  final int currentIndex;
+  final int itemCount;
+  final bool isDark;
+  final ValueChanged<int> onSelected;
+  final String Function(int) labelBuilder;
+
+  const _DialPicker({
+    required this.currentIndex,
+    required this.itemCount,
+    required this.isDark,
+    required this.onSelected,
+    required this.labelBuilder,
+  });
+
+  @override
+  State<_DialPicker> createState() => _DialPickerState();
+}
+
+class _DialPickerState extends State<_DialPicker> {
+  late ScrollController _scrollController;
+  late int _selectedIndex;
+  bool _scrolling = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.currentIndex;
+    _scrollController = ScrollController(
+      initialScrollOffset: _getItemExtent() * widget.currentIndex,
     );
   }
 
-  Widget _circleButton({required IconData icon, VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: onTap != null
-              ? MacroSnapTheme.neonGreen.withValues(alpha: 0.12)
-              : Colors.grey.withValues(alpha: 0.1),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          color: onTap != null ? MacroSnapTheme.neonGreen : Colors.grey,
-          size: 24,
-        ),
+  @override
+  void didUpdateWidget(covariant _DialPicker oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentIndex != widget.currentIndex && !_scrolling) {
+      _selectedIndex = widget.currentIndex;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _scrollController.hasClients) {
+          _scrollController.animateTo(
+            _getItemExtent() * widget.currentIndex,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+          );
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  double _getItemExtent() => 52.0;
+
+  void _onScrollEnd() {
+    _scrolling = false;
+    final offset = _scrollController.offset;
+    final newIndex = (offset / _getItemExtent()).round().clamp(0, widget.itemCount - 1);
+    if (newIndex != _selectedIndex) {
+      _selectedIndex = newIndex;
+      widget.onSelected(newIndex);
+      // Snap to the exact position
+      _scrollController.animateTo(
+        _getItemExtent() * newIndex,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final neonGreen = MacroSnapTheme.neonGreen;
+
+    return SizedBox(
+      height: _getItemExtent() * 5, // Show ~5 items
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Selection indicator (center highlight bar)
+          Container(
+            height: _getItemExtent(),
+            width: double.infinity,
+            margin: const EdgeInsets.symmetric(horizontal: 24),
+            decoration: BoxDecoration(
+              color: neonGreen.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: neonGreen.withValues(alpha: 0.25),
+                width: 1,
+              ),
+            ),
+          ),
+          // Gradient fade on top and bottom
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: _getItemExtent() * 2,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF0D0D12)
+                        : MacroSnapTheme.surfaceLight,
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: _getItemExtent() * 2,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF0D0D12)
+                        : MacroSnapTheme.surfaceLight,
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Scroll wheel
+          ListWheelScrollView.useDelegate(
+            controller: _scrollController,
+            itemExtent: _getItemExtent(),
+            diameterRatio: 1.8,
+            physics: const FixedExtentScrollPhysics(),
+            onSelectedItemChanged: (_) {},
+            childDelegate: ListWheelChildBuilderDelegate(
+              childCount: widget.itemCount,
+              builder: (context, index) {
+                final distance = (index - _selectedIndex).abs().toDouble().clamp(0, 3);
+                final opacity = 1.0 - (distance * 0.25);
+                final scale = 1.0 - (distance * 0.08);
+                final isSelected = index == _selectedIndex;
+                final label = widget.labelBuilder(index);
+
+                return GestureDetector(
+                  onTap: () {
+                    HapticFeedback.mediumImpact();
+                    setState(() {
+                      _scrolling = true;
+                      _selectedIndex = index;
+                    });
+                    widget.onSelected(index);
+                    _scrollController.animateTo(
+                      _getItemExtent() * index,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic,
+                    ).then((_) => _scrolling = false);
+                  },
+                  child: AnimatedOpacity(
+                    opacity: opacity.clamp(0.3, 1.0),
+                    duration: const Duration(milliseconds: 150),
+                    child: Transform.scale(
+                      scale: scale,
+                      child: Center(
+                        child: Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: isSelected ? 24 : 18,
+                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                            color: isSelected
+                                ? neonGreen
+                                : (widget.isDark ? Colors.white54 : Colors.black38),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          // Left/right fade lines
+          Positioned(
+            left: 20,
+            top: _getItemExtent() * 2,
+            bottom: _getItemExtent() * 2,
+            child: Container(
+              width: 2,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    neonGreen.withValues(alpha: 0.3),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            right: 20,
+            top: _getItemExtent() * 2,
+            bottom: _getItemExtent() * 2,
+            child: Container(
+              width: 2,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    neonGreen.withValues(alpha: 0.3),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
