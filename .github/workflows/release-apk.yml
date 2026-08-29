@@ -1,4 +1,4 @@
-name: Build and Release APK
+name: Build and Release AAB
 
 on:
   push:
@@ -46,26 +46,26 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Build APK (release)
-        run: flutter build apk --release
+      - name: Build AAB (release)
+        run: flutter build appbundle --release
 
-      - name: Verify APK
+      - name: Verify AAB
         run: |
-          APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
-          if [ -f "$APK_PATH" ]; then
-            echo "APK built: $(ls -lh $APK_PATH | awk '{print $5}')"
+          AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
+          if [ -f "$AAB_PATH" ]; then
+            echo "AAB built: $(ls -lh $AAB_PATH | awk '{print $5}')"
           else
-            echo "ERROR: APK not found"
+            echo "ERROR: AAB not found"
             exit 1
           fi
 
-      - name: Rename APK
-        run: cp build/app/outputs/flutter-apk/app-release.apk macro-snap-${{ github.ref_name }}.apk
+      - name: Rename AAB
+        run: cp build/app/outputs/bundle/release/app-release.aab macro-snap-${{ github.ref_name }}.aab
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: macro-snap-${{ github.ref_name }}.apk
+          files: macro-snap-${{ github.ref_name }}.aab
           draft: false
           prerelease: false
         env:
