@@ -472,7 +472,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             const SizedBox(height: 24),
             // Cal AI-style scroll dial
             _DialPicker(
-              currentIndex: currentIndex.clamp(0, itemCount - 1),
+              currentIndex: currentIndex.clamp(0, itemCount - 1).toInt(),
               itemCount: itemCount,
               isDark: isDark,
               onSelected: (index) {
