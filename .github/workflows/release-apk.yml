@@ -1,4 +1,4 @@
-name: Build and Release AAB
+name: Build and Release APK + AAB
 
 on:
   push:
@@ -33,8 +33,6 @@ jobs:
           flutter doctor -v
           yes | sdkmanager --licenses 2>/dev/null || true
           yes | sdkmanager --install "ndk;27.0.12077973" 2>/dev/null || true
-          echo "NDK installed"
-          ls $ANDROID_HOME/ndk/ 2>/dev/null || echo "NDK dir listing failed"
 
       - name: Set up signing
         run: |
@@ -48,33 +46,34 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Build APK (release)
+        run: flutter build apk --release
+
       - name: Build AAB (release)
         run: flutter build appbundle --release
 
-      - name: Verify AAB
+      - name: Rename artifacts
         run: |
-          AAB_PATH="build/app/outputs/bundle/release/app-release.aab"
-          if [ -f "$AAB_PATH" ]; then
-            echo "AAB built: $(ls -lh $AAB_PATH | awk '{print $5}')"
-          else
-            echo "ERROR: AAB not found"
-            exit 1
-          fi
+          cp build/app/outputs/flutter-apk/app-release.apk macro-snap-${{ github.ref_name }}.apk
+          cp build/app/outputs/bundle/release/app-release.aab macro-snap-${{ github.ref_name }}.aab
+          echo "APK: $(ls -lh macro-snap-${{ github.ref_name }}.apk | awk '{print $5}')"
+          echo "AAB: $(ls -lh macro-snap-${{ github.ref_name }}.aab | awk '{print $5}')"
 
-      - name: Rename AAB
-        run: mv build/app/outputs/bundle/release/app-release.aab macro-snap-${{ github.ref_name }}.aab
-
-      - name: Upload AAB artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: macro-snap-aab-${{ github.ref_name }}
-          path: macro-snap-${{ github.ref_name }}.aab
+          name: macro-snap-${{ github.ref_name }}
+          path: |
+            macro-snap-${{ github.ref_name }}.apk
+            macro-snap-${{ github.ref_name }}.aab
           retention-days: 30
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: macro-snap-${{ github.ref_name }}.aab
+          files: |
+            macro-snap-${{ github.ref_name }}.apk
+            macro-snap-${{ github.ref_name }}.aab
           draft: false
           prerelease: false
         env:
